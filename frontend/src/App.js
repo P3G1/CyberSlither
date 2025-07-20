@@ -129,6 +129,11 @@ const GameComponent = () => {
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Admin State
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [adminSecret, setAdminSecret] = useState('');
   
   // Real Game Data
   const [userAccount, setUserAccount] = useState(null);
