@@ -1496,7 +1496,7 @@ const GameComponent = () => {
       }
     });
     
-  }, [gameState.players, gameState.food, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail, canvasSize]);
+  }, [gameState.players, gameState.food, particles, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail, canvasSize]);
 
   // Cleanup
   useEffect(() => {
