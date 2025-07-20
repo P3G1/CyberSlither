@@ -460,7 +460,7 @@ const GameComponent = () => {
     }
   };
 
-  // Check for saved user
+  // Check for saved user and setup resize handler
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -474,6 +474,19 @@ const GameComponent = () => {
         localStorage.removeItem('user');
       }
     }
+
+    // Handle canvas resize for mobile
+    const handleResize = () => {
+      setCanvasSize(getCanvasSize());
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
   }, []);
 
   // Connect user account to wallet
