@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 # Test Configuration
-BACKEND_URL = "https://82cf5bfd-7c63-4f6e-ad89-45a94323b34d.preview.emergentagent.com"
+BACKEND_URL = "https://13ab768b-5e97-4a4e-b05e-5f3bb9d7e54b.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 WS_BASE = BACKEND_URL.replace("https://", "wss://").replace("http://", "ws://")
 
