@@ -13,6 +13,7 @@ from typing import List, Dict, Optional
 from datetime import datetime
 import random
 import math
+import hashlib
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -29,6 +30,15 @@ api_router = APIRouter(prefix="/api")
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# Helper functions
+def hash_password(password: str) -> str:
+    """Hash password using SHA-256"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(password: str, hash: str) -> bool:
+    """Verify password against hash"""
+    return hash_password(password) == hash
 
 # Enhanced Game Models
 class UserAuth(BaseModel):
