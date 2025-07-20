@@ -1,8 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
-import SolanaWalletProvider from './components/WalletProvider';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
