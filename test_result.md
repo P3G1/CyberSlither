@@ -115,7 +115,7 @@ backend:
     status_history:
         - working: true
           agent: "testing"
-          comment: "All basic API endpoints working correctly. GET /api/ returns proper response, POST /api/game/create creates sessions with valid UUIDs, GET /api/game/{session_id} retrieves session details properly."
+          comment: "All basic API endpoints working correctly. GET /api/ returns proper response, POST /api/game/create creates sessions with valid UUIDs, GET /api/leaderboard retrieves leaderboard data properly. Fixed MongoDB ObjectId serialization issue."
 
   - task: "Payment Flow APIs"
     implemented: true
