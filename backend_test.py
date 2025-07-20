@@ -104,29 +104,26 @@ class CryptoSlitherTester:
         except Exception as e:
             self.results.add_result("POST /api/game/create - Create game session", False, str(e))
         
-        # Test 3: Get game session details
-        if self.test_session_id:
-            try:
-                response = requests.get(f"{API_BASE}/game/{self.test_session_id}", timeout=10)
-                if response.status_code == 200:
-                    data = response.json()
-                    required_fields = ["session_id", "players", "status", "prize_pool", "entry_fee"]
-                    has_all_fields = all(field in data for field in required_fields)
-                    self.results.add_result(
-                        "GET /api/game/{session_id} - Get game details", 
-                        has_all_fields,
-                        f"Players: {data.get('players', 'N/A')}, Status: {data.get('status', 'N/A')}"
-                    )
-                else:
-                    self.results.add_result(
-                        "GET /api/game/{session_id} - Get game details", 
-                        False,
-                        f"Status: {response.status_code}, Response: {response.text}"
-                    )
-            except Exception as e:
-                self.results.add_result("GET /api/game/{session_id} - Get game details", False, str(e))
-        else:
-            self.results.add_result("GET /api/game/{session_id} - Get game details", False, "No session ID available")
+        # Test 3: Get leaderboard (since there's no individual game session endpoint)
+        try:
+            response = requests.get(f"{API_BASE}/leaderboard", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["leaderboard", "total_winnings", "active_players"]
+                has_all_fields = all(field in data for field in required_fields)
+                self.results.add_result(
+                    "GET /api/leaderboard - Get leaderboard", 
+                    has_all_fields,
+                    f"Active players: {data.get('active_players', 'N/A')}, Total winnings: {data.get('total_winnings', 'N/A')}"
+                )
+            else:
+                self.results.add_result(
+                    "GET /api/leaderboard - Get leaderboard", 
+                    False,
+                    f"Status: {response.status_code}, Response: {response.text}"
+                )
+        except Exception as e:
+            self.results.add_result("GET /api/leaderboard - Get leaderboard", False, str(e))
     
     def test_payment_flow(self):
         """Test payment flow endpoints"""
