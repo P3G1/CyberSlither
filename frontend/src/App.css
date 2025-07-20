@@ -1501,10 +1501,12 @@
   
   .cyber-canvas {
     max-width: 100%;
-    max-height: 350px;
+    min-height: 500px;
+    max-height: 70vh;
     width: 100%;
     height: auto;
     border-radius: 10px;
+    touch-action: none;
   }
   
   .game-hud {
