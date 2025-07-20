@@ -16,6 +16,17 @@ const WS_URL = BACKEND_URL.replace('https://', 'wss://').replace('http://', 'ws:
 // Cyberpunk Game Constants
 const GAME_WIDTH = 1200;
 const GAME_HEIGHT = 700;
+
+// Mobile responsive canvas sizing
+const getCanvasSize = () => {
+  const isMobile = window.innerWidth <= 768;
+  if (isMobile) {
+    const width = Math.min(window.innerWidth - 40, 800);
+    const height = Math.min(window.innerHeight * 0.6, 500);
+    return { width, height };
+  }
+  return { width: GAME_WIDTH, height: GAME_HEIGHT };
+};
 const FOOD_SIZE = 8;
 const SNAKE_SEGMENT_SIZE = 10;
 const SNAKE_HEAD_SIZE = 16;
