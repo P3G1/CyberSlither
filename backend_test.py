@@ -223,8 +223,8 @@ class CryptoSlitherTester:
         ws_url = f"{WS_BASE}/ws/{self.test_session_id}/{self.test_player_id}"
         
         try:
-            # Test WebSocket connection
-            async with websockets.connect(ws_url) as websocket:
+            # Test WebSocket connection with shorter timeout
+            async with asyncio.wait_for(websockets.connect(ws_url), timeout=15.0) as websocket:
                 self.results.add_result(
                     "WebSocket Connection - Connect to game session", 
                     True,
@@ -272,8 +272,14 @@ class CryptoSlitherTester:
                 except Exception as e:
                     self.results.add_result("WebSocket Messaging - Send update command", False, str(e))
                 
+        except asyncio.TimeoutError:
+            self.results.add_result(
+                "WebSocket Connection - Connect to game session", 
+                False, 
+                f"Connection timeout to {ws_url}. This may be due to external URL WebSocket limitations."
+            )
         except Exception as e:
-            self.results.add_result("WebSocket Connection - Connect to game session", False, str(e))
+            self.results.add_result("WebSocket Connection - Connect to game session", False, f"Connection error: {str(e)}")
     
     def test_error_handling(self):
         """Test error handling for invalid requests"""
