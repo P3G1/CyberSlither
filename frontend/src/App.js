@@ -1311,25 +1311,56 @@ const GameComponent = () => {
                 </div>
               ) : (
                 <div className="battle-zone">
-                  <div className="bet-selector">
-                    <div className="bet-label">// ARENA ENTRY FEE //</div>
-                    <div className="bet-options">
-                      {BET_AMOUNTS.map(amount => (
-                        <button
-                          key={amount}
-                          className={`bet-chip ${selectedBetAmount === amount ? 'selected' : ''}`}
-                          onClick={() => setSelectedBetAmount(amount)}
-                        >
-                          ${amount}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <button className="enter-arena-btn" onClick={createGameWithBet} disabled={loading}>
-                    <span className="btn-icon">⚡</span>
-                    <span className="btn-text">{loading ? 'INITIALIZING ARENA...' : 'ENTER CYBER ARENA'}</span>
-                  </button>
+                  {isAdmin ? (
+                    <>
+                      <div className="admin-notice">
+                        <h3>👑 ADMIN MODE ACTIVE</h3>
+                        <p>You can play FREE without spending Solana!</p>
+                      </div>
+                      
+                      <div className="bet-selector">
+                        <div className="bet-label">// DISPLAY BET AMOUNT (FREE FOR ADMIN) //</div>
+                        <div className="bet-options">
+                          {BET_AMOUNTS.map(amount => (
+                            <button
+                              key={amount}
+                              className={`bet-chip ${selectedBetAmount === amount ? 'selected' : ''} admin-chip`}
+                              onClick={() => setSelectedBetAmount(amount)}
+                            >
+                              ${amount} <span className="free-label">FREE</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <button className="enter-arena-btn admin-btn" onClick={createFreeGameAsAdmin} disabled={loading}>
+                        <span className="btn-icon">👑</span>
+                        <span className="btn-text">{loading ? 'CREATING FREE ARENA...' : 'ENTER ARENA (FREE)'}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bet-selector">
+                        <div className="bet-label">// ARENA ENTRY FEE //</div>
+                        <div className="bet-options">
+                          {BET_AMOUNTS.map(amount => (
+                            <button
+                              key={amount}
+                              className={`bet-chip ${selectedBetAmount === amount ? 'selected' : ''}`}
+                              onClick={() => setSelectedBetAmount(amount)}
+                            >
+                              ${amount}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <button className="enter-arena-btn" onClick={createGameWithBet} disabled={loading}>
+                        <span className="btn-icon">⚡</span>
+                        <span className="btn-text">{loading ? 'INITIALIZING ARENA...' : 'ENTER CYBER ARENA'}</span>
+                      </button>
+                    </>
+                  )}
                   
                   <div className="arena-options">
                     <button className="option-chip">🌐 GLOBAL SERVERS</button>
