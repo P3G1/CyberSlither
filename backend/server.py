@@ -201,28 +201,100 @@ async def broadcast_to_session(session_id: str, message: dict):
 async def root():
     return {"message": "Enhanced Crypto Slither Game API v2.0"}
 
-@api_router.post("/user/account")
-async def create_or_get_user_account(data: dict = Body(...)):
-    """Create or retrieve user account"""
+# Authentication endpoints
+@api_router.post("/auth/register")
+async def register_user(data: dict = Body(...)):
+    """Register a new user"""
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+    quick_setup = data.get("quick_setup", False)
+    
+    if not username or len(username) < 3:
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters")
+    
+    if not password or len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Check if username already exists
+    existing_user = await db.user_auth.find_one({"username": username.lower()})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    
+    # Create new user
+    user_auth = UserAuth(
+        username=username.lower(),
+        password_hash=hash_password(password)
+    )
+    
+    await db.user_auth.insert_one(user_auth.dict())
+    
+    # Return user data (without password hash)
+    return {
+        "user_id": user_auth.user_id,
+        "username": username,
+        "created_at": user_auth.created_at,
+        "message": "Account created successfully"
+    }
+
+@api_router.post("/auth/login") 
+async def login_user(data: dict = Body(...)):
+    """Login user"""
+    username = data.get("username", "").strip().lower()
+    password = data.get("password", "")
+    
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="Username and password required")
+    
+    # Find user
+    user = await db.user_auth.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # Verify password
+    if not verify_password(password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # Update last login
+    await db.user_auth.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"last_login": datetime.utcnow()}}
+    )
+    
+    return {
+        "user_id": user["user_id"],
+        "username": user["username"],
+        "last_login": user.get("last_login"),
+        "wallet_address": user.get("wallet_address"),
+        "message": "Login successful"
+    }
+
+@api_router.post("/user/connect-wallet")
+async def connect_user_wallet(data: dict = Body(...)):
+    """Connect wallet to user account"""
+    user_id = data.get("user_id")
     wallet_address = data.get("wallet_address")
-    if not wallet_address:
-        raise HTTPException(status_code=400, detail="Wallet address required")
+    
+    if not user_id or not wallet_address:
+        raise HTTPException(status_code=400, detail="User ID and wallet address required")
+    
+    # Update user auth with wallet
+    await db.user_auth.update_one(
+        {"user_id": user_id},
+        {"$set": {"wallet_address": wallet_address}}
+    )
     
     # Check if account exists
     existing_account = await db.user_accounts.find_one({"wallet_address": wallet_address})
     
     if existing_account:
-        # Update last active
-        await db.user_accounts.update_one(
-            {"wallet_address": wallet_address},
-            {"$set": {"last_active": datetime.utcnow()}}
-        )
         return existing_account
     
     # Create new account
+    user = await db.user_auth.find_one({"user_id": user_id})
     new_account = UserAccount(
+        user_id=user_id,
         wallet_address=wallet_address,
-        display_name=f"Player_{wallet_address[:8]}"
+        display_name=user["username"] if user else "Player"
     )
     
     await db.user_accounts.insert_one(new_account.dict())
