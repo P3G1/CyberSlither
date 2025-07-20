@@ -29,6 +29,38 @@ module.exports = {
         "net": false,
         "tls": false
       };
+
+      // Add module rules for SVG handling
+      const svgRule = {
+        test: /\.svg$/,
+        use: [
+          {
+            loader: '@svgr/webpack',
+            options: {
+              svgo: false,
+            },
+          },
+          'url-loader',
+        ],
+      };
+
+      // Find existing SVG rule and replace it
+      const fileLoaderRule = webpackConfig.module.rules.find(rule => rule.test && rule.test.test('.svg'));
+      if (fileLoaderRule) {
+        fileLoaderRule.exclude = /\.svg$/;
+      }
+      
+      webpackConfig.module.rules.push(svgRule);
+
+      // Ignore missing assets from third-party packages
+      webpackConfig.resolve.alias = {
+        ...webpackConfig.resolve.alias,
+        // Ignore missing SVG assets from @reown/appkit-ui
+        '../assets/svg/swapHorizontalMedium.js': false,
+        '../assets/svg/swapHorizontalBold.js': false,
+        '../assets/svg/swapHorizontalRoundedBold.js': false,
+        '../assets/svg/reown-logo.js': false,
+      };
       
       // Disable hot reload completely if environment variable is set
       if (config.disableHotReload) {
