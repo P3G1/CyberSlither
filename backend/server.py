@@ -88,6 +88,20 @@ class Player(BaseModel):
     color: str = "#00ff00"
     length: int = 10
 
+class SnakePlayer(BaseModel):
+    player_id: str
+    wallet_address: str
+    username: str = "Player"
+    x: float = 400.0
+    y: float = 300.0
+    segments: List[dict] = Field(default_factory=lambda: [{"x": 400, "y": 300}])
+    direction: dict = Field(default_factory=lambda: {"x": 1, "y": 0, "angle": 0})
+    speed: float = 3.0
+    score: int = 10
+    alive: bool = True
+    color: str = "#00ff00"
+    length: int = 10
+
 class PaymentTransaction(BaseModel):
     transaction_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     session_id: str
