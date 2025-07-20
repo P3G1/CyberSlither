@@ -251,6 +251,156 @@ async def register_user(data: dict = Body(...)):
         "message": "Account created successfully"
     }
 
+# Admin endpoints
+@api_router.post("/admin/create-admin")
+async def create_admin_account(data: dict = Body(...)):
+    """Create an admin account (for initial setup only)"""
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+    admin_secret = data.get("admin_secret", "")
+    
+    # Simple admin secret for initial setup - change this in production
+    if admin_secret != "cyberslither_admin_2025":
+        raise HTTPException(status_code=403, detail="Invalid admin secret")
+    
+    if not username or len(username) < 3:
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters")
+    
+    if not password or len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Check if username already exists
+    existing_user = await db.user_auth.find_one({"username": username.lower()})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    
+    # Create admin user
+    admin_user = UserAuth(
+        username=username.lower(),
+        password_hash=hash_password(password),
+        is_admin=True
+    )
+    
+    await db.user_auth.insert_one(admin_user.dict())
+    
+    return {
+        "user_id": admin_user.user_id,
+        "username": username,
+        "is_admin": True,
+        "created_at": admin_user.created_at,
+        "message": "Admin account created successfully"
+    }
+
+@api_router.post("/admin/create-free-game")
+async def create_free_game_for_admin(data: dict = Body(...)):
+    """Create a free game session for admin (no payment required)"""
+    user_id = data.get("user_id")
+    bet_amount = data.get("bet_amount", 5)  # Default $5 but free for admin
+    
+    if not user_id:
+        raise HTTPException(status_code=400, detail="User ID required")
+    
+    # Verify user is admin
+    user = await db.user_auth.find_one({"user_id": user_id})
+    if not user or not user.get("is_admin", False):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Create game session
+    session = GameSession()
+    session.entry_fee = 0.0  # Free for admin
+    session.food = generate_food(session.session_id, 150)
+    
+    # Store session
+    game_sessions[session.session_id] = session
+    websocket_connections[session.session_id] = {}
+    
+    # Save to database
+    await db.game_sessions.insert_one(session.dict())
+    
+    return {
+        "session_id": session.session_id,
+        "entry_fee": 0.0,
+        "bet_amount": bet_amount,
+        "status": session.status,
+        "max_players": session.max_players,
+        "admin_mode": True
+    }
+
+@api_router.post("/admin/join-free-game")
+async def join_free_game_as_admin(data: dict = Body(...)):
+    """Join game as admin without payment"""
+    session_id = data.get("session_id")
+    user_id = data.get("user_id")
+    player_id = data.get("player_id")
+    
+    if not all([session_id, user_id, player_id]):
+        raise HTTPException(status_code=400, detail="Session ID, User ID, and Player ID required")
+    
+    # Verify user is admin
+    user = await db.user_auth.find_one({"user_id": user_id})
+    if not user or not user.get("is_admin", False):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if session_id not in game_sessions:
+        raise HTTPException(status_code=404, detail="Game session not found")
+    
+    session = game_sessions[session_id]
+    
+    if len(session.players) >= session.max_players:
+        raise HTTPException(status_code=400, detail="Game is full")
+    
+    # Create admin player with special styling
+    admin_snake_colors = [
+        "#FFD700", "#FF4500", "#FF1493", "#00CED1", "#32CD32", "#BA55D3"
+    ]
+    player_color = random.choice(admin_snake_colors)
+    
+    # Spawn in center area
+    center_x = 600
+    center_y = 350
+    spawn_radius = 100
+    
+    spawn_angle = random.uniform(0, 2 * math.pi)
+    spawn_x = center_x + spawn_radius * math.cos(spawn_angle)
+    spawn_y = center_y + spawn_radius * math.sin(spawn_angle)
+    
+    player = SnakePlayer(
+        player_id=f"ADMIN_{player_id}",
+        x=spawn_x,
+        y=spawn_y,
+        color=player_color,
+        wallet_address="ADMIN_WALLET",
+        username=user["username"]
+    )
+    
+    session.players[player.player_id] = player
+    
+    # Create a mock free transaction record
+    transaction = PaymentTransaction(
+        session_id=session_id,
+        player_id=player.player_id,
+        wallet_address="ADMIN_WALLET",
+        amount=0.0,
+        transaction_type="admin_free",
+        status="completed"
+    )
+    
+    await db.payment_transactions.insert_one(transaction.dict())
+    
+    # Update session in database
+    await db.game_sessions.update_one(
+        {"session_id": session_id},
+        {"$set": {"players": {pid: p.dict() for pid, p in session.players.items()}}}
+    )
+    
+    return {
+        "message": "Admin joined game successfully (FREE)",
+        "player_id": player.player_id,
+        "session_id": session_id,
+        "admin_mode": True,
+        "entry_fee": 0.0
+    }
+
 @api_router.post("/auth/login") 
 async def login_user(data: dict = Body(...)):
     """Login user"""
