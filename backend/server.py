@@ -210,10 +210,13 @@ async def create_or_get_user_account(data: dict = Body(...)):
     return new_account.dict()
 
 @api_router.post("/game/create")
-async def create_game_session():
-    """Create a new enhanced game session"""
+async def create_game_session(data: dict = Body(...)):
+    """Create a new game session with bet amount"""
+    bet_amount = data.get("bet_amount", 1)  # Default $1 bet
+    
     session = GameSession()
-    session.food = generate_food(session.session_id, 100)
+    session.entry_fee = bet_amount * 0.01  # Convert to SOL (assuming $1 = 0.01 SOL for demo)
+    session.food = generate_food(session.session_id, 150)  # More food like damnbruh
     game_sessions[session.session_id] = session
     websocket_connections[session.session_id] = {}
     
@@ -223,39 +226,30 @@ async def create_game_session():
     return {
         "session_id": session.session_id,
         "entry_fee": session.entry_fee,
+        "bet_amount": bet_amount,
         "status": session.status,
         "max_players": session.max_players
     }
 
-@api_router.get("/game/{session_id}")
-async def get_game_session(session_id: str):
-    """Get game session details"""
-    if session_id not in game_sessions:
-        raise HTTPException(status_code=404, detail="Game session not found")
-    
-    session = game_sessions[session_id]
-    return {
-        "session_id": session.session_id,
-        "players": len(session.players),
-        "status": session.status,
-        "prize_pool": session.prize_pool,
-        "entry_fee": session.entry_fee,
-        "max_players": session.max_players
-    }
-
-@api_router.post("/payment/create-entry")
-async def create_entry_payment(data: dict = Body(...)):
-    """Create entry fee payment transaction"""
+@api_router.post("/payment/create-bet")
+async def create_bet_payment(data: dict = Body(...)):
+    """Create bet payment transaction"""
     session_id = data.get("session_id")
     player_id = data.get("player_id") 
     wallet_address = data.get("wallet_address")
+    bet_amount = data.get("bet_amount", 1)
     
     if session_id not in game_sessions:
-        raise HTTPException(status_code=404, detail="Game session not found")
+        # Create session if it doesn't exist
+        session = GameSession()
+        session.session_id = session_id
+        session.entry_fee = bet_amount * 0.01
+        session.food = generate_food(session_id, 150)
+        game_sessions[session_id] = session
+        websocket_connections[session_id] = {}
+        await db.game_sessions.insert_one(session.dict())
     
     session = game_sessions[session_id]
-    if session.status != "waiting":
-        raise HTTPException(status_code=400, detail="Game already started")
     
     if len(session.players) >= session.max_players:
         raise HTTPException(status_code=400, detail="Game is full")
@@ -266,7 +260,7 @@ async def create_entry_payment(data: dict = Body(...)):
         player_id=player_id,
         wallet_address=wallet_address,
         amount=session.entry_fee,
-        transaction_type="entry_fee"
+        transaction_type="bet"
     )
     
     # Save transaction to database
@@ -274,14 +268,15 @@ async def create_entry_payment(data: dict = Body(...)):
     
     return {
         "transaction_id": transaction.transaction_id,
-        "amount": transaction.amount,
-        "recipient": "11111111111111111111111111111112",  # System program for demo
-        "message": f"Entry fee for Crypto Slither game {session_id[:8]}"
+        "amount": session.entry_fee,
+        "bet_amount": bet_amount,
+        "recipient": "Game_Vault_Address",
+        "message": f"${bet_amount} bet for Crypto Slither"
     }
 
-@api_router.post("/payment/confirm-entry")
-async def confirm_entry_payment(data: dict = Body(...)):
-    """Confirm entry fee payment and add player to game"""
+@api_router.post("/payment/confirm-bet")
+async def confirm_bet_payment(data: dict = Body(...)):
+    """Confirm bet payment and add player to game"""
     transaction_id = data.get("transaction_id")
     solana_signature = data.get("signature")
     
@@ -304,36 +299,42 @@ async def confirm_entry_payment(data: dict = Body(...)):
     if session_id in game_sessions:
         session = game_sessions[session_id]
         
-        # Create new player with random spawn
-        colors = ["#ff3333", "#33ff33", "#3333ff", "#ffff33", "#ff33ff", "#33ffff", "#ff8833", "#8833ff", "#33ff88"]
-        player_color = random.choice(colors)
+        # Create new player with enhanced colors like damnbruh
+        snake_colors = [
+            "#8B5CF6", "#06B6D4", "#F59E0B", "#10B981", 
+            "#F43F5E", "#3B82F6", "#8B5A2B", "#EC4899"
+        ]
+        player_color = random.choice(snake_colors)
         
-        # Random spawn position away from center
-        angle = random.random() * 2 * math.pi
-        distance = random.randint(100, 200)
-        spawn_x = 400 + math.cos(angle) * distance
-        spawn_y = 300 + math.sin(angle) * distance
+        # Spawn in different areas of the map
+        spawn_areas = [
+            {"x": 200, "y": 150}, {"x": 1000, "y": 150}, 
+            {"x": 200, "y": 650}, {"x": 1000, "y": 650},
+            {"x": 600, "y": 400}
+        ]
+        spawn_pos = random.choice(spawn_areas)
         
-        # Initial segments for snake body
+        # Create longer initial snake
         initial_segments = []
-        for i in range(10):  # Start with 10 segments
+        for i in range(15):  # Longer snake like damnbruh
             initial_segments.append({
-                "x": spawn_x - (i * 8 * math.cos(angle)),
-                "y": spawn_y - (i * 8 * math.sin(angle))
+                "x": spawn_pos["x"] - (i * 10),
+                "y": spawn_pos["y"]
             })
         
         player_data = {
             "player_id": player_id,
             "wallet_address": wallet_address,
-            "x": spawn_x,
-            "y": spawn_y,
+            "x": spawn_pos["x"],
+            "y": spawn_pos["y"],
             "segments": initial_segments,
-            "direction": {"x": math.cos(angle), "y": math.sin(angle), "angle": angle},
-            "speed": 3.0,
-            "score": 10,
+            "direction": {"x": 1, "y": 0, "angle": 0},
+            "speed": 4.0,  # Faster like damnbruh
+            "score": 15,   # Start with higher score
             "alive": True,
             "color": player_color,
-            "length": 10
+            "length": 15,
+            "bet_amount": transaction_doc["amount"] / 0.01  # Store bet amount
         }
         
         session.players[player_id] = player_data
@@ -354,7 +355,7 @@ async def confirm_entry_payment(data: dict = Body(...)):
             {"$set": session.dict()}
         )
         
-        # Start game if we have enough players
+        # Start game if we have 2+ players
         if len(session.players) >= 2 and session.status == "waiting":
             session.status = "active"
             await broadcast_to_session(session_id, {
@@ -365,6 +366,30 @@ async def confirm_entry_payment(data: dict = Body(...)):
             })
     
     return {"status": "success", "message": "Player added to game"}
+
+@api_router.get("/leaderboard")
+async def get_leaderboard():
+    """Get top players leaderboard"""
+    top_players = await db.user_accounts.find(
+        {},
+        {"display_name": 1, "total_winnings": 1, "wallet_address": 1}
+    ).sort("total_winnings", -1).limit(10).to_list(10)
+    
+    # Calculate total winnings
+    total_winnings = await db.user_accounts.aggregate([
+        {"$group": {"_id": None, "total": {"$sum": "$total_winnings"}}}
+    ]).to_list(1)
+    
+    total = total_winnings[0]["total"] if total_winnings else 0
+    
+    # Count active players
+    active_players = sum(len(session.players) for session in game_sessions.values())
+    
+    return {
+        "leaderboard": top_players,
+        "total_winnings": total,
+        "active_players": active_players
+    }
 
 # Enhanced WebSocket connection for real-time gameplay
 @app.websocket("/ws/{session_id}/{player_id}")
