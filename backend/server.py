@@ -31,6 +31,17 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Game Models
+class UserAccount(BaseModel):
+    user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    wallet_address: str
+    display_name: Optional[str] = None
+    games_played: int = 0
+    games_won: int = 0
+    total_winnings: float = 0.0
+    total_spent: float = 0.0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_active: datetime = Field(default_factory=datetime.utcnow)
+
 class GameSession(BaseModel):
     session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     players: Dict[str, dict] = Field(default_factory=dict)
