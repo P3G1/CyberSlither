@@ -754,15 +754,19 @@ const GameComponent = () => {
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     }
     
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
       if (canvas) {
         canvas.removeEventListener('mousemove', handleMouseMove);
+        canvas.removeEventListener('touchstart', handleTouchStart);
+        canvas.removeEventListener('touchmove', handleTouchMove);
       }
     };
-  }, [handleKeyPress, handleMouseMove]);
+  }, [handleKeyPress, handleMouseMove, handleTouchStart, handleTouchMove]);
 
   // Enhanced canvas rendering with cyberpunk effects
   useEffect(() => {
