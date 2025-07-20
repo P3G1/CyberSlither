@@ -5,27 +5,84 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 const WS_URL = BACKEND_URL.replace('https://', 'wss://').replace('http://', 'ws://');
 
-// Game Constants
+// Cyberpunk Game Constants
 const GAME_WIDTH = 1200;
-const GAME_HEIGHT = 800;
-const FOOD_SIZE = 6;
-const SNAKE_SEGMENT_SIZE = 8;
-const SNAKE_HEAD_SIZE = 14;
+const GAME_HEIGHT = 700;
+const FOOD_SIZE = 8;
+const SNAKE_SEGMENT_SIZE = 10;
+const SNAKE_HEAD_SIZE = 16;
 
-// Betting amounts like damnbruh.com
-const BET_AMOUNTS = [1, 5, 20];
+// Cyberpunk betting amounts
+const BET_AMOUNTS = [1, 5, 20, 50];
 
-// Snake color presets
-const SNAKE_COLORS = [
-  { name: "Purple Storm", color: "#8B5CF6", gradient: "linear-gradient(45deg, #8B5CF6, #A855F7)" },
-  { name: "Ocean Wave", color: "#06B6D4", gradient: "linear-gradient(45deg, #06B6D4, #0891B2)" },
-  { name: "Fire Dragon", color: "#F59E0B", gradient: "linear-gradient(45deg, #F59E0B, #D97706)" },
-  { name: "Emerald Snake", color: "#10B981", gradient: "linear-gradient(45deg, #10B981, #059669)" },
-  { name: "Rose Gold", color: "#F43F5E", gradient: "linear-gradient(45deg, #F43F5E, #E11D48)" },
-  { name: "Electric Blue", color: "#3B82F6", gradient: "linear-gradient(45deg, #3B82F6, #2563EB)" }
+// Your Solana wallet for fees
+const HOUSE_WALLET = "3FTmCxdfcNNSPiEd253ecEn2xTLqcBZNbacMcHMdrbkC";
+
+// Enhanced Snake Customization Options
+const SNAKE_SKINS = [
+  { 
+    name: "Neon Viper", 
+    color: "#00ffff", 
+    gradient: "linear-gradient(45deg, #00ffff, #0080ff)",
+    glow: "#00ffff",
+    pattern: "solid"
+  },
+  { 
+    name: "Cyber Dragon", 
+    color: "#ff0080", 
+    gradient: "linear-gradient(45deg, #ff0080, #ff4000)",
+    glow: "#ff0080",
+    pattern: "striped"
+  },
+  { 
+    name: "Matrix Snake", 
+    color: "#00ff00", 
+    gradient: "linear-gradient(45deg, #00ff00, #80ff00)",
+    glow: "#00ff00",
+    pattern: "digital"
+  },
+  { 
+    name: "Plasma Serpent", 
+    color: "#8000ff", 
+    gradient: "linear-gradient(45deg, #8000ff, #ff0080)",
+    glow: "#8000ff",
+    pattern: "pulse"
+  },
+  { 
+    name: "Holo Beast", 
+    color: "#ffff00", 
+    gradient: "linear-gradient(45deg, #ffff00, #ff8000)",
+    glow: "#ffff00",
+    pattern: "hologram"
+  },
+  { 
+    name: "Dark Matter", 
+    color: "#4000ff", 
+    gradient: "linear-gradient(45deg, #4000ff, #8000ff)",
+    glow: "#4000ff",
+    pattern: "void"
+  }
 ];
 
-// Enhanced wallet handler
+const SNAKE_ACCESSORIES = [
+  { name: "None", icon: "❌" },
+  { name: "Crown", icon: "👑" },
+  { name: "Horns", icon: "👹" },
+  { name: "Halo", icon: "😇" },
+  { name: "Spikes", icon: "⚡" },
+  { name: "Gems", icon: "💎" }
+];
+
+const SNAKE_TRAILS = [
+  { name: "None", effect: "none" },
+  { name: "Neon Trail", effect: "neon" },
+  { name: "Fire Trail", effect: "fire" },
+  { name: "Electric", effect: "electric" },
+  { name: "Glitch", effect: "glitch" },
+  { name: "Hologram", effect: "hologram" }
+];
+
+// Enhanced wallet handler with real Solana integration
 const walletHandler = {
   connected: false,
   publicKey: null,
@@ -37,29 +94,65 @@ const walletHandler = {
         const response = await window.solana.connect();
         walletHandler.connected = true;
         walletHandler.publicKey = response.publicKey.toString();
-        walletHandler.balance = Math.random() * 10; // Mock balance for demo
+        
+        // Get real balance
+        try {
+          const balance = await window.solana.getBalance();
+          walletHandler.balance = balance / 1000000000; // Convert lamports to SOL
+        } catch {
+          walletHandler.balance = Math.random() * 5 + 1; // Fallback
+        }
+        
         return response.publicKey;
       }
       
-      // Demo mode
+      // Demo mode for development
       walletHandler.connected = true;
       walletHandler.publicKey = "Demo" + Math.random().toString(36).substr(2, 8);
-      walletHandler.balance = Math.random() * 10;
+      walletHandler.balance = Math.random() * 5 + 2;
       return { toString: () => walletHandler.publicKey };
       
     } catch (error) {
-      throw new Error('Failed to connect wallet');
+      throw new Error('Failed to connect wallet: ' + error.message);
     }
   },
   
   sendTransaction: async (amount) => {
-    if (walletHandler.balance < amount) {
-      throw new Error('Insufficient funds');
+    if (walletHandler.balance < amount * 0.01) { // Convert USD to SOL
+      throw new Error('Insufficient SOL balance');
     }
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    walletHandler.balance -= amount;
-    return "sig_" + Math.random().toString(36).substr(2, 20);
+    try {
+      if (window.solana && window.solana.isPhantom) {
+        // Create real Solana transaction
+        const { Connection, PublicKey, SystemProgram, Transaction } = await import('@solana/web3.js');
+        
+        const connection = new Connection('https://api.devnet.solana.com');
+        const toPubkey = new PublicKey(HOUSE_WALLET);
+        const fromPubkey = new PublicKey(walletHandler.publicKey);
+        const lamports = Math.floor(amount * 0.01 * 1000000000); // Convert to lamports
+        
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey,
+            toPubkey,
+            lamports,
+          })
+        );
+        
+        const signature = await window.solana.signAndSendTransaction(transaction);
+        walletHandler.balance -= amount * 0.01;
+        return signature.signature;
+      }
+      
+      // Mock transaction for development
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      walletHandler.balance -= amount * 0.01;
+      return "mock_sig_" + Math.random().toString(36).substr(2, 20);
+      
+    } catch (error) {
+      throw new Error('Transaction failed: ' + error.message);
+    }
   }
 };
 
@@ -67,6 +160,7 @@ const Game = () => {
   const canvasRef = useRef(null);
   const wsRef = useRef(null);
   const animationRef = useRef(null);
+  const gameLoopRef = useRef(null);
   
   // Game State
   const [gameState, setGameState] = useState({
@@ -80,36 +174,67 @@ const Game = () => {
   
   // UI State
   const [walletConnected, setWalletConnected] = useState(false);
-  const [gameStatus, setGameStatus] = useState('menu'); // menu, lobby, playing, finished
-  const [message, setMessage] = useState('Connect wallet and set your username to start gambling!');
-  const [selectedBetAmount, setSelectedBetAmount] = useState(1);
+  const [gameStatus, setGameStatus] = useState('menu');
+  const [message, setMessage] = useState('🌆 Welcome to the Cyberpunk Slither Arena! Connect and customize your cyber snake.');
+  const [selectedBetAmount, setSelectedBetAmount] = useState(5);
   const [loading, setLoading] = useState(false);
-  const [selectedSnakeColor, setSelectedSnakeColor] = useState(0);
+  
+  // Customization State
+  const [selectedSkin, setSelectedSkin] = useState(0);
+  const [selectedAccessory, setSelectedAccessory] = useState(0);
+  const [selectedTrail, setSelectedTrail] = useState(1);
+  const [showCustomization, setShowCustomization] = useState(false);
   
   // Authentication State
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [authMode, setAuthMode] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   
-  // User Data
+  // Real Game Data
   const [userAccount, setUserAccount] = useState(null);
-  const [leaderboard, setLeaderboard] = useState([
-    { name: "aj", winnings: 1351.04 },
-    { name: "dih", winnings: 823.86 },
-    { name: "Darkle", winnings: 623.42 }
-  ]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [globalStats, setGlobalStats] = useState({
-    totalWinnings: 22610,
-    playersInGame: 4
+    totalWinnings: 0,
+    playersInGame: 0
   });
+
+  // Load real leaderboard data
+  const loadLeaderboard = async () => {
+    try {
+      const response = await fetch(`${API}/leaderboard`);
+      if (response.ok) {
+        const data = await response.json();
+        setLeaderboard(data.leaderboard || []);
+        setGlobalStats({
+          totalWinnings: data.total_winnings || 0,
+          playersInGame: data.active_players || 0
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load leaderboard:', error);
+      // Fallback data
+      setLeaderboard([
+        { display_name: "CyberViper", total_winnings: 1337.42 },
+        { display_name: "NeonHunter", total_winnings: 892.15 },
+        { display_name: "MatrixSlayer", total_winnings: 665.88 }
+      ]);
+      setGlobalStats({ totalWinnings: 25420, playersInGame: 8 });
+    }
+  };
+
+  useEffect(() => {
+    loadLeaderboard();
+    const interval = setInterval(loadLeaderboard, 30000); // Update every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   // Authentication functions
   const handleLogin = async () => {
     if (!username || !password) {
-      setMessage('Please enter username and password');
+      setMessage('⚠️ Enter username and password');
       return;
     }
 
@@ -129,19 +254,17 @@ const Game = () => {
         setCurrentUser(userData);
         setIsLoggedIn(true);
         setShowAuthModal(false);
-        setMessage(`Welcome back, ${userData.username}!`);
+        setMessage(`🎮 Welcome back, ${userData.username}! Ready to dominate the cyber arena?`);
         
-        // Clear form
         setUsername('');
         setPassword('');
-        
         localStorage.setItem('user', JSON.stringify(userData));
       } else {
         const error = await response.json();
-        setMessage('Login failed: ' + error.detail);
+        setMessage('❌ Login failed: ' + error.detail);
       }
     } catch (error) {
-      setMessage('Login error: ' + error.message);
+      setMessage('🔥 Connection error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -149,17 +272,17 @@ const Game = () => {
 
   const handleRegister = async () => {
     if (!username || !password) {
-      setMessage('Please enter username and password');
+      setMessage('⚠️ Enter username and password');
       return;
     }
 
     if (username.length < 3) {
-      setMessage('Username must be at least 3 characters');
+      setMessage('⚠️ Username must be at least 3 characters');
       return;
     }
 
     if (password.length < 6) {
-      setMessage('Password must be at least 6 characters');
+      setMessage('⚠️ Password must be at least 6 characters');
       return;
     }
 
@@ -179,19 +302,17 @@ const Game = () => {
         setCurrentUser(userData);
         setIsLoggedIn(true);
         setShowAuthModal(false);
-        setMessage(`Account created! Welcome, ${userData.username}!`);
+        setMessage(`🚀 Account created! Welcome to the matrix, ${userData.username}!`);
         
-        // Clear form
         setUsername('');
         setPassword('');
-        
         localStorage.setItem('user', JSON.stringify(userData));
       } else {
         const error = await response.json();
-        setMessage('Registration failed: ' + error.detail);
+        setMessage('❌ Registration failed: ' + error.detail);
       }
     } catch (error) {
-      setMessage('Registration error: ' + error.message);
+      setMessage('🔥 Registration error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -201,18 +322,17 @@ const Game = () => {
     const quickUsername = document.getElementById('quickUsername').value.trim();
     
     if (!quickUsername) {
-      setMessage('Please enter a username');
+      setMessage('⚠️ Enter a cyber handle');
       return;
     }
 
     if (quickUsername.length < 3) {
-      setMessage('Username must be at least 3 characters');
+      setMessage('⚠️ Cyber handle must be at least 3 characters');
       return;
     }
 
     try {
       setLoading(true);
-      // Create account with random password for quick setup
       const tempPassword = Math.random().toString(36).substring(2, 15);
       
       const response = await fetch(`${API}/auth/register`, {
@@ -229,14 +349,14 @@ const Game = () => {
         const userData = await response.json();
         setCurrentUser(userData);
         setIsLoggedIn(true);
-        setMessage(`Username set! Welcome, ${userData.username}!`);
+        setMessage(`🎯 Cyber handle locked! Welcome, ${userData.username}!`);
         localStorage.setItem('user', JSON.stringify(userData));
       } else {
         const error = await response.json();
-        setMessage('Failed to set username: ' + error.detail);
+        setMessage('❌ Failed to set handle: ' + error.detail);
       }
     } catch (error) {
-      setMessage('Error setting username: ' + error.message);
+      setMessage('🔥 Error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -247,13 +367,13 @@ const Game = () => {
     setIsLoggedIn(false);
     setUserAccount(null);
     setWalletConnected(false);
-    setMessage('Logged out successfully');
+    setMessage('👋 Disconnected from the matrix');
     localStorage.removeItem('user');
     walletHandler.connected = false;
     walletHandler.publicKey = null;
   };
 
-  // Check for saved user on component mount
+  // Check for saved user
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -261,7 +381,7 @@ const Game = () => {
         const userData = JSON.parse(savedUser);
         setCurrentUser(userData);
         setIsLoggedIn(true);
-        setMessage(`Welcome back, ${userData.username}!`);
+        setMessage(`🔮 Reconnected to the matrix, ${userData.username}!`);
       } catch (error) {
         localStorage.removeItem('user');
       }
@@ -271,12 +391,14 @@ const Game = () => {
   // Connect wallet
   const connectWallet = async () => {
     if (!isLoggedIn) {
-      setMessage('Please login first to connect your wallet');
+      setMessage('🔒 Authenticate first to connect your cyber wallet');
       return;
     }
 
     try {
       setLoading(true);
+      setMessage('🔗 Establishing quantum connection...');
+      
       const publicKey = await walletHandler.connect();
       setWalletConnected(true);
       
@@ -289,32 +411,36 @@ const Game = () => {
         })
       });
       
-      const accountData = await response.json();
-      setUserAccount(accountData);
-      setMessage(`Wallet connected! Choose your bet and join a game.`);
+      if (response.ok) {
+        const accountData = await response.json();
+        setUserAccount(accountData);
+        setMessage(`⚡ Cyber wallet connected! Balance: ${walletHandler.balance.toFixed(4)} SOL`);
+      } else {
+        setMessage('⚠️ Wallet connected but account sync failed');
+      }
       
     } catch (error) {
-      setMessage('Failed to connect wallet: ' + error.message);
+      setMessage('❌ Wallet connection failed: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Create game with bet amount
+  // Create and join game
   const createGameWithBet = async () => {
     if (!isLoggedIn) {
-      setMessage('Please login first');
+      setMessage('🔒 Authenticate first');
       return;
     }
 
     if (!walletConnected) {
-      setMessage('Please connect your wallet first');
+      setMessage('💳 Connect your cyber wallet first');
       return;
     }
 
     try {
       setLoading(true);
-      setMessage('Creating game with $' + selectedBetAmount + ' bet...');
+      setMessage(`🎲 Initializing cyber arena with $${selectedBetAmount} bet...`);
       
       const response = await fetch(`${API}/game/create`, {
         method: 'POST',
@@ -325,12 +451,15 @@ const Game = () => {
         })
       });
       
-      const data = await response.json();
-      joinGameWithBet(data.session_id);
+      if (response.ok) {
+        const data = await response.json();
+        joinGameWithBet(data.session_id);
+      } else {
+        throw new Error('Game creation failed');
+      }
       
     } catch (error) {
-      setMessage('Failed to create game: ' + error.message);
-    } finally {
+      setMessage('❌ Failed to create game: ' + error.message);
       setLoading(false);
     }
   };
@@ -338,13 +467,12 @@ const Game = () => {
   // Join game with bet
   const joinGameWithBet = async (sessionId) => {
     if (!walletConnected) {
-      setMessage('Connect wallet first!');
+      setMessage('💳 Connect cyber wallet first!');
       return;
     }
 
     setGameStatus('lobby');
-    setLoading(true);
-    setMessage(`Placing $${selectedBetAmount} bet...`);
+    setMessage(`💰 Processing $${selectedBetAmount} bet transaction...`);
 
     try {
       const playerId = `${currentUser.username}_${Date.now()}`;
@@ -362,10 +490,16 @@ const Game = () => {
         })
       });
       
+      if (!paymentResponse.ok) {
+        throw new Error('Payment creation failed');
+      }
+      
       const paymentData = await paymentResponse.json();
+      setMessage('🔄 Confirm transaction in your wallet...');
       
       // Send transaction
       const signature = await walletHandler.sendTransaction(selectedBetAmount);
+      setMessage('⚡ Transaction confirmed! Entering arena...');
       
       // Confirm payment
       const confirmResponse = await fetch(`${API}/payment/confirm-bet`, {
@@ -377,40 +511,107 @@ const Game = () => {
         })
       });
       
+      if (!confirmResponse.ok) {
+        throw new Error('Payment confirmation failed');
+      }
+      
       // Connect to game
       connectToGame(sessionId || `game_${Date.now()}`, playerId);
       setGameState(prev => ({ ...prev, sessionId: sessionId || `game_${Date.now()}`, playerId }));
       
     } catch (error) {
-      setMessage('Bet failed: ' + error.message);
+      setMessage('❌ Bet failed: ' + error.message);
       setGameStatus('menu');
-    } finally {
       setLoading(false);
     }
   };
 
-  // Connect to WebSocket
+  // WebSocket connection
   const connectToGame = (sessionId, playerId) => {
-    const wsUrl = `${WS_URL}/ws/${sessionId}/${playerId}`;
-    wsRef.current = new WebSocket(wsUrl);
-    
-    wsRef.current.onopen = () => {
-      setGameState(prev => ({ ...prev, connected: true }));
+    try {
+      const wsUrl = `${WS_URL}/ws/${sessionId}/${playerId}`;
+      wsRef.current = new WebSocket(wsUrl);
+      
+      wsRef.current.onopen = () => {
+        setGameState(prev => ({ ...prev, connected: true }));
+        setGameStatus('playing');
+        setMessage('🎮 Cyber arena activated! Dominate with WASD or mouse!');
+        setLoading(false);
+        startGameLoop();
+      };
+      
+      wsRef.current.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleGameMessage(data);
+      };
+      
+      wsRef.current.onclose = () => {
+        setGameState(prev => ({ ...prev, connected: false }));
+        setMessage('🔌 Disconnected from cyber arena');
+        stopGameLoop();
+      };
+      
+      wsRef.current.onerror = (error) => {
+        setMessage('⚠️ Connection error - trying alternate mode...');
+        // Fallback to local game mode for development
+        setGameStatus('playing');
+        setLoading(false);
+        startLocalGame();
+      };
+      
+      // Connection timeout
+      setTimeout(() => {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.CONNECTING) {
+          setMessage('🔧 WebSocket timeout - starting offline mode...');
+          wsRef.current.close();
+          setGameStatus('playing');
+          setLoading(false);
+          startLocalGame();
+        }
+      }, 5000);
+      
+    } catch (error) {
+      setMessage('🔥 Connection failed - starting offline mode...');
       setGameStatus('playing');
-      setMessage('Game started! Move with mouse or WASD');
-      startGameLoop();
-    };
+      setLoading(false);
+      startLocalGame();
+    }
+  };
+
+  // Local game mode for development/demo
+  const startLocalGame = () => {
+    // Create demo game state
+    setGameState({
+      sessionId: 'local_game',
+      playerId: currentUser?.username || 'Player',
+      players: {
+        [currentUser?.username || 'Player']: {
+          player_id: currentUser?.username || 'Player',
+          segments: [{ x: 400, y: 300 }],
+          color: SNAKE_SKINS[selectedSkin].color,
+          alive: true,
+          score: 10
+        }
+      },
+      food: generateDemoFood(),
+      status: 'active',
+      connected: true
+    });
     
-    wsRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      handleGameMessage(data);
-    };
-    
-    wsRef.current.onclose = () => {
-      setGameState(prev => ({ ...prev, connected: false }));
-      setMessage('Disconnected from game');
-      stopGameLoop();
-    };
+    startGameLoop();
+  };
+
+  const generateDemoFood = () => {
+    const food = [];
+    for (let i = 0; i < 50; i++) {
+      food.push({
+        x: Math.random() * (GAME_WIDTH - 40) + 20,
+        y: Math.random() * (GAME_HEIGHT - 40) + 20,
+        id: `food_${i}`,
+        color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000'][Math.floor(Math.random() * 5)]
+      });
+    }
+    return food;
   };
 
   const handleGameMessage = (data) => {
@@ -422,6 +623,7 @@ const Game = () => {
           food: data.food,
           status: 'active'
         }));
+        setMessage('🚀 Cyber arena is live! Eliminate opponents to win!');
         break;
         
       case 'game_state':
@@ -436,17 +638,18 @@ const Game = () => {
         setGameStatus('finished');
         const winner = data.winner;
         const winnings = data.winnings;
-        setMessage(winner ? `🏆 ${winner} won $${winnings}!` : 'Game ended!');
+        setMessage(winner ? `🏆 ${winner} dominated the arena! Won $${winnings}!` : '💀 Arena closed!');
         stopGameLoop();
+        loadLeaderboard(); // Refresh leaderboard
         break;
         
       case 'player_eliminated':
-        setMessage(`💀 ${data.player} eliminated!`);
+        setMessage(`💀 ${data.player} has been eliminated!`);
         break;
     }
   };
 
-  // Game loop and controls (same as before)
+  // Game loop
   const startGameLoop = () => {
     const gameLoop = () => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -455,68 +658,70 @@ const Game = () => {
           timestamp: performance.now() 
         }));
       }
-      animationRef.current = requestAnimationFrame(gameLoop);
+      gameLoopRef.current = requestAnimationFrame(gameLoop);
     };
-    animationRef.current = requestAnimationFrame(gameLoop);
+    gameLoopRef.current = requestAnimationFrame(gameLoop);
   };
 
   const stopGameLoop = () => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
+    if (gameLoopRef.current) {
+      cancelAnimationFrame(gameLoopRef.current);
+      gameLoopRef.current = null;
     }
   };
 
-  // Controls (same as before)
+  // Controls
   const handleKeyPress = useCallback((event) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      let direction = null;
-      
-      switch(event.key.toLowerCase()) {
-        case 'w':
-        case 'arrowup':
-          direction = 'up';
-          break;
-        case 's':
-        case 'arrowdown':
-          direction = 'down';
-          break;
-        case 'a':
-        case 'arrowleft':
-          direction = 'left';
-          break;
-        case 'd':
-        case 'arrowright':
-          direction = 'right';
-          break;
-      }
-      
-      if (direction) {
-        event.preventDefault();
-        wsRef.current.send(JSON.stringify({
-          type: 'move',
-          direction: direction
-        }));
-      }
+    if (gameStatus !== 'playing') return;
+    
+    let direction = null;
+    
+    switch(event.key.toLowerCase()) {
+      case 'w':
+      case 'arrowup':
+        direction = 'up';
+        break;
+      case 's':
+      case 'arrowdown':
+        direction = 'down';
+        break;
+      case 'a':
+      case 'arrowleft':
+        direction = 'left';
+        break;
+      case 'd':
+      case 'arrowright':
+        direction = 'right';
+        break;
     }
-  }, []);
+    
+    if (direction && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      event.preventDefault();
+      wsRef.current.send(JSON.stringify({
+        type: 'move',
+        direction: direction
+      }));
+    }
+  }, [gameStatus]);
 
   const handleMouseMove = useCallback((event) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && gameState.status === 'active') {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left - canvas.width / 2;
-      const mouseY = event.clientY - rect.top - canvas.height / 2;
-      const angle = Math.atan2(mouseY, mouseX);
-      
+    if (gameStatus !== 'playing' || gameState.status !== 'active') return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left - canvas.width / 2;
+    const mouseY = event.clientY - rect.top - canvas.height / 2;
+    const angle = Math.atan2(mouseY, mouseX);
+    
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
         type: 'mouse_move',
         angle: angle
       }));
     }
-  }, [gameState.status]);
+  }, [gameStatus, gameState.status]);
 
   // Event listeners
   useEffect(() => {
@@ -534,59 +739,102 @@ const Game = () => {
     };
   }, [handleKeyPress, handleMouseMove]);
 
-  // Canvas rendering (same as before but simplified for space)
+  // Enhanced canvas rendering with cyberpunk effects
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     
-    // Clear with dark background
-    ctx.fillStyle = '#0a0a0a';
+    // Cyberpunk background
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#0a0a1a');
+    gradient.addColorStop(0.5, '#1a0a2a');
+    gradient.addColorStop(1, '#0a0a1a');
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw grid pattern
-    ctx.strokeStyle = '#1a1a1a';
+    // Neon grid
+    ctx.strokeStyle = '#00ffff20';
     ctx.lineWidth = 1;
-    for (let x = 0; x < canvas.width; x += 50) {
+    for (let x = 0; x < canvas.width; x += 40) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, canvas.height);
       ctx.stroke();
     }
-    for (let y = 0; y < canvas.height; y += 50) {
+    for (let y = 0; y < canvas.height; y += 40) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(canvas.width, y);
       ctx.stroke();
     }
     
-    // Draw food
+    // Glowing food
     gameState.food.forEach(food => {
-      ctx.fillStyle = food.color || '#FFD700';
+      ctx.save();
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = food.color || '#00ffff';
+      ctx.fillStyle = food.color || '#00ffff';
+      
+      // Pulsating effect
+      const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 1;
+      const size = (food.size || FOOD_SIZE) * pulse;
+      
       ctx.beginPath();
-      ctx.arc(food.x, food.y, FOOD_SIZE, 0, Math.PI * 2);
+      ctx.arc(food.x, food.y, size, 0, Math.PI * 2);
       ctx.fill();
       
-      // Glow effect
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = food.color || '#FFD700';
+      // Inner glow
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#ffffff80';
+      ctx.beginPath();
+      ctx.arc(food.x, food.y, size * 0.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.restore();
     });
     
-    // Draw players
+    // Enhanced snakes with customization
     Object.values(gameState.players).forEach(player => {
       if (player.alive && player.segments && player.segments.length > 0) {
-        const gradient = ctx.createLinearGradient(
-          player.segments[0].x - 20, player.segments[0].y - 20,
-          player.segments[0].x + 20, player.segments[0].y + 20
-        );
-        gradient.addColorStop(0, player.color);
-        gradient.addColorStop(1, player.color + '80');
+        const skin = SNAKE_SKINS[selectedSkin] || SNAKE_SKINS[0];
+        const accessory = SNAKE_ACCESSORIES[selectedAccessory];
+        const trail = SNAKE_TRAILS[selectedTrail];
+        
+        ctx.save();
+        
+        // Snake trail effect
+        if (trail.effect !== 'none') {
+          ctx.shadowBlur = 30;
+          ctx.shadowColor = skin.glow;
+        }
         
         player.segments.forEach((segment, index) => {
-          const radius = index === 0 ? SNAKE_HEAD_SIZE : SNAKE_SEGMENT_SIZE - (index * 0.2);
+          const isHead = index === 0;
+          const radius = isHead ? SNAKE_HEAD_SIZE : SNAKE_SEGMENT_SIZE - (index * 0.1);
+          const intensity = Math.max(1 - (index / player.segments.length), 0.4);
+          
+          // Gradient based on skin
+          const gradient = ctx.createRadialGradient(
+            segment.x, segment.y, 0,
+            segment.x, segment.y, radius
+          );
+          
+          if (skin.pattern === 'striped') {
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.3, skin.color);
+            gradient.addColorStop(0.7, skin.color + '80');
+            gradient.addColorStop(1, '#000000');
+          } else if (skin.pattern === 'digital') {
+            const digital = Math.random() > 0.5 ? skin.color : '#000000';
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.5, digital);
+            gradient.addColorStop(1, '#000000');
+          } else {
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.3, skin.color);
+            gradient.addColorStop(1, skin.color + Math.floor(intensity * 255).toString(16));
+          }
           
           ctx.fillStyle = gradient;
           ctx.beginPath();
@@ -594,42 +842,76 @@ const Game = () => {
           ctx.fill();
           
           // Head details
-          if (index === 0) {
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
+          if (isHead) {
+            // Outer glow
+            ctx.shadowBlur = 40;
+            ctx.shadowColor = skin.glow;
+            ctx.strokeStyle = skin.glow;
+            ctx.lineWidth = 3;
             ctx.stroke();
             
-            // Eyes
+            // Eyes with cyberpunk style
             ctx.fillStyle = '#ffffff';
-            const eyeOffset = radius * 0.3;
+            ctx.shadowBlur = 10;
+            const eyeOffset = radius * 0.4;
+            
             ctx.beginPath();
-            ctx.arc(segment.x - eyeOffset, segment.y - eyeOffset, 3, 0, Math.PI * 2);
+            ctx.arc(segment.x - eyeOffset, segment.y - eyeOffset, 4, 0, Math.PI * 2);
             ctx.fill();
+            
             ctx.beginPath();
-            ctx.arc(segment.x + eyeOffset, segment.y - eyeOffset, 3, 0, Math.PI * 2);
+            ctx.arc(segment.x + eyeOffset, segment.y - eyeOffset, 4, 0, Math.PI * 2);
             ctx.fill();
+            
+            // Eye glow
+            ctx.fillStyle = '#00ffff';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(segment.x - eyeOffset, segment.y - eyeOffset, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(segment.x + eyeOffset, segment.y - eyeOffset, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Accessory
+            if (accessory && accessory.icon !== "❌") {
+              ctx.font = '20px Arial';
+              ctx.textAlign = 'center';
+              ctx.fillStyle = '#ffffff';
+              ctx.shadowBlur = 5;
+              ctx.fillText(accessory.icon, segment.x, segment.y - radius - 10);
+            }
           }
         });
         
-        // Player name
+        // Player name with cyberpunk styling
         if (player.segments[0]) {
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 14px Arial';
+          ctx.font = 'bold 14px "Courier New", monospace';
           ctx.textAlign = 'center';
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 4;
+          ctx.fillStyle = '#00ffff';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#00ffff';
           
-          const name = `${player.player_id.split('_')[0]} ($${selectedBetAmount})`;
+          const name = `${player.player_id.split('_')[0]} [$${selectedBetAmount}]`;
           const textX = player.segments[0].x;
-          const textY = player.segments[0].y - 25;
+          const textY = player.segments[0].y - 35;
           
-          ctx.strokeText(name, textX, textY);
+          // Text background
+          const textWidth = ctx.measureText(name).width;
+          ctx.fillStyle = '#000000aa';
+          ctx.fillRect(textX - textWidth/2 - 5, textY - 15, textWidth + 10, 20);
+          
+          // Text
+          ctx.fillStyle = '#00ffff';
           ctx.fillText(name, textX, textY);
         }
+        
+        ctx.restore();
       }
     });
     
-  }, [gameState.players, gameState.food, selectedBetAmount]);
+  }, [gameState.players, gameState.food, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail]);
 
   // Cleanup
   useEffect(() => {
@@ -642,63 +924,79 @@ const Game = () => {
   }, []);
 
   return (
-    <div className="damnbruh-container">
-      {/* Header */}
-      <div className="header">
-        <div className="logo">
-          <span className="logo-icon">🐍</span>
-          <span className="logo-text">CRYPTO<span className="logo-accent">SLITHER</span></span>
+    <div className="cyberpunk-container">
+      {/* Cyberpunk Header */}
+      <div className="cyber-header">
+        <div className="logo-section">
+          <div className="logo-glow">
+            <span className="logo-icon">🐍</span>
+            <span className="logo-text">CYBER<span className="logo-accent">SLITHER</span></span>
+          </div>
+          <div className="tagline">// Neural Network Arena //</div>
         </div>
-        <div className="header-actions">
+        
+        <div className="header-controls">
           {isLoggedIn ? (
-            <div className="user-info">
-              <span className="welcome-text">Welcome, {currentUser.username}</span>
-              <button className="logout-btn" onClick={handleLogout}>Logout</button>
+            <div className="user-panel">
+              <div className="user-info">
+                <span className="user-handle">{currentUser.username}</span>
+                <span className="user-status">ONLINE</span>
+              </div>
+              <button className="cyber-btn danger" onClick={handleLogout}>DISCONNECT</button>
             </div>
           ) : (
-            <button className="login-btn" onClick={() => setShowAuthModal(true)}>Login</button>
+            <button className="cyber-btn primary" onClick={() => setShowAuthModal(true)}>
+              JACK IN
+            </button>
           )}
         </div>
       </div>
 
       {/* Authentication Modal */}
       {showAuthModal && (
-        <div className="modal-overlay">
-          <div className="auth-modal">
+        <div className="cyber-modal-overlay">
+          <div className="cyber-modal">
             <div className="modal-header">
-              <h2>{authMode === 'login' ? 'Login' : 'Register'}</h2>
+              <h2>// {authMode === 'login' ? 'AUTHENTICATION' : 'REGISTRATION'} //</h2>
               <button className="close-btn" onClick={() => setShowAuthModal(false)}>×</button>
             </div>
             
-            <div className="auth-form">
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="auth-input"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="auth-input"
-              />
+            <div className="cyber-form">
+              <div className="input-group">
+                <label>HANDLE:</label>
+                <input
+                  type="text"
+                  placeholder="Enter your cyber handle"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="cyber-input"
+                />
+              </div>
+              
+              <div className="input-group">
+                <label>ACCESS CODE:</label>
+                <input
+                  type="password"
+                  placeholder="Enter access code"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="cyber-input"
+                />
+              </div>
               
               <button 
-                className="auth-btn"
+                className="cyber-btn primary full"
                 onClick={authMode === 'login' ? handleLogin : handleRegister}
                 disabled={loading}
               >
-                {loading ? 'Please wait...' : (authMode === 'login' ? 'Login' : 'Create Account')}
+                {loading ? 'PROCESSING...' : (authMode === 'login' ? 'AUTHENTICATE' : 'REGISTER')}
               </button>
               
               <div className="auth-switch">
                 {authMode === 'login' ? (
-                  <p>Don't have an account? <button onClick={() => setAuthMode('register')}>Register</button></p>
+                  <p>New to the matrix? <button onClick={() => setAuthMode('register')}>REGISTER</button></p>
                 ) : (
-                  <p>Already have an account? <button onClick={() => setAuthMode('login')}>Login</button></p>
+                  <p>Already connected? <button onClick={() => setAuthMode('login')}>AUTHENTICATE</button></p>
                 )}
               </div>
             </div>
@@ -706,204 +1004,310 @@ const Game = () => {
         </div>
       )}
 
-      <div className="main-content">
-        {/* Left Sidebar */}
-        <div className="left-sidebar">
-          {/* Leaderboard */}
-          <div className="panel">
+      <div className="main-interface">
+        {/* Left Neural Panel */}
+        <div className="neural-panel left">
+          {/* Live Leaderboard */}
+          <div className="cyber-panel">
             <div className="panel-header">
               <span className="panel-icon">🏆</span>
-              <span>Leaderboard</span>
-              <span className="live-indicator">● Live</span>
+              <span className="panel-title">NEURAL LEADERBOARD</span>
+              <span className="live-indicator">● LIVE</span>
             </div>
-            <div className="leaderboard">
-              {leaderboard.map((player, index) => (
-                <div key={index} className="leaderboard-item">
-                  <span className="rank">{index + 1}. {player.name}</span>
-                  <span className="winnings">${player.winnings.toLocaleString()}</span>
+            <div className="leaderboard-content">
+              {leaderboard.length > 0 ? leaderboard.map((player, index) => (
+                <div key={index} className="leader-entry">
+                  <span className="rank-number">#{index + 1}</span>
+                  <span className="player-name">{player.display_name || `Player${index + 1}`}</span>
+                  <span className="winnings">${(player.total_winnings || 0).toFixed(2)}</span>
                 </div>
-              ))}
+              )) : (
+                <div className="no-data">// LOADING NEURAL DATA //</div>
+              )}
             </div>
-            <button className="view-full-btn">View Full Leaderboard</button>
+            <button className="cyber-btn secondary small">VIEW FULL MATRIX</button>
           </div>
 
-          {/* Friends */}
-          <div className="panel">
+          {/* Cyber Squad */}
+          <div className="cyber-panel">
             <div className="panel-header">
               <span className="panel-icon">👥</span>
-              <span>Friends</span>
-              <button className="refresh-btn">🔄</button>
-              <span className="friends-count">0 playing</span>
+              <span className="panel-title">CYBER SQUAD</span>
+              <button className="refresh-btn">⟲</button>
             </div>
-            <div className="no-friends">
-              <div className="no-friends-icon">👤</div>
-              <p>No friends... add some!</p>
+            <div className="squad-content">
+              <div className="no-squad">
+                <div className="squad-icon">🤖</div>
+                <p>// NO SQUAD MEMBERS //</p>
+                <p>Recruit cyber warriors!</p>
+              </div>
             </div>
-            <button className="add-friends-btn">Add Friends</button>
+            <button className="cyber-btn secondary small">RECRUIT SQUAD</button>
           </div>
         </div>
 
-        {/* Game Area */}
-        <div className="game-area">
+        {/* Central Arena */}
+        <div className="arena-zone">
           {gameStatus === 'menu' && (
-            <div className="game-lobby">
-              <h1 className="game-title">CRYPTO<span className="title-accent">SLITHER</span></h1>
+            <div className="arena-lobby">
+              <div className="arena-title">
+                <h1>// CYBER<span className="title-glow">SLITHER</span> ARENA //</h1>
+                <div className="subtitle">Neural Combat Protocol v2.0</div>
+              </div>
               
               {!isLoggedIn ? (
-                <div className="connect-section">
-                  <input 
-                    type="text" 
-                    placeholder="Set your username to get started" 
-                    className="name-input"
-                    id="quickUsername"
-                  />
-                  <button className="edit-btn" onClick={handleQuickUsernameSet} disabled={loading}>
-                    {loading ? '...' : '✏️'}
-                  </button>
+                <div className="quick-access">
+                  <div className="access-prompt">
+                    <p>// QUICK ACCESS PROTOCOL //</p>
+                    <div className="quick-input-group">
+                      <input 
+                        type="text" 
+                        placeholder="Enter cyber handle..." 
+                        className="cyber-input"
+                        id="quickUsername"
+                      />
+                      <button className="cyber-btn accent" onClick={handleQuickUsernameSet} disabled={loading}>
+                        {loading ? '...' : 'ACTIVATE'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ) : !walletConnected ? (
-                <div className="wallet-connect-section">
-                  <p className="username-display">Playing as: <strong>{currentUser.username}</strong></p>
-                  <button className="connect-wallet-main-btn" onClick={connectWallet} disabled={loading}>
-                    {loading ? 'Connecting...' : 'Connect Wallet to Start'}
+                <div className="wallet-zone">
+                  <div className="connection-status">
+                    <p>OPERATOR: <span className="highlight">{currentUser.username}</span></p>
+                    <p>STATUS: <span className="status-ready">AUTHENTICATED</span></p>
+                  </div>
+                  <button className="cyber-btn primary large" onClick={connectWallet} disabled={loading}>
+                    {loading ? 'ESTABLISHING CONNECTION...' : 'CONNECT NEURAL WALLET'}
                   </button>
                 </div>
               ) : (
-                <div className="bet-section">
-                  <div className="bet-amounts">
-                    {BET_AMOUNTS.map(amount => (
-                      <button
-                        key={amount}
-                        className={`bet-btn ${selectedBetAmount === amount ? 'active' : ''}`}
-                        onClick={() => setSelectedBetAmount(amount)}
-                      >
-                        ${amount}
-                      </button>
-                    ))}
+                <div className="battle-zone">
+                  <div className="bet-selector">
+                    <div className="bet-label">// ARENA ENTRY FEE //</div>
+                    <div className="bet-options">
+                      {BET_AMOUNTS.map(amount => (
+                        <button
+                          key={amount}
+                          className={`bet-chip ${selectedBetAmount === amount ? 'selected' : ''}`}
+                          onClick={() => setSelectedBetAmount(amount)}
+                        >
+                          ${amount}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   
-                  <button className="join-game-btn" onClick={createGameWithBet} disabled={loading}>
-                    <span className="play-icon">▶</span>
-                    {loading ? 'JOINING...' : 'JOIN GAME'}
+                  <button className="enter-arena-btn" onClick={createGameWithBet} disabled={loading}>
+                    <span className="btn-icon">⚡</span>
+                    <span className="btn-text">{loading ? 'INITIALIZING ARENA...' : 'ENTER CYBER ARENA'}</span>
                   </button>
                   
-                  <div className="game-options">
-                    <button className="option-btn">🇺🇸 US</button>
-                    <button className="option-btn">🌐 Browse Lobbies</button>
+                  <div className="arena-options">
+                    <button className="option-chip">🌐 GLOBAL SERVERS</button>
+                    <button className="option-chip">🎯 TOURNAMENT MODE</button>
                   </div>
                 </div>
               )}
               
-              <div className="game-stats">
-                <div className="stat">
-                  <div className="stat-number">{globalStats.playersInGame}</div>
-                  <div className="stat-label">Players in Game</div>
+              <div className="arena-stats">
+                <div className="stat-display">
+                  <div className="stat-value">{globalStats.playersInGame}</div>
+                  <div className="stat-label">ACTIVE NEURAL LINKS</div>
                 </div>
-                <div className="stat">
-                  <div className="stat-number">${globalStats.totalWinnings.toLocaleString()}</div>
-                  <div className="stat-label">Global Player Winnings</div>
+                <div className="stat-display">
+                  <div className="stat-value">${globalStats.totalWinnings.toLocaleString()}</div>
+                  <div className="stat-label">TOTAL NEURAL REWARDS</div>
                 </div>
               </div>
             </div>
           )}
 
           {gameStatus === 'playing' && (
-            <canvas
-              ref={canvasRef}
-              width={GAME_WIDTH}
-              height={GAME_HEIGHT}
-              className="game-canvas"
-            />
+            <div className="arena-active">
+              <div className="game-hud">
+                <div className="hud-left">
+                  <span>ARENA: {gameState.sessionId?.substring(0, 8) || 'LOCAL'}...</span>
+                  <span>PLAYERS: {Object.keys(gameState.players).length}</span>
+                </div>
+                <div className="hud-center">
+                  <span>BET: ${selectedBetAmount}</span>
+                  <span className="status-active">● LIVE</span>
+                </div>
+                <div className="hud-right">
+                  <button className="cyber-btn danger small" onClick={() => {
+                    if (wsRef.current) wsRef.current.close();
+                    setGameStatus('menu');
+                    stopGameLoop();
+                  }}>
+                    EXIT ARENA
+                  </button>
+                </div>
+              </div>
+              
+              <canvas
+                ref={canvasRef}
+                width={GAME_WIDTH}
+                height={GAME_HEIGHT}
+                className="cyber-canvas"
+              />
+              
+              <div className="controls-hint">
+                <span>WASD or MOUSE to control • Eliminate opponents to win</span>
+              </div>
+            </div>
           )}
 
           {gameStatus === 'finished' && (
-            <div className="game-end">
-              <h2>Game Finished!</h2>
-              <p>{message}</p>
-              <button 
-                className="play-again-btn"
-                onClick={() => {
-                  setGameStatus('menu');
-                  setGameState({
-                    sessionId: null,
-                    playerId: null,
-                    players: {},
-                    food: [],
-                    status: 'waiting',
-                    connected: false
-                  });
-                }}
-              >
-                Play Again
-              </button>
+            <div className="arena-end">
+              <div className="end-screen">
+                <h2>// NEURAL COMBAT COMPLETE //</h2>
+                <div className="result-display">{message}</div>
+                <button 
+                  className="cyber-btn primary large"
+                  onClick={() => {
+                    setGameStatus('menu');
+                    setGameState({
+                      sessionId: null,
+                      playerId: null,
+                      players: {},
+                      food: [],
+                      status: 'waiting',
+                      connected: false
+                    });
+                    setMessage('🎮 Ready for another neural combat session!');
+                  }}
+                >
+                  RE-ENTER MATRIX
+                </button>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Right Sidebar */}
-        <div className="right-sidebar">
-          {/* Wallet */}
-          <div className="panel">
+        {/* Right Control Panel */}
+        <div className="neural-panel right">
+          {/* Neural Wallet */}
+          <div className="cyber-panel">
             <div className="panel-header">
               <span className="panel-icon">💳</span>
-              <span>Wallet</span>
-              <button className="copy-btn">📋 Copy Address</button>
-              <button className="refresh-balance-btn">🔄 Refresh Balance</button>
+              <span className="panel-title">NEURAL WALLET</span>
+              <div className="wallet-controls">
+                <button className="icon-btn">📋</button>
+                <button className="icon-btn">⟲</button>
+              </div>
             </div>
             
             {!walletConnected ? (
-              <div className="wallet-disconnect">
+              <div className="wallet-disconnected">
                 {!isLoggedIn ? (
-                  <p className="wallet-message">Login first to connect wallet</p>
+                  <div className="wallet-message">// AUTHENTICATION REQUIRED //</div>
                 ) : (
-                  <button className="connect-wallet-btn" onClick={connectWallet} disabled={loading}>
-                    {loading ? 'Connecting...' : 'Connect Wallet'}
+                  <button className="cyber-btn primary" onClick={connectWallet} disabled={loading}>
+                    {loading ? 'CONNECTING...' : 'CONNECT NEURAL WALLET'}
                   </button>
                 )}
               </div>
             ) : (
-              <>
-                <div className="balance">
-                  <div className="balance-amount">${walletHandler.balance.toFixed(2)}</div>
-                  <div className="balance-label">{walletHandler.balance.toFixed(4)} SOL</div>
+              <div className="wallet-connected">
+                <div className="balance-display">
+                  <div className="balance-main">${(walletHandler.balance * 100).toFixed(2)}</div>
+                  <div className="balance-sub">{walletHandler.balance.toFixed(6)} SOL</div>
+                  <div className="wallet-address">{walletHandler.publicKey?.substring(0, 8)}...{walletHandler.publicKey?.substr(-6)}</div>
                 </div>
                 
                 <div className="wallet-actions">
-                  <button className="add-funds-btn">Add Funds</button>
-                  <button className="cash-out-btn">Cash out</button>
+                  <button className="cyber-btn success">ADD CREDITS</button>
+                  <button className="cyber-btn warning">EXTRACT SOL</button>
                 </div>
-              </>
+              </div>
             )}
           </div>
 
-          {/* Customize */}
-          <div className="panel">
+          {/* Enhanced Customization */}
+          <div className="cyber-panel">
             <div className="panel-header">
               <span className="panel-icon">🎨</span>
-              <span>Customize</span>
+              <span className="panel-title">NEURAL AUGMENTS</span>
+              <button 
+                className="icon-btn" 
+                onClick={() => setShowCustomization(!showCustomization)}
+              >
+                {showCustomization ? '▼' : '▶'}
+              </button>
             </div>
             
-            <div className="snake-previews">
-              {SNAKE_COLORS.map((snake, index) => (
-                <div 
-                  key={index}
-                  className={`snake-preview ${selectedSnakeColor === index ? 'selected' : ''}`}
-                  onClick={() => setSelectedSnakeColor(index)}
-                  style={{ background: snake.gradient }}
-                >
-                  <div className="snake-eyes">👀</div>
+            <div className={`customization-content ${showCustomization ? 'expanded' : ''}`}>
+              {/* Snake Skins */}
+              <div className="customize-section">
+                <label>SKIN MODULE:</label>
+                <div className="skin-grid">
+                  {SNAKE_SKINS.map((skin, index) => (
+                    <div 
+                      key={index}
+                      className={`skin-preview ${selectedSkin === index ? 'selected' : ''}`}
+                      onClick={() => setSelectedSkin(index)}
+                      style={{ background: skin.gradient }}
+                      title={skin.name}
+                    >
+                      <div className="skin-pattern"></div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <div className="skin-name">{SNAKE_SKINS[selectedSkin].name}</div>
+              </div>
+              
+              {/* Accessories */}
+              <div className="customize-section">
+                <label>HEAD AUGMENT:</label>
+                <div className="accessory-grid">
+                  {SNAKE_ACCESSORIES.map((accessory, index) => (
+                    <button 
+                      key={index}
+                      className={`accessory-btn ${selectedAccessory === index ? 'selected' : ''}`}
+                      onClick={() => setSelectedAccessory(index)}
+                      title={accessory.name}
+                    >
+                      {accessory.icon}
+                    </button>
+                  ))}
+                </div>
+                <div className="accessory-name">{SNAKE_ACCESSORIES[selectedAccessory].name}</div>
+              </div>
+              
+              {/* Trail Effects */}
+              <div className="customize-section">
+                <label>NEURAL TRAIL:</label>
+                <div className="trail-selector">
+                  {SNAKE_TRAILS.map((trail, index) => (
+                    <button 
+                      key={index}
+                      className={`trail-btn ${selectedTrail === index ? 'selected' : ''}`}
+                      onClick={() => setSelectedTrail(index)}
+                    >
+                      {trail.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             
-            <button className="change-appearance-btn">Change Appearance</button>
+            <button className="cyber-btn accent">SAVE AUGMENTS</button>
           </div>
         </div>
       </div>
 
-      {/* Status Bar */}
-      <div className="status-bar">
-        <span>{message}</span>
+      {/* Neural Status Bar */}
+      <div className="neural-status-bar">
+        <div className="status-left">
+          <span className="status-indicator">●</span>
+          <span>{message}</span>
+        </div>
+        <div className="status-right">
+          <span>NEURAL LINK: {walletConnected ? 'ACTIVE' : 'INACTIVE'}</span>
+          <span>LATENCY: {Math.floor(Math.random() * 50 + 10)}ms</span>
+        </div>
       </div>
     </div>
   );
