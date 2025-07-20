@@ -1301,19 +1301,6 @@ const GameComponent = () => {
 
 // Solana Wallet Configuration
 
-// Cyberpunk Game Constants
-const GAME_WIDTH = 1200;
-const GAME_HEIGHT = 700;
-const FOOD_SIZE = 8;
-const SNAKE_SEGMENT_SIZE = 10;
-const SNAKE_HEAD_SIZE = 16;
-
-// Cyberpunk betting amounts
-const BET_AMOUNTS = [1, 5, 20, 50];
-
-// Your Solana wallet for fees
-const HOUSE_WALLET = "3FTmCxdfcNNSPiEd253ecEn2xTLqcBZNbacMcHMdrbkC";
-
 // Enhanced Snake Customization Options
 const SNAKE_SKINS = [
   { 
