@@ -184,14 +184,14 @@ class CryptoSlitherTester:
                     success = data.get("status") == "success"
                 
                 self.results.add_result(
-                    "POST /api/payment/confirm-entry - Confirm payment", 
+                    "POST /api/payment/confirm-bet - Confirm payment", 
                     success,
                     f"Status: {response.status_code}, Response: {response.text[:200]}"
                 )
             except Exception as e:
-                self.results.add_result("POST /api/payment/confirm-entry - Confirm payment", False, str(e))
+                self.results.add_result("POST /api/payment/confirm-bet - Confirm payment", False, str(e))
         else:
-            self.results.add_result("POST /api/payment/confirm-entry - Confirm payment", False, "No transaction ID available")
+            self.results.add_result("POST /api/payment/confirm-bet - Confirm payment", False, "No transaction ID available")
         
         # Test 3: Payout winner (this will fail as game isn't finished, but we test the endpoint)
         try:
