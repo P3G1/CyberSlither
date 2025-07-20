@@ -1300,9 +1300,40 @@ const GameComponent = () => {
 };
 
 // Solana Wallet Configuration
+const WalletContextProvider = ({ children }) => {
+  const network = WalletAdapterNetwork.Devnet;
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter({ network }),
+    ],
+    [network]
+  );
 
-// Enhanced Snake Customization Options
-const SNAKE_SKINS = [
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          {children}
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  );
+};
+
+function App() {
+  return (
+    <div className="App">
+      <WalletContextProvider>
+        <GameComponent />
+      </WalletContextProvider>
+    </div>
+  );
+}
+
+export default App;
   { 
     name: "Neon Viper", 
     color: "#00ffff", 
