@@ -709,19 +709,54 @@ const GameComponent = () => {
     }
   };
 
-  // Local game mode for development/demo
+  // Local game mode for development/demo with moving elements
   const startLocalGame = () => {
-    // Create demo game state
+    const centerX = canvasSize.width / 2;
+    const centerY = canvasSize.height / 2;
+    
+    // Create demo game state with responsive sizing
     setGameState({
       sessionId: 'local_game',
       playerId: currentUser?.username || 'Player',
       players: {
         [currentUser?.username || 'Player']: {
           player_id: currentUser?.username || 'Player',
-          segments: [{ x: 400, y: 300 }],
+          segments: [
+            { x: centerX, y: centerY },
+            { x: centerX - 20, y: centerY },
+            { x: centerX - 40, y: centerY }
+          ],
           color: SNAKE_SKINS[selectedSkin].color,
           alive: true,
-          score: 10
+          score: 10,
+          direction: 'right',
+          speed: 2
+        },
+        'DemoBot1': {
+          player_id: 'DemoBot1',
+          segments: [
+            { x: centerX - 200, y: centerY - 100 },
+            { x: centerX - 220, y: centerY - 100 },
+            { x: centerX - 240, y: centerY - 100 }
+          ],
+          color: '#ff0080',
+          alive: true,
+          score: 8,
+          direction: 'down',
+          speed: 1.5
+        },
+        'DemoBot2': {
+          player_id: 'DemoBot2',
+          segments: [
+            { x: centerX + 200, y: centerY + 100 },
+            { x: centerX + 220, y: centerY + 100 },
+            { x: centerX + 240, y: centerY + 100 }
+          ],
+          color: '#00ff00',
+          alive: true,
+          score: 12,
+          direction: 'left',
+          speed: 1.8
         }
       },
       food: generateDemoFood(),
@@ -729,20 +764,97 @@ const GameComponent = () => {
       connected: true
     });
     
-    startGameLoop();
+    startDemoGameLoop();
   };
 
   const generateDemoFood = () => {
     const food = [];
-    for (let i = 0; i < 50; i++) {
+    const maxFood = Math.floor(canvasSize.width * canvasSize.height / 15000); // Scale food with canvas size
+    
+    for (let i = 0; i < maxFood; i++) {
       food.push({
-        x: Math.random() * (GAME_WIDTH - 40) + 20,
-        y: Math.random() * (GAME_HEIGHT - 40) + 20,
+        x: Math.random() * (canvasSize.width - 40) + 20,
+        y: Math.random() * (canvasSize.height - 40) + 20,
         id: `food_${i}`,
         color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000'][Math.floor(Math.random() * 5)]
       });
     }
     return food;
+  };
+
+  // Enhanced game loop for mobile demo
+  const startDemoGameLoop = () => {
+    let lastTime = 0;
+    const targetFPS = 30; // Optimize for mobile
+    const frameTime = 1000 / targetFPS;
+
+    const gameLoop = (currentTime) => {
+      if (currentTime - lastTime >= frameTime) {
+        updateDemoGame();
+        lastTime = currentTime;
+      }
+      gameLoopRef.current = requestAnimationFrame(gameLoop);
+    };
+    
+    gameLoopRef.current = requestAnimationFrame(gameLoop);
+  };
+
+  // Update demo game with moving snakes
+  const updateDemoGame = () => {
+    setGameState(prevState => {
+      const newPlayers = { ...prevState.players };
+      
+      // Update each player/bot
+      Object.keys(newPlayers).forEach(playerId => {
+        const player = newPlayers[playerId];
+        if (!player.alive) return;
+        
+        // Move the snake
+        const head = { ...player.segments[0] };
+        const speed = player.speed || 2;
+        
+        switch (player.direction) {
+          case 'up':
+            head.y -= speed;
+            break;
+          case 'down':
+            head.y += speed;
+            break;
+          case 'left':
+            head.x -= speed;
+            break;
+          case 'right':
+            head.x += speed;
+            break;
+        }
+        
+        // Wrap around edges for demo
+        if (head.x < 0) head.x = canvasSize.width;
+        if (head.x > canvasSize.width) head.x = 0;
+        if (head.y < 0) head.y = canvasSize.height;
+        if (head.y > canvasSize.height) head.y = 0;
+        
+        // Update segments
+        const newSegments = [head, ...player.segments];
+        newSegments.pop(); // Remove tail
+        
+        // Random direction change for bots (simple AI)
+        if (playerId !== (currentUser?.username || 'Player') && Math.random() < 0.02) {
+          const directions = ['up', 'down', 'left', 'right'];
+          player.direction = directions[Math.floor(Math.random() * directions.length)];
+        }
+        
+        newPlayers[playerId] = {
+          ...player,
+          segments: newSegments
+        };
+      });
+      
+      return {
+        ...prevState,
+        players: newPlayers
+      };
+    });
   };
 
   const handleGameMessage = (data) => {
