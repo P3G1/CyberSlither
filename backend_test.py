@@ -224,7 +224,7 @@ class CryptoSlitherTester:
         
         try:
             # Test WebSocket connection
-            async with websockets.connect(ws_url, timeout=10) as websocket:
+            async with websockets.connect(ws_url) as websocket:
                 self.results.add_result(
                     "WebSocket Connection - Connect to game session", 
                     True,
