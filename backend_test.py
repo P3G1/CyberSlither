@@ -133,14 +133,15 @@ class CryptoSlitherTester:
             self.results.add_result("Payment Flow Tests", False, "No session ID available")
             return
         
-        # Test 1: Create entry payment
+        # Test 1: Create bet payment
         try:
             payload = {
                 "session_id": self.test_session_id,
                 "player_id": self.test_player_id,
-                "wallet_address": self.test_wallet
+                "wallet_address": self.test_wallet,
+                "bet_amount": 5
             }
-            response = requests.post(f"{API_BASE}/payment/create-entry", json=payload, timeout=10)
+            response = requests.post(f"{API_BASE}/payment/create-bet", json=payload, timeout=10)
             
             if response.status_code == 200:
                 data = response.json()
