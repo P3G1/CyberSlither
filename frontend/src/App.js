@@ -954,17 +954,15 @@ const GameComponent = () => {
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left - canvas.width / 2;
-    const mouseY = event.clientY - rect.top - canvas.height / 2;
-    const angle = Math.atan2(mouseY, mouseX);
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
     
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'mouse_move',
-        angle: angle
-      }));
-    }
-  }, [gameStatus, gameState.status]);
+    // Convert to game coordinates
+    const gameX = (mouseX / rect.width) * canvasSize.width;
+    const gameY = (mouseY / rect.height) * canvasSize.height;
+    
+    updatePlayerDirection(gameX, gameY);
+  }, [gameStatus, gameState.status, canvasSize]);
 
   // Mobile touch handlers
   const handleTouchStart = useCallback((event) => {
