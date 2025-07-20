@@ -150,24 +150,24 @@ class CryptoSlitherTester:
                 if has_all_fields:
                     self.test_transaction_id = data["transaction_id"]
                     self.results.add_result(
-                        "POST /api/payment/create-entry - Create entry payment", 
+                        "POST /api/payment/create-bet - Create bet payment", 
                         True,
                         f"Transaction ID: {self.test_transaction_id}, Amount: {data['amount']}"
                     )
                 else:
                     self.results.add_result(
-                        "POST /api/payment/create-entry - Create entry payment", 
+                        "POST /api/payment/create-bet - Create bet payment", 
                         False,
                         f"Missing required fields. Got: {list(data.keys())}"
                     )
             else:
                 self.results.add_result(
-                    "POST /api/payment/create-entry - Create entry payment", 
+                    "POST /api/payment/create-bet - Create bet payment", 
                     False,
                     f"Status: {response.status_code}, Response: {response.text}"
                 )
         except Exception as e:
-            self.results.add_result("POST /api/payment/create-entry - Create entry payment", False, str(e))
+            self.results.add_result("POST /api/payment/create-bet - Create bet payment", False, str(e))
         
         # Test 2: Confirm entry payment
         if self.test_transaction_id:
