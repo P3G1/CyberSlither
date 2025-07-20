@@ -1072,16 +1072,21 @@
 }
 
 /* Responsive Design */
+/* Enhanced Mobile Responsive Styles */
+
+/* Large tablets and small desktops */
 @media (max-width: 1400px) {
   .neural-panel {
     width: 280px;
+    padding: 10px;
   }
   
   .arena-title h1 {
-    font-size: 36px;
+    font-size: 42px;
   }
 }
 
+/* Medium tablets */
 @media (max-width: 1200px) {
   .main-interface {
     flex-direction: column;
@@ -1090,14 +1095,16 @@
   .neural-panel {
     width: 100%;
     height: auto;
-    max-height: 200px;
+    max-height: 180px;
     flex-direction: row;
     overflow-x: auto;
     gap: 15px;
+    padding: 15px;
   }
   
   .cyber-panel {
-    min-width: 300px;
+    min-width: 250px;
+    flex-shrink: 0;
   }
   
   .arena-stats {
@@ -1107,10 +1114,54 @@
   
   .cyber-canvas {
     max-width: 100%;
+    max-height: 500px;
+    width: auto;
     height: auto;
+  }
+  
+  .arena-title h1 {
+    font-size: 36px;
   }
 }
 
+/* Small tablets and large phones (landscape) */
+@media (max-width: 1024px) {
+  .cyber-header {
+    padding: 12px 20px;
+  }
+  
+  .logo-text {
+    font-size: 20px;
+  }
+  
+  .tagline {
+    font-size: 10px;
+  }
+  
+  .neural-panel {
+    max-height: 150px;
+    padding: 10px;
+  }
+  
+  .cyber-panel {
+    min-width: 220px;
+  }
+  
+  .panel-header {
+    padding: 10px;
+  }
+  
+  .bet-options {
+    gap: 8px;
+  }
+  
+  .bet-chip {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Standard tablet portrait */
 @media (max-width: 768px) {
   .cyber-header {
     flex-direction: column;
@@ -1118,27 +1169,460 @@
     padding: 15px;
   }
   
+  .logo-section {
+    text-align: center;
+  }
+  
+  .header-controls {
+    width: 100%;
+    justify-content: center;
+  }
+  
   .arena-title h1 {
-    font-size: 24px;
+    font-size: 28px;
+  }
+  
+  .subtitle {
+    font-size: 14px;
+    letter-spacing: 2px;
   }
   
   .bet-options {
     flex-wrap: wrap;
+    justify-content: center;
   }
   
   .quick-input-group {
     flex-direction: column;
     align-items: center;
+    gap: 15px;
   }
   
   .quick-input-group .cyber-input {
     min-width: auto;
     width: 100%;
-    max-width: 300px;
+    max-width: 280px;
   }
   
   .neural-status-bar {
     flex-direction: column;
     gap: 10px;
+    padding: 10px;
+    font-size: 11px;
+  }
+  
+  .neural-panel {
+    gap: 10px;
+    padding: 8px;
+  }
+  
+  .cyber-panel {
+    min-width: 200px;
+  }
+  
+  .cyber-canvas {
+    max-height: 400px;
+  }
+}
+
+/* Mobile phones (portrait and small landscape) */
+@media (max-width: 600px) {
+  .cyberpunk-container {
+    overflow-y: auto;
+    height: 100vh;
+  }
+  
+  .cyber-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: linear-gradient(90deg, #000, #001122, #000);
+    backdrop-filter: blur(10px);
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .logo-accent {
+    font-size: 18px;
+  }
+  
+  .tagline {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+  
+  .main-interface {
+    flex-direction: column;
+    min-height: calc(100vh - 120px);
+  }
+  
+  .neural-panel {
+    width: 100%;
+    max-height: 120px;
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #00ffff #001122;
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .neural-panel::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .neural-panel::-webkit-scrollbar-track {
+    background: #001122;
+    border-radius: 3px;
+  }
+  
+  .neural-panel::-webkit-scrollbar-thumb {
+    background: #00ffff;
+    border-radius: 3px;
+  }
+  
+  .cyber-panel {
+    min-width: 180px;
+    max-width: 180px;
+    flex-shrink: 0;
+  }
+  
+  .panel-header {
+    padding: 8px;
+    font-size: 10px;
+  }
+  
+  .panel-icon {
+    font-size: 14px;
+  }
+  
+  .panel-title {
+    font-size: 9px;
+  }
+  
+  .arena-zone {
+    padding: 15px 10px;
+    flex: 1;
+  }
+  
+  .arena-lobby {
+    max-width: 100%;
+  }
+  
+  .arena-title {
+    margin-bottom: 25px;
+  }
+  
+  .arena-title h1 {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+  
+  .subtitle {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  
+  .quick-access {
+    margin-bottom: 25px;
+  }
+  
+  .quick-input-group .cyber-input {
+    max-width: 100%;
+    font-size: 14px;
+    padding: 12px;
+  }
+  
+  .cyber-btn {
+    padding: 12px 20px;
+    font-size: 11px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 255, 255, 0.2);
+  }
+  
+  .cyber-btn.large {
+    padding: 15px 25px;
+    font-size: 14px;
+  }
+  
+  .bet-selector {
+    margin-bottom: 25px;
+  }
+  
+  .bet-options {
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .bet-chip {
+    padding: 12px 20px;
+    font-size: 16px;
+    min-width: 70px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 255, 255, 0.2);
+  }
+  
+  .enter-arena-btn {
+    padding: 15px 30px;
+    font-size: 14px;
+    width: 100%;
+    max-width: 300px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(255, 0, 128, 0.2);
+  }
+  
+  .arena-options {
+    margin-top: 20px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .option-chip {
+    padding: 10px 15px;
+    font-size: 12px;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .arena-stats {
+    flex-direction: row;
+    gap: 20px;
+    margin-top: 25px;
+  }
+  
+  .stat-display {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+  
+  .stat-label {
+    font-size: 10px;
+  }
+  
+  .cyber-canvas {
+    max-width: 100%;
+    max-height: 350px;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+  }
+  
+  .game-hud {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #00000080;
+    border-radius: 8px;
+  }
+  
+  .hud-left, .hud-center, .hud-right {
+    text-align: center;
+    font-size: 11px;
+  }
+  
+  .controls-hint {
+    margin-top: 10px;
+    font-size: 11px;
+    text-align: center;
+    color: #00ffff80;
+  }
+  
+  .neural-status-bar {
+    font-size: 10px;
+    padding: 8px 10px;
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(90deg, #000, #001122, #000);
+    border-top: 1px solid #00ffff20;
+  }
+}
+
+/* Small mobile phones */
+@media (max-width: 480px) {
+  .cyber-header {
+    padding: 10px;
+  }
+  
+  .logo-text {
+    font-size: 16px;
+  }
+  
+  .logo-accent {
+    font-size: 16px;
+  }
+  
+  .tagline {
+    font-size: 8px;
+  }
+  
+  .arena-title h1 {
+    font-size: 20px;
+  }
+  
+  .subtitle {
+    font-size: 11px;
+  }
+  
+  .cyber-panel {
+    min-width: 160px;
+    max-width: 160px;
+  }
+  
+  .bet-chip {
+    padding: 10px 15px;
+    font-size: 14px;
+    min-width: 60px;
+  }
+  
+  .cyber-canvas {
+    max-height: 280px;
+  }
+  
+  .neural-panel {
+    max-height: 100px;
+  }
+  
+  .arena-zone {
+    padding: 10px 8px;
+  }
+  
+  .user-panel {
+    gap: 8px;
+  }
+  
+  .user-handle {
+    font-size: 12px;
+  }
+  
+  .user-status {
+    font-size: 9px;
+  }
+}
+
+/* Very small mobile phones */
+@media (max-width: 360px) {
+  .arena-title h1 {
+    font-size: 18px;
+  }
+  
+  .logo-text {
+    font-size: 14px;
+  }
+  
+  .logo-accent {
+    font-size: 14px;
+  }
+  
+  .cyber-panel {
+    min-width: 140px;
+    max-width: 140px;
+  }
+  
+  .bet-chip {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-width: 55px;
+  }
+  
+  .cyber-btn {
+    padding: 10px 16px;
+    font-size: 10px;
+  }
+  
+  .enter-arena-btn {
+    padding: 12px 20px;
+    font-size: 13px;
+  }
+  
+  .cyber-canvas {
+    max-height: 250px;
+  }
+  
+  .neural-status-bar {
+    font-size: 9px;
+  }
+}
+
+/* Touch-specific optimizations */
+@media (pointer: coarse) {
+  .cyber-btn, .bet-chip, .option-chip {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  .cyber-input {
+    min-height: 44px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .neural-panel {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 900px) and (orientation: landscape) {
+  .cyber-header {
+    padding: 8px 15px;
+  }
+  
+  .main-interface {
+    flex-direction: row;
+  }
+  
+  .neural-panel {
+    width: 200px;
+    max-height: none;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .neural-panel.left, .neural-panel.right {
+    height: calc(100vh - 80px);
+  }
+  
+  .arena-zone {
+    padding: 10px;
+  }
+  
+  .arena-title h1 {
+    font-size: 22px;
+  }
+  
+  .cyber-canvas {
+    max-height: 400px;
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .cyberpunk-container {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  .cyber-input {
+    font-size: 16px !important; /* Prevent zoom */
+  }
+}
+
+/* High DPI mobile displays */
+@media only screen and (-webkit-min-device-pixel-ratio: 2),
+       only screen and (min--moz-device-pixel-ratio: 2),
+       only screen and (-o-min-device-pixel-ratio: 2/1),
+       only screen and (min-device-pixel-ratio: 2),
+       only screen and (min-resolution: 192dpi),
+       only screen and (min-resolution: 2dppx) {
+  .cyber-canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 }
