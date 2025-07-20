@@ -456,7 +456,8 @@ const GameComponent = () => {
         const userData = JSON.parse(savedUser);
         setCurrentUser(userData);
         setIsLoggedIn(true);
-        setMessage(`🔮 Reconnected to the matrix, ${userData.username}!`);
+        setIsAdmin(userData.is_admin || false);
+        setMessage(`🔮 Reconnected to the matrix, ${userData.username}${userData.is_admin ? ' (ADMIN)' : ''}!`);
       } catch (error) {
         localStorage.removeItem('user');
       }
