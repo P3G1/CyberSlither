@@ -799,10 +799,12 @@ const GameComponent = () => {
     gameLoopRef.current = requestAnimationFrame(gameLoop);
   };
 
-  // Update demo game with moving snakes
+  // Update demo game with full collision detection and growth mechanics
   const updateDemoGame = () => {
     setGameState(prevState => {
       const newPlayers = { ...prevState.players };
+      let newFood = [...prevState.food];
+      const playerName = currentUser?.username || 'Player';
       
       // Update each player/bot
       Object.keys(newPlayers).forEach(playerId => {
@@ -834,12 +836,119 @@ const GameComponent = () => {
         if (head.y < 0) head.y = canvasSize.height;
         if (head.y > canvasSize.height) head.y = 0;
         
-        // Update segments
-        const newSegments = [head, ...player.segments];
-        newSegments.pop(); // Remove tail
+        // Collision detection with food
+        let ateFood = false;
+        let foodEaten = null;
+        newFood = newFood.filter(food => {
+          const distance = Math.sqrt(
+            Math.pow(head.x - food.x, 2) + Math.pow(head.y - food.y, 2)
+          );
+          
+          if (distance < 15) { // Collision detected
+            ateFood = true;
+            foodEaten = food;
+            
+            // Visual effect for eating food
+            if (playerId === playerName) {
+              setMessage(`🎯 Food consumed! Snake growing...`);
+            }
+            
+            return false; // Remove food
+          }
+          return true; // Keep food
+        });
+        
+        // Update segments based on whether food was eaten
+        let newSegments;
+        if (ateFood) {
+          // Grow the snake by not removing the tail
+          newSegments = [head, ...player.segments];
+          player.score = (player.score || 10) + 5;
+          
+          // Create visual eating effect
+          if (foodEaten && playerId === playerName) {
+            // You could add particle effects here
+          }
+        } else {
+          // Normal movement - remove tail
+          newSegments = [head, ...player.segments];
+          newSegments.pop();
+        }
+        
+        // Collision detection with other snakes (not including self)
+        let collisionDetected = false;
+        Object.keys(newPlayers).forEach(otherPlayerId => {
+          if (otherPlayerId === playerId) return; // Skip self
+          
+          const otherPlayer = newPlayers[otherPlayerId];
+          if (!otherPlayer.alive) return;
+          
+          // Check collision with other snake's body (except head-to-head)
+          otherPlayer.segments.forEach((segment, index) => {
+            const distance = Math.sqrt(
+              Math.pow(head.x - segment.x, 2) + Math.pow(head.y - segment.y, 2)
+            );
+            
+            if (distance < 12) { // Collision with other snake
+              collisionDetected = true;
+              
+              // If player hits another snake, they die (unless it's head-to-head)
+              if (index > 0 || newSegments.length < otherPlayer.segments.length) {
+                player.alive = false;
+                
+                if (playerId === playerName) {
+                  setMessage(`💀 You crashed into ${otherPlayerId}! Game over!`);
+                } else {
+                  setMessage(`⚡ ${playerId} was eliminated by ${otherPlayerId}!`);
+                }
+                
+                // Convert dead snake to food particles
+                const deadSnakeFood = player.segments.map((segment, i) => ({
+                  x: segment.x + (Math.random() - 0.5) * 10,
+                  y: segment.y + (Math.random() - 0.5) * 10,
+                  id: `dead_${playerId}_${i}_${Date.now()}`,
+                  color: player.color,
+                  size: 6
+                }));
+                
+                newFood = [...newFood, ...deadSnakeFood];
+              }
+            }
+          });
+        });
+        
+        // Self collision detection (hitting own body)
+        if (!collisionDetected && newSegments.length > 4) {
+          for (let i = 4; i < newSegments.length; i++) {
+            const distance = Math.sqrt(
+              Math.pow(head.x - newSegments[i].x, 2) + Math.pow(head.y - newSegments[i].y, 2)
+            );
+            
+            if (distance < 10) {
+              player.alive = false;
+              collisionDetected = true;
+              
+              if (playerId === playerName) {
+                setMessage(`💀 You hit yourself! Game over!`);
+              }
+              
+              // Convert dead snake to food
+              const deadSnakeFood = player.segments.map((segment, i) => ({
+                x: segment.x + (Math.random() - 0.5) * 10,
+                y: segment.y + (Math.random() - 0.5) * 10,
+                id: `self_dead_${playerId}_${i}_${Date.now()}`,
+                color: player.color,
+                size: 6
+              }));
+              
+              newFood = [...newFood, ...deadSnakeFood];
+              break;
+            }
+          }
+        }
         
         // Random direction change for bots (simple AI)
-        if (playerId !== (currentUser?.username || 'Player') && Math.random() < 0.02) {
+        if (playerId !== playerName && Math.random() < 0.02) {
           const directions = ['up', 'down', 'left', 'right'];
           player.direction = directions[Math.floor(Math.random() * directions.length)];
         }
@@ -850,9 +959,63 @@ const GameComponent = () => {
         };
       });
       
+      // Respawn food to maintain food count
+      while (newFood.length < Math.floor(canvasSize.width * canvasSize.height / 15000)) {
+        newFood.push({
+          x: Math.random() * (canvasSize.width - 40) + 20,
+          y: Math.random() * (canvasSize.height - 40) + 20,
+          id: `food_${Date.now()}_${Math.random()}`,
+          color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000'][Math.floor(Math.random() * 5)],
+          size: FOOD_SIZE
+        });
+      }
+      
+      // Respawn dead AI bots after 5 seconds
+      const alivePlayers = Object.values(newPlayers).filter(p => p.alive).length;
+      if (alivePlayers < 3) {
+        const deadBots = ['DemoBot1', 'DemoBot2'].filter(botId => 
+          !newPlayers[botId] || !newPlayers[botId].alive
+        );
+        
+        deadBots.forEach(botId => {
+          if (Math.random() < 0.01) { // 1% chance per frame to respawn
+            const centerX = canvasSize.width / 2;
+            const centerY = canvasSize.height / 2;
+            const spawnRadius = 200;
+            const spawnAngle = Math.random() * 2 * Math.PI;
+            
+            newPlayers[botId] = {
+              player_id: botId,
+              segments: [
+                { 
+                  x: centerX + spawnRadius * Math.cos(spawnAngle), 
+                  y: centerY + spawnRadius * Math.sin(spawnAngle) 
+                },
+                { 
+                  x: centerX + spawnRadius * Math.cos(spawnAngle) - 20, 
+                  y: centerY + spawnRadius * Math.sin(spawnAngle) 
+                },
+                { 
+                  x: centerX + spawnRadius * Math.cos(spawnAngle) - 40, 
+                  y: centerY + spawnRadius * Math.sin(spawnAngle) 
+                }
+              ],
+              color: botId === 'DemoBot1' ? '#ff0080' : '#00ff00',
+              alive: true,
+              score: 10,
+              direction: ['up', 'down', 'left', 'right'][Math.floor(Math.random() * 4)],
+              speed: 1.5 + Math.random()
+            };
+            
+            setMessage(`🤖 ${botId} respawned!`);
+          }
+        });
+      }
+      
       return {
         ...prevState,
-        players: newPlayers
+        players: newPlayers,
+        food: newFood
       };
     });
   };
