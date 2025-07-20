@@ -519,25 +519,223 @@
   border-top: 1px solid #222;
 }
 
-/* Discord Button */
-.discord-btn {
+/* Discord Button - REMOVED */
+
+/* Authentication Modal */
+.modal-overlay {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
-  background: #7289da;
-  color: #fff;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: bold;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
+}
+
+.auth-modal {
+  background: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #333;
+  width: 400px;
+  max-width: 90vw;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #333;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #FFD700;
+  font-size: 24px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+.auth-form {
+  padding: 20px;
+}
+
+.auth-input {
+  width: 100%;
+  background: #333;
+  border: 1px solid #555;
+  color: #fff;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 16px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+.auth-input::placeholder {
+  color: #888;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #FFD700;
+}
+
+.auth-btn {
+  width: 100%;
+  background: linear-gradient(45deg, #FFD700, #FFC700);
+  color: #000;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
   transition: all 0.2s;
 }
 
-.discord-btn:hover {
-  background: #677bc4;
+.auth-btn:hover:not(:disabled) {
+  background: linear-gradient(45deg, #FFC700, #FFB700);
+}
+
+.auth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-switch {
+  text-align: center;
+  color: #888;
+}
+
+.auth-switch button {
+  background: none;
+  border: none;
+  color: #FFD700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.auth-switch button:hover {
+  color: #FFC700;
+}
+
+/* Header Updates */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.welcome-text {
+  color: #FFD700;
+  font-weight: bold;
+}
+
+.logout-btn {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.logout-btn:hover {
+  background: #444;
+  border-color: #666;
+}
+
+/* Connect Section Updates */
+.wallet-connect-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.username-display {
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: #ccc;
+}
+
+.username-display strong {
+  color: #FFD700;
+}
+
+.connect-wallet-main-btn {
+  background: linear-gradient(45deg, #00aa44, #008833);
+  color: #fff;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.connect-wallet-main-btn:hover:not(:disabled) {
+  background: linear-gradient(45deg, #008833, #006622);
   transform: translateY(-2px);
+}
+
+.connect-wallet-main-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.wallet-disconnect {
+  padding: 20px;
+  text-align: center;
+}
+
+.wallet-message {
+  color: #888;
+  margin-bottom: 15px;
+}
+
+/* Responsive Updates */
+@media (max-width: 768px) {
+  .auth-modal {
+    width: 350px;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .user-info {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
 
 /* Responsive Design */
