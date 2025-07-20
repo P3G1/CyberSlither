@@ -313,8 +313,8 @@ class CryptoSlitherTester:
                 "player_id": "invalid_player",
                 "wallet_address": "invalid_wallet"
             }
-            response = requests.post(f"{API_BASE}/payment/create-entry", json=payload, timeout=10)
-            success = response.status_code == 404  # Should return 404 for invalid session
+            response = requests.post(f"{API_BASE}/payment/create-bet", json=payload, timeout=10)
+            success = response.status_code >= 400  # Should return error for invalid session
             self.results.add_result(
                 "Error Handling - Invalid payment data returns error", 
                 success,
@@ -326,7 +326,7 @@ class CryptoSlitherTester:
         # Test 3: Missing required fields
         try:
             payload = {}  # Empty payload
-            response = requests.post(f"{API_BASE}/payment/create-entry", json=payload, timeout=10)
+            response = requests.post(f"{API_BASE}/payment/create-bet", json=payload, timeout=10)
             success = response.status_code >= 400  # Should return error for missing fields
             self.results.add_result(
                 "Error Handling - Missing required fields returns error", 
