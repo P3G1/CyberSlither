@@ -213,8 +213,9 @@ const GameComponent = () => {
         const userData = await response.json();
         setCurrentUser(userData);
         setIsLoggedIn(true);
+        setIsAdmin(userData.is_admin || false);
         setShowAuthModal(false);
-        setMessage(`🎮 Welcome back, ${userData.username}! Ready to dominate the cyber arena?`);
+        setMessage(`🎮 Welcome back, ${userData.username}${userData.is_admin ? ' (ADMIN)' : ''}! Ready to dominate the cyber arena?`);
         
         setUsername('');
         setPassword('');
