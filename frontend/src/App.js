@@ -1308,6 +1308,30 @@ const GameComponent = () => {
       ctx.restore();
     });
     
+    // Render eating particles
+    particles.forEach(particle => {
+      ctx.save();
+      const alpha = particle.life / particle.maxLife;
+      ctx.globalAlpha = alpha;
+      ctx.shadowBlur = 15 * alpha;
+      ctx.shadowColor = particle.color;
+      ctx.fillStyle = particle.color;
+      
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Sparkle effect
+      if (particle.life % 4 === 0) {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size * alpha * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.restore();
+    });
+    
     // Enhanced snakes with customization
     Object.values(gameState.players).forEach(player => {
       if (player.alive && player.segments && player.segments.length > 0) {
