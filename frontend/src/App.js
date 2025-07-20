@@ -1030,6 +1030,20 @@ const GameComponent = () => {
         });
       }
       
+      // Update and clean up particles
+      setParticles(prevParticles => {
+        return prevParticles
+          .map(particle => ({
+            ...particle,
+            x: particle.x + particle.vx,
+            y: particle.y + particle.vy,
+            life: particle.life - 1,
+            vx: particle.vx * 0.95, // Slow down particles
+            vy: particle.vy * 0.95
+          }))
+          .filter(particle => particle.life > 0); // Remove dead particles
+      });
+      
       return {
         ...prevState,
         players: newPlayers,
