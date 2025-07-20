@@ -327,9 +327,125 @@ const GameComponent = () => {
   const handleLogout = () => {
     setCurrentUser(null);
     setIsLoggedIn(false);
+    setIsAdmin(false);
     setUserAccount(null);
     setMessage('👋 Disconnected from the matrix');
     localStorage.removeItem('user');
+  };
+
+  // Admin functions
+  const handleCreateAdmin = async () => {
+    if (!username || !password || !adminSecret) {
+      setMessage('⚠️ Enter username, password, and admin secret');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${API}/admin/create-admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password,
+          admin_secret: adminSecret
+        })
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setCurrentUser(userData);
+        setIsLoggedIn(true);
+        setIsAdmin(true);
+        setShowAuthModal(false);
+        setShowAdminPanel(false);
+        setMessage(`👑 Admin account created! Welcome, ${userData.username}! You can play FREE games.`);
+        
+        setUsername('');
+        setPassword('');
+        setAdminSecret('');
+        localStorage.setItem('user', JSON.stringify(userData));
+      } else {
+        const error = await response.json();
+        setMessage('❌ Admin creation failed: ' + error.detail);
+      }
+    } catch (error) {
+      setMessage('🔥 Admin creation error: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createFreeGameAsAdmin = async () => {
+    if (!isAdmin) {
+      setMessage('🔒 Admin access required');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setMessage(`🎲 Creating FREE admin arena with $${selectedBetAmount} display bet...`);
+      
+      const response = await fetch(`${API}/admin/create-free-game`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentUser.user_id,
+          bet_amount: selectedBetAmount
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        joinFreeGameAsAdmin(data.session_id);
+      } else {
+        throw new Error('Free game creation failed');
+      }
+      
+    } catch (error) {
+      setMessage('❌ Failed to create free game: ' + error.message);
+      setLoading(false);
+    }
+  };
+
+  const joinFreeGameAsAdmin = async (sessionId) => {
+    if (!isAdmin) {
+      setMessage('🔒 Admin access required');
+      return;
+    }
+
+    setGameStatus('lobby');
+    setMessage(`👑 Joining FREE admin arena (no payment required)...`);
+
+    try {
+      const playerId = `${currentUser.username}_${Date.now()}`;
+      
+      const response = await fetch(`${API}/admin/join-free-game`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          user_id: currentUser.user_id,
+          player_id: playerId
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Free game join failed');
+      }
+      
+      const joinData = await response.json();
+      setMessage('👑 Admin entered arena FREE! Starting game...');
+      
+      // Connect to game
+      connectToGame(sessionId, joinData.player_id);
+      setGameState(prev => ({ ...prev, sessionId: sessionId, playerId: joinData.player_id }));
+      
+    } catch (error) {
+      setMessage('❌ Failed to join free game: ' + error.message);
+      setGameStatus('menu');
+      setLoading(false);
+    }
   };
 
   // Check for saved user
