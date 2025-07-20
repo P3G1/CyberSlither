@@ -852,6 +852,23 @@ const GameComponent = () => {
             // Visual effect for eating food
             if (playerId === playerName) {
               setMessage(`🎯 Food consumed! Snake growing...`);
+              
+              // Create eating particles
+              const newParticles = [];
+              for (let i = 0; i < 8; i++) {
+                newParticles.push({
+                  x: food.x,
+                  y: food.y,
+                  vx: (Math.random() - 0.5) * 6,
+                  vy: (Math.random() - 0.5) * 6,
+                  color: foodEaten.color,
+                  life: 30,
+                  maxLife: 30,
+                  size: 3
+                });
+              }
+              
+              setParticles(prev => [...prev, ...newParticles]);
             }
             
             return false; // Remove food
