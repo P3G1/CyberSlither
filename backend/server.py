@@ -264,6 +264,7 @@ async def login_user(data: dict = Body(...)):
     return {
         "user_id": user["user_id"],
         "username": user["username"],
+        "is_admin": user.get("is_admin", False),
         "last_login": user.get("last_login"),
         "wallet_address": user.get("wallet_address"),
         "message": "Login successful"
