@@ -1299,7 +1299,7 @@ const GameComponent = () => {
                     </div>
                   </div>
                 </div>
-              ) : !connected ? (
+              ) : !connected && !isAdmin ? (
                 <div className="wallet-zone">
                   <div className="connection-status">
                     <p>OPERATOR: <span className="highlight">{currentUser.username}</span></p>
