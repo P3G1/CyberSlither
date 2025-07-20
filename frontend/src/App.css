@@ -1578,7 +1578,9 @@
   }
   
   .cyber-canvas {
-    max-height: 280px;
+    max-height: 500px;
+    min-height: 400px;
+    touch-action: none;
   }
   
   .neural-panel {
