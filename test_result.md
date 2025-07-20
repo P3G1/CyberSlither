@@ -193,3 +193,5 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: "Comprehensive backend testing completed. 11/12 tests passed. All critical functionality working correctly. Only WebSocket connectivity fails due to external URL limitations, not backend implementation issues. Backend is production-ready for the crypto slither game."
+    - agent: "testing"
+      message: "RETESTING COMPLETED: Fixed critical MongoDB ObjectId serialization issue in leaderboard endpoint. All user-specified concerns now working: ✅ GET /api/ ✅ Auth endpoints ✅ Game creation ✅ Payment flow ✅ Database connectivity. WebSocket timeout expected due to external URL limitations. Backend APIs are fully functional for game loading."
