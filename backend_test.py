@@ -169,14 +169,14 @@ class CryptoSlitherTester:
         except Exception as e:
             self.results.add_result("POST /api/payment/create-bet - Create bet payment", False, str(e))
         
-        # Test 2: Confirm entry payment
+        # Test 2: Confirm bet payment
         if self.test_transaction_id:
             try:
                 payload = {
                     "transaction_id": self.test_transaction_id,
                     "signature": "fake_solana_signature_for_testing_" + str(uuid.uuid4())
                 }
-                response = requests.post(f"{API_BASE}/payment/confirm-entry", json=payload, timeout=10)
+                response = requests.post(f"{API_BASE}/payment/confirm-bet", json=payload, timeout=10)
                 
                 success = response.status_code == 200
                 if success:
