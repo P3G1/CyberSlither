@@ -341,7 +341,8 @@ class CryptoSlitherTester:
         
         # Create a new game session and verify it persists
         try:
-            response = requests.post(f"{API_BASE}/game/create", timeout=10)
+            payload = {"bet_amount": 3}  # $3 bet
+            response = requests.post(f"{API_BASE}/game/create", json=payload, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 session_id = data["session_id"]
