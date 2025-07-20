@@ -1183,7 +1183,12 @@ const GameComponent = () => {
               />
               
               <div className="controls-hint">
-                <span>WASD or MOUSE to control • Eliminate opponents to win</span>
+                <span>
+                  {/Mobi|Android/i.test(navigator.userAgent) 
+                    ? "Touch and drag to control • Eliminate opponents to win" 
+                    : "WASD or MOUSE to control • Eliminate opponents to win"
+                  }
+                </span>
               </div>
             </div>
           )}
