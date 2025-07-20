@@ -261,9 +261,9 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Admin Functionality"
     - "Frontend-Backend Integration Testing"
     - "Solana Wallet Transaction Flow"
-    - "Authentication System Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
