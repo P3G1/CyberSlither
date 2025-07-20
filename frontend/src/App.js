@@ -126,6 +126,7 @@ const GameComponent = () => {
   const [selectedBetAmount, setSelectedBetAmount] = useState(5);
   const [loading, setLoading] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [canvasSize, setCanvasSize] = useState(getCanvasSize());
   
   // Customization State
   const [selectedSkin, setSelectedSkin] = useState(0);
