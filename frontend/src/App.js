@@ -1395,26 +1395,45 @@ const GameComponent = () => {
           }
         });
         
-        // Player name with cyberpunk styling
+        // Player name with cyberpunk styling and growth stats
         if (player.segments[0]) {
-          ctx.font = 'bold 14px "Courier New", monospace';
+          const growthFactor = Math.min(player.segments.length / 10, 2);
+          const fontSize = 14 + (growthFactor * 3);
+          
+          ctx.font = `bold ${fontSize}px "Courier New", monospace`;
           ctx.textAlign = 'center';
           ctx.fillStyle = '#00ffff';
-          ctx.shadowBlur = 10;
+          ctx.shadowBlur = 10 + (growthFactor * 5);
           ctx.shadowColor = '#00ffff';
           
-          const name = `${player.player_id.split('_')[0]} [$${selectedBetAmount}]`;
+          const playerName = player.player_id.split('_')[0];
+          const scoreText = `${playerName} [${player.segments.length}] [$${selectedBetAmount}]`;
           const textX = player.segments[0].x;
-          const textY = player.segments[0].y - 35;
+          const textY = player.segments[0].y - (35 + growthFactor * 5);
           
-          // Text background
-          const textWidth = ctx.measureText(name).width;
+          // Enhanced text background for larger snakes
+          const textWidth = ctx.measureText(scoreText).width;
+          const bgPadding = 5 + (growthFactor * 2);
+          const bgHeight = 20 + (growthFactor * 3);
+          
           ctx.fillStyle = '#000000aa';
-          ctx.fillRect(textX - textWidth/2 - 5, textY - 15, textWidth + 10, 20);
+          ctx.fillRect(textX - textWidth/2 - bgPadding, textY - 15, textWidth + bgPadding*2, bgHeight);
           
-          // Text
-          ctx.fillStyle = '#00ffff';
-          ctx.fillText(name, textX, textY);
+          // Text with enhanced glow for larger snakes
+          ctx.fillStyle = player.player_id === (currentUser?.username || 'Player') ? '#ffff00' : '#00ffff';
+          ctx.shadowColor = player.player_id === (currentUser?.username || 'Player') ? '#ffff00' : '#00ffff';
+          ctx.fillText(scoreText, textX, textY);
+          
+          // Additional size milestone indicators
+          if (player.segments.length > 15) {
+            ctx.font = 'bold 10px Arial';
+            ctx.fillStyle = '#ff0080';
+            ctx.fillText('🔥 LARGE', textX, textY + 18);
+          } else if (player.segments.length > 25) {
+            ctx.font = 'bold 12px Arial';
+            ctx.fillStyle = '#ff4000';
+            ctx.fillText('⚡ HUGE', textX, textY + 20);
+          }
         }
         
         ctx.restore();
