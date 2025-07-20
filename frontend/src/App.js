@@ -1431,9 +1431,15 @@ const GameComponent = () => {
               
               <canvas
                 ref={canvasRef}
-                width={GAME_WIDTH}
-                height={GAME_HEIGHT}
+                width={canvasSize.width}
+                height={canvasSize.height}
                 className="cyber-canvas"
+                style={{ 
+                  width: '100%', 
+                  maxHeight: '70vh', 
+                  height: 'auto',
+                  touchAction: 'none'
+                }}
               />
               
               <div className="controls-hint">
