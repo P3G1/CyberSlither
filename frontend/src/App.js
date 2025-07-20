@@ -1115,6 +1115,70 @@ const GameComponent = () => {
         </div>
       </div>
 
+      {/* Admin Panel Modal */}
+      {showAdminPanel && (
+        <div className="cyber-modal-overlay">
+          <div className="cyber-modal">
+            <div className="modal-header">
+              <h2>// ADMIN CONTROL PANEL //</h2>
+              <button className="close-btn" onClick={() => setShowAdminPanel(false)}>×</button>
+            </div>
+            
+            <div className="cyber-form">
+              <div className="admin-warning">
+                <p>⚠️ Admin accounts can play FREE games without spending Solana</p>
+              </div>
+              
+              <div className="input-group">
+                <label>ADMIN USERNAME:</label>
+                <input
+                  type="text"
+                  placeholder="Enter admin username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="cyber-input"
+                />
+              </div>
+              
+              <div className="input-group">
+                <label>ADMIN PASSWORD:</label>
+                <input
+                  type="password"
+                  placeholder="Enter admin password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="cyber-input"
+                />
+              </div>
+              
+              <div className="input-group">
+                <label>ADMIN SECRET:</label>
+                <input
+                  type="password"
+                  placeholder="Enter admin secret key"
+                  value={adminSecret}
+                  onChange={(e) => setAdminSecret(e.target.value)}
+                  className="cyber-input"
+                />
+              </div>
+              
+              <button 
+                className="cyber-btn primary full"
+                onClick={handleCreateAdmin}
+                disabled={loading}
+              >
+                {loading ? 'CREATING ADMIN...' : 'CREATE ADMIN ACCOUNT'}
+              </button>
+              
+              <div className="admin-info">
+                <p>Admin accounts bypass all Solana payments</p>
+                <p>Perfect for testing and demonstration purposes</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Authentication Modal */}
       {showAuthModal && (
         <div className="cyber-modal-overlay">
