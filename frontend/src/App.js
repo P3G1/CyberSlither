@@ -1230,7 +1230,7 @@ const GameComponent = () => {
       }
     });
     
-  }, [gameState.players, gameState.food, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail]);
+  }, [gameState.players, gameState.food, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail, canvasSize]);
 
   // Cleanup
   useEffect(() => {
