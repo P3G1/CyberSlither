@@ -1093,14 +1093,24 @@ const GameComponent = () => {
             <div className="user-panel">
               <div className="user-info">
                 <span className="user-handle">{currentUser.username}</span>
-                <span className="user-status">ONLINE</span>
+                <span className="user-status">{isAdmin ? 'ADMIN' : 'ONLINE'}</span>
               </div>
+              {isAdmin && (
+                <button className="cyber-btn success small" onClick={() => setShowAdminPanel(!showAdminPanel)}>
+                  ADMIN PANEL
+                </button>
+              )}
               <button className="cyber-btn danger" onClick={handleLogout}>DISCONNECT</button>
             </div>
           ) : (
-            <button className="cyber-btn primary" onClick={() => setShowAuthModal(true)}>
-              JACK IN
-            </button>
+            <div className="auth-buttons">
+              <button className="cyber-btn primary" onClick={() => setShowAuthModal(true)}>
+                JACK IN
+              </button>
+              <button className="cyber-btn secondary" onClick={() => setShowAdminPanel(true)}>
+                ADMIN
+              </button>
+            </div>
           )}
         </div>
       </div>
