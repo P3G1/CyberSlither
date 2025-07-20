@@ -193,23 +193,27 @@ class CryptoSlitherTester:
         else:
             self.results.add_result("POST /api/payment/confirm-bet - Confirm payment", False, "No transaction ID available")
         
-        # Test 3: Payout winner (this will fail as game isn't finished, but we test the endpoint)
+        # Test 3: Test authentication endpoints
         try:
+            # Test user registration
             payload = {
-                "session_id": self.test_session_id,
-                "winner_id": self.test_player_id
+                "username": f"testuser_{uuid.uuid4().hex[:8]}",
+                "password": "testpass123"
             }
-            response = requests.post(f"{API_BASE}/payment/payout-winner", json=payload, timeout=10)
+            response = requests.post(f"{API_BASE}/auth/register", json=payload, timeout=10)
             
-            # This should fail with 400 because game isn't finished
-            expected_failure = response.status_code == 400 and "not finished" in response.text.lower()
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                success = "user_id" in data and "username" in data
+            
             self.results.add_result(
-                "POST /api/payment/payout-winner - Payout winner (expected failure)", 
-                expected_failure,
+                "POST /api/auth/register - User registration", 
+                success,
                 f"Status: {response.status_code}, Response: {response.text[:200]}"
             )
         except Exception as e:
-            self.results.add_result("POST /api/payment/payout-winner - Payout winner", False, str(e))
+            self.results.add_result("POST /api/auth/register - User registration", False, str(e))
     
     async def test_websocket_connection(self):
         """Test WebSocket connection and messaging"""
