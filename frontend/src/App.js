@@ -2611,10 +2611,36 @@ const Game = () => {
   );
 };
 
+// Solana Wallet Configuration
+const WalletContextProvider = ({ children }) => {
+  const network = WalletAdapterNetwork.Devnet;
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter({ network }),
+    ],
+    [network]
+  );
+
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          {children}
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  );
+};
+
 function App() {
   return (
     <div className="App">
-      <Game />
+      <WalletContextProvider>
+        <GameComponent />
+      </WalletContextProvider>
     </div>
   );
 }
