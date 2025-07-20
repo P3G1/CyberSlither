@@ -262,8 +262,9 @@ const GameComponent = () => {
         const userData = await response.json();
         setCurrentUser(userData);
         setIsLoggedIn(true);
+        setIsAdmin(userData.is_admin || false);
         setShowAuthModal(false);
-        setMessage(`🚀 Account created! Welcome to the matrix, ${userData.username}!`);
+        setMessage(`🚀 Account created! Welcome to the matrix, ${userData.username}${userData.is_admin ? ' (ADMIN)' : ''}!`);
         
         setUsername('');
         setPassword('');
