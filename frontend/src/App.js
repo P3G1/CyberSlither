@@ -147,13 +147,14 @@ const GameComponent = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [adminSecret, setAdminSecret] = useState('');
   
-  // Real Game Data
+  // Real Game Data and Effects
   const [userAccount, setUserAccount] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [globalStats, setGlobalStats] = useState({
     totalWinnings: 0,
     playersInGame: 0
   });
+  const [particles, setParticles] = useState([]); // For eating effects
 
   // Load wallet balance
   const loadWalletBalance = async () => {
