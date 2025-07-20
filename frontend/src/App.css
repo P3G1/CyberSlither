@@ -28,6 +28,24 @@
   opacity: 0.9;
 }
 
+.wallet-section {
+  margin-bottom: 20px;
+}
+
+.wallet-section .wallet-adapter-button {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-weight: bold !important;
+  transition: all 0.3s ease !important;
+}
+
+.wallet-section .wallet-adapter-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
+}
+
 .status-bar {
   background: rgba(0,0,0,0.3);
   padding: 15px;
@@ -41,12 +59,35 @@
   font-weight: bold;
 }
 
+.user-stats {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.user-stats p {
+  margin: 0;
+  background: rgba(255,255,255,0.1);
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
 .menu {
   background: rgba(255,255,255,0.1);
   padding: 40px;
   border-radius: 15px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.2);
+}
+
+.connect-prompt {
+  padding: 20px;
+}
+
+.connect-prompt h3 {
+  color: #ffff00;
+  margin-bottom: 15px;
 }
 
 .menu-options {
@@ -83,7 +124,12 @@
   min-width: 200px;
 }
 
-.btn:hover {
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
@@ -139,6 +185,8 @@
   padding: 15px 30px;
   border-radius: 10px;
   backdrop-filter: blur(10px);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .game-info p {
@@ -149,8 +197,9 @@
 .game-canvas {
   border: 3px solid #ffffff;
   border-radius: 10px;
-  background: #001122;
+  background: linear-gradient(45deg, #001122 0%, #000511 100%);
   box-shadow: 0 0 30px rgba(0,0,0,0.5);
+  cursor: crosshair;
 }
 
 .game-end {
@@ -167,6 +216,16 @@
   margin-bottom: 20px;
 }
 
+/* Wallet adapter modal styling */
+.wallet-adapter-modal {
+  background: rgba(0,0,0,0.9) !important;
+}
+
+.wallet-adapter-modal-wrapper {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-radius: 15px !important;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .game-container {
@@ -181,12 +240,18 @@
     width: 100%;
     height: auto;
     max-width: 400px;
+    max-height: 300px;
   }
   
   .game-info {
     flex-direction: column;
     gap: 10px;
     text-align: center;
+  }
+  
+  .user-stats {
+    flex-direction: column;
+    gap: 10px;
   }
   
   .menu-options,
