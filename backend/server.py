@@ -361,8 +361,8 @@ async def create_bet_payment(data: dict = Body(...)):
         "transaction_id": transaction.transaction_id,
         "amount": session.entry_fee,
         "bet_amount": bet_amount,
-        "recipient": "Game_Vault_Address",
-        "message": f"${bet_amount} bet for Crypto Slither"
+        "recipient": "3FTmCxdfcNNSPiEd253ecEn2xTLqcBZNbacMcHMdrbkC",
+        "message": f"${bet_amount} bet for Cyber Slither Arena"
     }
 
 @api_router.post("/payment/confirm-bet")
