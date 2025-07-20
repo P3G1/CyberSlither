@@ -964,6 +964,41 @@ const GameComponent = () => {
     updatePlayerDirection(gameX, gameY);
   }, [gameStatus, gameState.status, canvasSize]);
 
+  // Update player direction based on touch/mouse position
+  const updatePlayerDirection = (targetX, targetY) => {
+    const playerId = currentUser?.username || 'Player';
+    
+    setGameState(prevState => {
+      if (!prevState.players[playerId] || !prevState.players[playerId].segments[0]) {
+        return prevState;
+      }
+      
+      const player = prevState.players[playerId];
+      const head = player.segments[0];
+      
+      const deltaX = targetX - head.x;
+      const deltaY = targetY - head.y;
+      
+      let newDirection;
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        newDirection = deltaX > 0 ? 'right' : 'left';
+      } else {
+        newDirection = deltaY > 0 ? 'down' : 'up';
+      }
+      
+      return {
+        ...prevState,
+        players: {
+          ...prevState.players,
+          [playerId]: {
+            ...player,
+            direction: newDirection
+          }
+        }
+      };
+    });
+  };
+
   // Mobile touch handlers
   const handleTouchStart = useCallback((event) => {
     event.preventDefault();
