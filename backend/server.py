@@ -46,6 +46,7 @@ class UserAuth(BaseModel):
     username: str
     password_hash: str
     wallet_address: Optional[str] = None
+    is_admin: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_login: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True
