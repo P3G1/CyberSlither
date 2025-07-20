@@ -1,38 +1,201 @@
 .App {
-    text-align: center;
+  text-align: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-family: 'Arial', sans-serif;
 }
 
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+.game-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+.header {
+  margin-bottom: 20px;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
+.header h1 {
+  font-size: 2.5rem;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.header p {
+  font-size: 1.2rem;
+  margin: 10px 0;
+  opacity: 0.9;
+}
+
+.status-bar {
+  background: rgba(0,0,0,0.3);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.status-bar p {
+  margin: 5px 0;
+  font-weight: bold;
+}
+
+.menu {
+  background: rgba(255,255,255,0.1);
+  padding: 40px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.join-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.session-input {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  width: 300px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+  color: white;
+}
+
+.btn-secondary {
+  background: linear-gradient(45deg, #74b9ff, #0984e3);
+  color: white;
+}
+
+.btn-success {
+  background: linear-gradient(45deg, #00b894, #00a085);
+  color: white;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.game-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.game-info {
+  display: flex;
+  gap: 30px;
+  background: rgba(0,0,0,0.3);
+  padding: 15px 30px;
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+}
+
+.game-info p {
+  margin: 0;
+  font-weight: bold;
+}
+
+.game-canvas {
+  border: 3px solid #ffffff;
+  border-radius: 10px;
+  background: #001122;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+.game-end {
+  background: rgba(255,255,255,0.1);
+  padding: 40px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.game-end h2 {
+  color: #00ff00;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  margin-bottom: 20px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .game-container {
+    padding: 10px;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .game-canvas {
+    width: 100%;
+    height: auto;
+    max-width: 400px;
+  }
+  
+  .game-info {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
-}
-
-.App-link {
-    color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .menu-options,
+  .join-section {
+    width: 100%;
+  }
+  
+  .session-input {
+    width: 100%;
+    max-width: 300px;
+  }
 }
