@@ -1,266 +1,576 @@
+/* DamnBruh.com Replica Styles */
 .App {
-  text-align: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-family: 'Arial', sans-serif;
-}
-
-.game-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.header {
-  margin-bottom: 20px;
-}
-
-.header h1 {
-  font-size: 2.5rem;
   margin: 0;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  background: #0a0a0a;
+  color: #ffffff;
+  overflow: hidden;
 }
 
-.header p {
-  font-size: 1.2rem;
-  margin: 10px 0;
-  opacity: 0.9;
+.damnbruh-container {
+  width: 100vw;
+  height: 100vh;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
 }
 
-.wallet-section {
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: #111111;
+  border-bottom: 1px solid #222;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 24px;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.logo-accent {
+  color: #FFD700;
+}
+
+.login-btn {
+  background: #FFD700;
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.login-btn:hover {
+  background: #FFC700;
+}
+
+/* Main Content */
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebars */
+.left-sidebar,
+.right-sidebar {
+  width: 300px;
+  background: #111111;
+  padding: 20px;
+  overflow-y: auto;
+  border-right: 1px solid #222;
+}
+
+.right-sidebar {
+  border-right: none;
+  border-left: 1px solid #222;
+}
+
+.panel {
+  background: #1a1a1a;
+  border-radius: 8px;
   margin-bottom: 20px;
+  border: 1px solid #333;
 }
 
-.wallet-section .wallet-adapter-button {
-  background: linear-gradient(45deg, #ff6b6b, #ee5a24) !important;
-  border: none !important;
-  border-radius: 8px !important;
-  padding: 12px 24px !important;
-  font-weight: bold !important;
-  transition: all 0.3s ease !important;
-}
-
-.wallet-section .wallet-adapter-button:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
-}
-
-.status-bar {
-  background: rgba(0,0,0,0.3);
+.panel-header {
   padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  backdrop-filter: blur(10px);
-}
-
-.status-bar p {
-  margin: 5px 0;
+  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: bold;
 }
 
-.user-stats {
+.panel-icon {
+  font-size: 16px;
+}
+
+.live-indicator {
+  color: #00ff00;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.refresh-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.friends-count {
+  color: #888;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+/* Leaderboard */
+.leaderboard {
+  padding: 15px;
+}
+
+.leaderboard-item {
   display: flex;
-  gap: 20px;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #333;
+}
+
+.leaderboard-item:last-child {
+  border-bottom: none;
+}
+
+.rank {
+  color: #ccc;
+  font-size: 14px;
+}
+
+.winnings {
+  color: #00ff88;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.view-full-btn {
+  width: 100%;
+  background: #333;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
   margin-top: 10px;
 }
 
-.user-stats p {
-  margin: 0;
-  background: rgba(255,255,255,0.1);
-  padding: 8px 16px;
-  border-radius: 6px;
+.view-full-btn:hover {
+  background: #444;
 }
 
-.menu {
-  background: rgba(255,255,255,0.1);
-  padding: 40px;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-}
-
-.connect-prompt {
-  padding: 20px;
-}
-
-.connect-prompt h3 {
-  color: #ffff00;
-  margin-bottom: 15px;
-}
-
-.menu-options {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: center;
-}
-
-.join-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-}
-
-.session-input {
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  width: 300px;
-  font-size: 16px;
+/* Friends */
+.no-friends {
+  padding: 30px 15px;
   text-align: center;
+  color: #666;
 }
 
-.btn {
-  padding: 12px 24px;
+.no-friends-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.add-friends-btn {
+  width: 100%;
+  background: #333;
+  color: #fff;
   border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 15px;
+}
+
+/* Game Area */
+.game-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+  position: relative;
+}
+
+.game-lobby {
+  text-align: center;
+  max-width: 500px;
+}
+
+.game-title {
+  font-size: 48px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: #ffffff;
+}
+
+.title-accent {
+  color: #FFD700;
+}
+
+.connect-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.name-input {
+  flex: 1;
+  background: #1a1a1a;
+  border: 2px solid #333;
+  color: #fff;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.name-input::placeholder {
+  color: #666;
+}
+
+.edit-btn {
+  background: #FFD700;
+  color: #000;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.bet-section {
+  margin-bottom: 30px;
+}
+
+.bet-amounts {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.bet-btn {
+  background: #333;
+  color: #fff;
+  border: 2px solid #555;
+  padding: 12px 24px;
   border-radius: 8px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 200px;
+  transition: all 0.2s;
+  min-width: 80px;
 }
 
-.btn:disabled {
+.bet-btn:hover {
+  background: #444;
+  border-color: #666;
+}
+
+.bet-btn.active {
+  background: #FFD700;
+  color: #000;
+  border-color: #FFD700;
+}
+
+.join-game-btn {
+  background: linear-gradient(45deg, #FFD700, #FFC700);
+  color: #000;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto 20px auto;
+  transition: all 0.2s;
+}
+
+.join-game-btn:hover {
+  background: linear-gradient(45deg, #FFC700, #FFB700);
+  transform: translateY(-2px);
+}
+
+.join-game-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+.play-icon {
+  font-size: 16px;
 }
 
-.btn-primary {
-  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-  color: white;
-}
-
-.btn-secondary {
-  background: linear-gradient(45deg, #74b9ff, #0984e3);
-  color: white;
-}
-
-.btn-success {
-  background: linear-gradient(45deg, #00b894, #00a085);
-  color: white;
-}
-
-.loading {
+.game-options {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 40px;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255,255,255,0.3);
-  border-top: 4px solid #ffffff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.game-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-.game-info {
-  display: flex;
-  gap: 30px;
-  background: rgba(0,0,0,0.3);
-  padding: 15px 30px;
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
-  flex-wrap: wrap;
+  gap: 15px;
   justify-content: center;
 }
 
-.game-info p {
-  margin: 0;
+.option-btn {
+  background: #1a1a1a;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.option-btn:hover {
+  background: #333;
+  border-color: #555;
+}
+
+.game-stats {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #FFD700;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #888;
+  margin-top: 5px;
+}
+
+/* Wallet Panel */
+.connect-wallet-btn {
+  width: calc(100% - 30px);
+  background: linear-gradient(45deg, #FFD700, #FFC700);
+  color: #000;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 15px;
+  transition: all 0.2s;
+}
+
+.connect-wallet-btn:hover {
+  background: linear-gradient(45deg, #FFC700, #FFB700);
+}
+
+.balance {
+  padding: 20px;
+  text-align: center;
+}
+
+.balance-amount {
+  font-size: 36px;
+  font-weight: bold;
+  color: #00ff88;
+}
+
+.balance-label {
+  font-size: 14px;
+  color: #888;
+  margin-top: 5px;
+}
+
+.wallet-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 15px 15px;
+}
+
+.add-funds-btn {
+  flex: 1;
+  background: #00aa44;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
   font-weight: bold;
 }
 
+.cash-out-btn {
+  flex: 1;
+  background: #0066cc;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.copy-btn,
+.refresh-balance-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+/* Customize Panel */
+.snake-previews {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 15px;
+}
+
+.snake-preview {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  border: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.snake-preview:hover {
+  transform: scale(1.1);
+}
+
+.snake-preview.selected {
+  border-color: #FFD700;
+  transform: scale(1.1);
+}
+
+.snake-eyes {
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.change-appearance-btn {
+  width: calc(100% - 30px);
+  background: #333;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 15px;
+}
+
+/* Game Canvas */
 .game-canvas {
-  border: 3px solid #ffffff;
-  border-radius: 10px;
-  background: linear-gradient(45deg, #001122 0%, #000511 100%);
-  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+  border: 2px solid #333;
+  border-radius: 8px;
+  background: #0a0a0a;
   cursor: crosshair;
 }
 
+/* Game End */
 .game-end {
-  background: rgba(255,255,255,0.1);
+  text-align: center;
   padding: 40px;
+  background: #1a1a1a;
   border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid #333;
 }
 
 .game-end h2 {
-  color: #00ff00;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  color: #FFD700;
   margin-bottom: 20px;
+  font-size: 32px;
 }
 
-/* Wallet adapter modal styling */
-.wallet-adapter-modal {
-  background: rgba(0,0,0,0.9) !important;
+.play-again-btn {
+  background: linear-gradient(45deg, #FFD700, #FFC700);
+  color: #000;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 20px;
 }
 
-.wallet-adapter-modal-wrapper {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border-radius: 15px !important;
+/* Status Bar */
+.status-bar {
+  background: #111;
+  color: #888;
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 14px;
+  border-top: 1px solid #222;
 }
 
-/* Mobile responsiveness */
+/* Discord Button */
+.discord-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: #7289da;
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: bold;
+  z-index: 1000;
+  transition: all 0.2s;
+}
+
+.discord-btn:hover {
+  background: #677bc4;
+  transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .left-sidebar,
+  .right-sidebar {
+    width: 250px;
+  }
+}
+
 @media (max-width: 768px) {
-  .game-container {
-    padding: 10px;
+  .main-content {
+    flex-direction: column;
   }
   
-  .header h1 {
-    font-size: 2rem;
+  .left-sidebar,
+  .right-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
   }
   
   .game-canvas {
     width: 100%;
     height: auto;
-    max-width: 400px;
-    max-height: 300px;
   }
   
-  .game-info {
+  .bet-amounts {
+    flex-wrap: wrap;
+  }
+  
+  .game-stats {
     flex-direction: column;
-    gap: 10px;
-    text-align: center;
-  }
-  
-  .user-stats {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .menu-options,
-  .join-section {
-    width: 100%;
-  }
-  
-  .session-input {
-    width: 100%;
-    max-width: 300px;
+    gap: 20px;
   }
 }

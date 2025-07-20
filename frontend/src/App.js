@@ -6,70 +6,60 @@ const API = `${BACKEND_URL}/api`;
 const WS_URL = BACKEND_URL.replace('https://', 'wss://').replace('http://', 'ws://');
 
 // Game Constants
-const GAME_WIDTH = 800;
-const GAME_HEIGHT = 600;
+const GAME_WIDTH = 1200;
+const GAME_HEIGHT = 800;
 const FOOD_SIZE = 6;
 const SNAKE_SEGMENT_SIZE = 8;
-const SNAKE_HEAD_SIZE = 12;
+const SNAKE_HEAD_SIZE = 14;
 
-// Enhanced wallet handler for real Solana wallets
+// Betting amounts like damnbruh.com
+const BET_AMOUNTS = [1, 5, 20];
+
+// Snake color presets
+const SNAKE_COLORS = [
+  { name: "Purple Storm", color: "#8B5CF6", gradient: "linear-gradient(45deg, #8B5CF6, #A855F7)" },
+  { name: "Ocean Wave", color: "#06B6D4", gradient: "linear-gradient(45deg, #06B6D4, #0891B2)" },
+  { name: "Fire Dragon", color: "#F59E0B", gradient: "linear-gradient(45deg, #F59E0B, #D97706)" },
+  { name: "Emerald Snake", color: "#10B981", gradient: "linear-gradient(45deg, #10B981, #059669)" },
+  { name: "Rose Gold", color: "#F43F5E", gradient: "linear-gradient(45deg, #F43F5E, #E11D48)" },
+  { name: "Electric Blue", color: "#3B82F6", gradient: "linear-gradient(45deg, #3B82F6, #2563EB)" }
+];
+
+// Enhanced wallet handler
 const walletHandler = {
   connected: false,
   publicKey: null,
+  balance: 0,
   
   connect: async () => {
     try {
-      // Check for Phantom Wallet
       if (window.solana && window.solana.isPhantom) {
         const response = await window.solana.connect();
         walletHandler.connected = true;
         walletHandler.publicKey = response.publicKey.toString();
+        walletHandler.balance = Math.random() * 10; // Mock balance for demo
         return response.publicKey;
       }
       
-      // Check for Solflare
-      if (window.solflare && window.solflare.isSolflare) {
-        await window.solflare.connect();
-        walletHandler.connected = true;
-        walletHandler.publicKey = window.solflare.publicKey.toString();
-        return window.solflare.publicKey;
-      }
-      
-      // Fallback to mock for demo
+      // Demo mode
       walletHandler.connected = true;
       walletHandler.publicKey = "Demo" + Math.random().toString(36).substr(2, 8);
+      walletHandler.balance = Math.random() * 10;
       return { toString: () => walletHandler.publicKey };
       
     } catch (error) {
-      console.error('Wallet connection failed:', error);
-      throw new Error('Failed to connect wallet. Please make sure you have Phantom or Solflare installed.');
+      throw new Error('Failed to connect wallet');
     }
   },
   
-  sendTransaction: async (transactionData) => {
-    try {
-      if (window.solana && window.solana.isPhantom) {
-        // In a real implementation, you would create a proper Solana transaction here
-        // For demo purposes, we'll simulate the transaction
-        console.log('Sending transaction via Phantom:', transactionData);
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
-        return "phantom_sig_" + Math.random().toString(36).substr(2, 20);
-      }
-      
-      if (window.solflare && window.solflare.isSolflare) {
-        console.log('Sending transaction via Solflare:', transactionData);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        return "solflare_sig_" + Math.random().toString(36).substr(2, 20);
-      }
-      
-      // Mock transaction
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      return "demo_sig_" + Math.random().toString(36).substr(2, 20);
-      
-    } catch (error) {
-      console.error('Transaction failed:', error);
-      throw new Error('Transaction failed. Please try again.');
+  sendTransaction: async (amount) => {
+    if (walletHandler.balance < amount) {
+      throw new Error('Insufficient funds');
     }
+    
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    walletHandler.balance -= amount;
+    return "sig_" + Math.random().toString(36).substr(2, 20);
   }
 };
 
@@ -78,40 +68,44 @@ const Game = () => {
   const wsRef = useRef(null);
   const animationRef = useRef(null);
   
+  // Game State
   const [gameState, setGameState] = useState({
     sessionId: null,
     playerId: null,
     players: {},
     food: [],
     status: 'waiting',
-    connected: false,
-    myDirection: 0
+    connected: false
   });
   
-  const [userAccount, setUserAccount] = useState(null);
+  // UI State
   const [walletConnected, setWalletConnected] = useState(false);
-  const [gameStatus, setGameStatus] = useState('menu'); // menu, joining, playing, finished
-  const [message, setMessage] = useState('Connect your Solana wallet to play!');
-  const [entryFee, setEntryFee] = useState(0.01);
+  const [gameStatus, setGameStatus] = useState('menu'); // menu, lobby, playing, finished
+  const [message, setMessage] = useState('Connect wallet to start gambling!');
+  const [selectedBetAmount, setSelectedBetAmount] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [showCustomize, setShowCustomize] = useState(false);
+  const [selectedSnakeColor, setSelectedSnakeColor] = useState(0);
+  
+  // User Data
+  const [userAccount, setUserAccount] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([
+    { name: "aj", winnings: 1351.04 },
+    { name: "dih", winnings: 823.86 },
+    { name: "Darkle", winnings: 623.42 }
+  ]);
+  const [globalStats, setGlobalStats] = useState({
+    totalWinnings: 22610,
+    playersInGame: 4
+  });
 
-  // Detect available wallets
-  const detectWallets = () => {
-    const wallets = [];
-    if (window.solana && window.solana.isPhantom) wallets.push('Phantom');
-    if (window.solflare && window.solflare.isSolflare) wallets.push('Solflare');
-    if (wallets.length === 0) wallets.push('Demo Mode');
-    return wallets;
-  };
-
-  // Connect wallet function
+  // Connect wallet
   const connectWallet = async () => {
     try {
       setLoading(true);
       const publicKey = await walletHandler.connect();
       setWalletConnected(true);
       
-      // Create or get user account
       const response = await fetch(`${API}/user/account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,13 +114,9 @@ const Game = () => {
         })
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to create user account');
-      }
-      
       const accountData = await response.json();
       setUserAccount(accountData);
-      setMessage(`Welcome ${accountData.display_name || 'Player'}! Ready to play.`);
+      setMessage('Wallet connected! Choose your bet and join a game.');
       
     } catch (error) {
       setMessage('Failed to connect wallet: ' + error.message);
@@ -135,75 +125,63 @@ const Game = () => {
     }
   };
 
-  // Create new game session
-  const createGame = async () => {
+  // Create game with bet amount
+  const createGameWithBet = async () => {
     try {
       setLoading(true);
+      setMessage('Creating game with $' + selectedBetAmount + ' bet...');
+      
       const response = await fetch(`${API}/game/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bet_amount: selectedBetAmount
+        })
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to create game session');
-      }
-      
       const data = await response.json();
-      setGameState(prev => ({ ...prev, sessionId: data.session_id }));
-      setEntryFee(data.entry_fee);
-      setMessage(`Game created: ${data.session_id.substring(0, 8)}...`);
-      return data.session_id;
+      joinGameWithBet(data.session_id);
+      
     } catch (error) {
       setMessage('Failed to create game: ' + error.message);
-      return null;
     } finally {
       setLoading(false);
     }
   };
 
-  // Join game with payment
-  const joinGame = async (sessionId) => {
+  // Join game with bet
+  const joinGameWithBet = async (sessionId) => {
     if (!walletConnected) {
-      setMessage('Please connect your Solana wallet first');
+      setMessage('Connect wallet first!');
       return;
     }
 
-    setGameStatus('joining');
+    setGameStatus('lobby');
     setLoading(true);
-    setMessage('Processing entry fee payment...');
+    setMessage(`Placing $${selectedBetAmount} bet...`);
 
     try {
       const playerId = `player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
       
-      // Step 1: Create payment transaction
-      const paymentResponse = await fetch(`${API}/payment/create-entry`, {
+      // Create payment transaction
+      const paymentResponse = await fetch(`${API}/payment/create-bet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
+          session_id: sessionId || `game_${Date.now()}`,
           player_id: playerId,
-          wallet_address: walletHandler.publicKey
+          wallet_address: walletHandler.publicKey,
+          bet_amount: selectedBetAmount
         })
       });
       
-      if (!paymentResponse.ok) {
-        throw new Error('Failed to create payment transaction');
-      }
-      
       const paymentData = await paymentResponse.json();
-      setMessage('Confirm payment in your wallet...');
       
-      // Step 2: Send transaction
-      const signature = await walletHandler.sendTransaction({
-        amount: paymentData.amount,
-        recipient: paymentData.recipient,
-        message: paymentData.message
-      });
+      // Send transaction
+      const signature = await walletHandler.sendTransaction(selectedBetAmount);
       
-      setMessage('Payment sent! Waiting for confirmation...');
-      
-      // Step 3: Confirm payment with backend
-      const confirmResponse = await fetch(`${API}/payment/confirm-entry`, {
+      // Confirm payment
+      const confirmResponse = await fetch(`${API}/payment/confirm-bet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -212,24 +190,19 @@ const Game = () => {
         })
       });
       
-      if (!confirmResponse.ok) {
-        throw new Error('Failed to confirm payment');
-      }
-      
-      // Step 4: Connect to game WebSocket
-      connectToGame(sessionId, playerId);
-      setGameState(prev => ({ ...prev, sessionId, playerId }));
-      setMessage('Payment confirmed! Joining game...');
+      // Connect to game
+      connectToGame(sessionId || `game_${Date.now()}`, playerId);
+      setGameState(prev => ({ ...prev, sessionId: sessionId || `game_${Date.now()}`, playerId }));
       
     } catch (error) {
-      setMessage('Payment failed: ' + error.message);
+      setMessage('Bet failed: ' + error.message);
       setGameStatus('menu');
     } finally {
       setLoading(false);
     }
   };
 
-  // Connect to game WebSocket
+  // Connect to WebSocket
   const connectToGame = (sessionId, playerId) => {
     const wsUrl = `${WS_URL}/ws/${sessionId}/${playerId}`;
     wsRef.current = new WebSocket(wsUrl);
@@ -237,53 +210,13 @@ const Game = () => {
     wsRef.current.onopen = () => {
       setGameState(prev => ({ ...prev, connected: true }));
       setGameStatus('playing');
-      setMessage('Connected! Waiting for other players...');
+      setMessage('Game started! Move with mouse or WASD');
+      startGameLoop();
     };
     
     wsRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      
-      switch(data.type) {
-        case 'game_started':
-          setGameState(prev => ({
-            ...prev,
-            players: data.players,
-            food: data.food,
-            status: 'active'
-          }));
-          setMessage('Game started! Use WASD/arrows to move, or move your mouse!');
-          startGameLoop();
-          break;
-          
-        case 'game_state':
-          setGameState(prev => ({
-            ...prev,
-            players: data.players,
-            food: data.food,
-            status: data.status
-          }));
-          break;
-          
-        case 'game_ended':
-          setGameState(prev => ({ ...prev, status: 'finished' }));
-          setGameStatus('finished');
-          const winnerName = data.winner ? `Player ${data.winner.substring(0, 8)}...` : 'No one';
-          const prizeAmount = data.prize_pool ? data.prize_pool.toFixed(4) : '0';
-          setMessage(`🎉 Game ended! Winner: ${winnerName} | Prize: ${prizeAmount} SOL`);
-          stopGameLoop();
-          break;
-          
-        case 'player_eliminated':
-          setMessage(`💀 Player eliminated: ${data.player_id.substring(0, 8)}...`);
-          break;
-          
-        case 'error':
-          setMessage(`⚠️ Game error: ${data.message}`);
-          break;
-          
-        default:
-          break;
-      }
+      handleGameMessage(data);
     };
     
     wsRef.current.onclose = () => {
@@ -291,36 +224,55 @@ const Game = () => {
       setMessage('Disconnected from game');
       stopGameLoop();
     };
-    
-    wsRef.current.onerror = () => {
-      setMessage('Connection error - please try again');
-    };
+  };
+
+  const handleGameMessage = (data) => {
+    switch(data.type) {
+      case 'game_started':
+        setGameState(prev => ({
+          ...prev,
+          players: data.players,
+          food: data.food,
+          status: 'active'
+        }));
+        break;
+        
+      case 'game_state':
+        setGameState(prev => ({
+          ...prev,
+          players: data.players,
+          food: data.food
+        }));
+        break;
+        
+      case 'game_ended':
+        setGameStatus('finished');
+        const winner = data.winner;
+        const winnings = data.winnings;
+        setMessage(winner ? `🏆 ${winner} won $${winnings}!` : 'Game ended!');
+        stopGameLoop();
+        break;
+        
+      case 'player_eliminated':
+        setMessage(`💀 ${data.player} eliminated!`);
+        break;
+    }
   };
 
   // Game loop
   const startGameLoop = () => {
-    let lastTime = performance.now();
-    
-    const gameLoop = (currentTime) => {
-      const deltaTime = currentTime - lastTime;
-      
-      if (deltaTime >= 50) { // 20 FPS
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-          wsRef.current.send(JSON.stringify({ 
-            type: 'update',
-            timestamp: currentTime 
-          }));
-        }
-        lastTime = currentTime;
+    const gameLoop = () => {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ 
+          type: 'update',
+          timestamp: performance.now() 
+        }));
       }
-      
       animationRef.current = requestAnimationFrame(gameLoop);
     };
-    
     animationRef.current = requestAnimationFrame(gameLoop);
   };
 
-  // Stop game loop
   const stopGameLoop = () => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
@@ -328,44 +280,40 @@ const Game = () => {
     }
   };
 
-  // Keyboard input
+  // Controls
   const handleKeyPress = useCallback((event) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       let direction = null;
       
       switch(event.key.toLowerCase()) {
-        case 'arrowup':
         case 'w':
+        case 'arrowup':
           direction = 'up';
           break;
-        case 'arrowdown':
         case 's':
+        case 'arrowdown':
           direction = 'down';
           break;
-        case 'arrowleft':
         case 'a':
+        case 'arrowleft':
           direction = 'left';
           break;
-        case 'arrowright':
         case 'd':
+        case 'arrowright':
           direction = 'right';
           break;
-        default:
-          return;
       }
       
       if (direction) {
         event.preventDefault();
         wsRef.current.send(JSON.stringify({
           type: 'move',
-          direction: direction,
-          timestamp: performance.now()
+          direction: direction
         }));
       }
     }
   }, []);
 
-  // Mouse movement for smooth direction control
   const handleMouseMove = useCallback((event) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && gameState.status === 'active') {
       const canvas = canvasRef.current;
@@ -378,8 +326,7 @@ const Game = () => {
       
       wsRef.current.send(JSON.stringify({
         type: 'mouse_move',
-        angle: angle,
-        timestamp: performance.now()
+        angle: angle
       }));
     }
   }, [gameState.status]);
@@ -400,94 +347,102 @@ const Game = () => {
     };
   }, [handleKeyPress, handleMouseMove]);
 
-  // Enhanced canvas rendering
+  // Canvas rendering
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     
-    // Clear canvas with gradient background
-    const gradient = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, 0,
-      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
-    );
-    gradient.addColorStop(0, '#001122');
-    gradient.addColorStop(1, '#000511');
-    ctx.fillStyle = gradient;
+    // Clear with dark background
+    ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw food with glow effect
-    ctx.shadowBlur = 10;
-    gameState.food.forEach(food => {
-      ctx.shadowColor = food.color || '#ffff00';
-      ctx.fillStyle = food.color || '#ffff00';
+    // Draw grid pattern
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 50) {
       ctx.beginPath();
-      ctx.arc(food.x, food.y, food.size || FOOD_SIZE, 0, Math.PI * 2);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 50) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+    
+    // Draw food
+    gameState.food.forEach(food => {
+      ctx.fillStyle = food.color || '#FFD700';
+      ctx.beginPath();
+      ctx.arc(food.x, food.y, FOOD_SIZE, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Glow effect
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = food.color || '#FFD700';
+      ctx.fill();
+      ctx.shadowBlur = 0;
     });
     
-    // Reset shadow
-    ctx.shadowBlur = 0;
-    
-    // Draw players with enhanced visuals
+    // Draw players
     Object.values(gameState.players).forEach(player => {
       if (player.alive && player.segments && player.segments.length > 0) {
-        // Draw snake body with gradient
-        const segmentCount = player.segments.length;
+        const gradient = ctx.createLinearGradient(
+          player.segments[0].x - 20, player.segments[0].y - 20,
+          player.segments[0].x + 20, player.segments[0].y + 20
+        );
+        gradient.addColorStop(0, player.color);
+        gradient.addColorStop(1, player.color + '80');
         
         player.segments.forEach((segment, index) => {
+          const radius = index === 0 ? SNAKE_HEAD_SIZE : SNAKE_SEGMENT_SIZE - (index * 0.2);
+          
+          ctx.fillStyle = gradient;
           ctx.beginPath();
-          const radius = index === 0 ? SNAKE_HEAD_SIZE : Math.max(SNAKE_SEGMENT_SIZE - (index * 0.2), 4);
-          
-          // Color intensity decreases towards tail
-          const intensity = Math.max(1 - (index / segmentCount), 0.3);
-          const color = player.color;
-          const r = parseInt(color.substr(1, 2), 16);
-          const g = parseInt(color.substr(3, 2), 16);
-          const b = parseInt(color.substr(5, 2), 16);
-          
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${intensity})`;
-          ctx.arc(segment.x, segment.y, radius, 0, Math.PI * 2);
+          ctx.arc(segment.x, segment.y, Math.max(radius, 4), 0, Math.PI * 2);
           ctx.fill();
           
-          // Head outline and eyes
+          // Head details
           if (index === 0) {
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // Draw eyes
+            // Eyes
             ctx.fillStyle = '#ffffff';
             const eyeOffset = radius * 0.3;
             ctx.beginPath();
-            ctx.arc(segment.x - eyeOffset, segment.y - eyeOffset, 2, 0, Math.PI * 2);
+            ctx.arc(segment.x - eyeOffset, segment.y - eyeOffset, 3, 0, Math.PI * 2);
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(segment.x + eyeOffset, segment.y - eyeOffset, 2, 0, Math.PI * 2);
+            ctx.arc(segment.x + eyeOffset, segment.y - eyeOffset, 3, 0, Math.PI * 2);
             ctx.fill();
           }
         });
         
-        // Draw player name and score
+        // Player name
         if (player.segments[0]) {
           ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 12px Arial';
+          ctx.font = 'bold 14px Arial';
           ctx.textAlign = 'center';
           ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 4;
           
-          const playerName = `${player.player_id.substring(0, 6)}... (${player.score || 10})`;
+          const name = `${player.player_id.substring(0, 8)}... ($${selectedBetAmount})`;
           const textX = player.segments[0].x;
           const textY = player.segments[0].y - 25;
           
-          ctx.strokeText(playerName, textX, textY);
-          ctx.fillText(playerName, textX, textY);
+          ctx.strokeText(name, textX, textY);
+          ctx.fillText(name, textX, textY);
         }
       }
     });
     
-  }, [gameState.players, gameState.food]);
+  }, [gameState.players, gameState.food, selectedBetAmount]);
 
   // Cleanup
   useEffect(() => {
@@ -499,161 +454,205 @@ const Game = () => {
     };
   }, []);
 
-  const availableWallets = detectWallets();
-
   return (
-    <div className="game-container">
+    <div className="damnbruh-container">
+      {/* Header */}
       <div className="header">
-        <h1>🐍 Crypto Slither</h1>
-        <p>Real Solana-powered multiplayer snake game</p>
+        <div className="logo">
+          <span className="logo-icon">🐍</span>
+          <span className="logo-text">CRYPTO<span className="logo-accent">SLITHER</span></span>
+        </div>
+        <button className="login-btn">Login</button>
       </div>
-      
-      <div className="wallet-section">
-        {!walletConnected ? (
-          <div className="wallet-connection">
-            <button className="btn btn-primary" onClick={connectWallet} disabled={loading}>
-              {loading ? 'Connecting...' : 'Connect Solana Wallet'}
-            </button>
-            <p className="wallet-info">Available: {availableWallets.join(', ')}</p>
-          </div>
-        ) : (
-          <div className="wallet-connected">
-            <p>✅ Wallet Connected</p>
-            <p className="wallet-address">{walletHandler.publicKey?.substring(0, 8)}...{walletHandler.publicKey?.substr(-8)}</p>
-          </div>
-        )}
-      </div>
-      
-      <div className="status-bar">
-        <p className="status-message">{message}</p>
-        {userAccount && (
-          <div className="user-stats">
-            <div className="stat-item">
-              <span className="stat-label">Games:</span>
-              <span className="stat-value">{userAccount.games_won}/{userAccount.games_played}</span>
+
+      <div className="main-content">
+        {/* Left Sidebar */}
+        <div className="left-sidebar">
+          {/* Leaderboard */}
+          <div className="panel">
+            <div className="panel-header">
+              <span className="panel-icon">🏆</span>
+              <span>Leaderboard</span>
+              <span className="live-indicator">● Live</span>
             </div>
-            <div className="stat-item">
-              <span className="stat-label">Winnings:</span>
-              <span className="stat-value">{userAccount.total_winnings.toFixed(4)} SOL</span>
+            <div className="leaderboard">
+              {leaderboard.map((player, index) => (
+                <div key={index} className="leaderboard-item">
+                  <span className="rank">{index + 1}. {player.name}</span>
+                  <span className="winnings">${player.winnings.toLocaleString()}</span>
+                </div>
+              ))}
             </div>
+            <button className="view-full-btn">View Full Leaderboard</button>
           </div>
-        )}
-        {gameState.sessionId && (
-          <p className="game-id">🎮 Game ID: {gameState.sessionId.substring(0, 12)}...</p>
-        )}
-      </div>
-      
-      {gameStatus === 'menu' && (
-        <div className="menu">
-          {!walletConnected ? (
-            <div className="connect-prompt">
-              <h3>Connect Your Solana Wallet to Play</h3>
-              <p>Install Phantom or Solflare wallet to play with real SOL</p>
-              <p>Or continue in demo mode to test the game</p>
+
+          {/* Friends */}
+          <div className="panel">
+            <div className="panel-header">
+              <span className="panel-icon">👥</span>
+              <span>Friends</span>
+              <button className="refresh-btn">🔄</button>
+              <span className="friends-count">0 playing</span>
             </div>
-          ) : (
-            <div className="menu-options">
-              <button 
-                className="btn btn-success" 
-                onClick={async () => {
-                  const sessionId = await createGame();
-                  if (sessionId) joinGame(sessionId);
-                }}
-                disabled={loading}
-              >
-                {loading ? 'Creating...' : `🚀 Create New Game (${entryFee} SOL)`}
-              </button>
-              <div className="join-section">
-                <input 
-                  type="text" 
-                  placeholder="Enter Game Session ID"
-                  id="sessionInput"
-                  className="session-input"
-                />
-                <button 
-                  className="btn btn-secondary" 
-                  onClick={() => {
-                    const sessionId = document.getElementById('sessionInput').value.trim();
-                    if (sessionId) {
-                      joinGame(sessionId);
-                    } else {
-                      setMessage('Please enter a valid session ID');
-                    }
-                  }}
-                  disabled={loading}
-                >
-                  {loading ? 'Joining...' : `🎯 Join Game (${entryFee} SOL)`}
-                </button>
+            <div className="no-friends">
+              <div className="no-friends-icon">👤</div>
+              <p>No friends... add some!</p>
+            </div>
+            <button className="add-friends-btn">Add Friends</button>
+          </div>
+        </div>
+
+        {/* Game Area */}
+        <div className="game-area">
+          {gameStatus === 'menu' && (
+            <div className="game-lobby">
+              <h1 className="game-title">CRYPTO<span className="title-accent">SLITHER</span></h1>
+              
+              {!walletConnected ? (
+                <div className="connect-section">
+                  <input 
+                    type="text" 
+                    placeholder="Login to set your name" 
+                    className="name-input"
+                  />
+                  <button className="edit-btn">✏️</button>
+                </div>
+              ) : (
+                <div className="bet-section">
+                  <div className="bet-amounts">
+                    {BET_AMOUNTS.map(amount => (
+                      <button
+                        key={amount}
+                        className={`bet-btn ${selectedBetAmount === amount ? 'active' : ''}`}
+                        onClick={() => setSelectedBetAmount(amount)}
+                      >
+                        ${amount}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <button className="join-game-btn" onClick={createGameWithBet} disabled={loading}>
+                    <span className="play-icon">▶</span>
+                    {loading ? 'JOINING...' : 'JOIN GAME'}
+                  </button>
+                  
+                  <div className="game-options">
+                    <button className="option-btn">🇺🇸 US</button>
+                    <button className="option-btn">🌐 Browse Lobbies</button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="game-stats">
+                <div className="stat">
+                  <div className="stat-number">{globalStats.playersInGame}</div>
+                  <div className="stat-label">Players in Game</div>
+                </div>
+                <div className="stat">
+                  <div className="stat-number">${globalStats.totalWinnings.toLocaleString()}</div>
+                  <div className="stat-label">Global Player Winnings</div>
+                </div>
               </div>
             </div>
           )}
-        </div>
-      )}
-      
-      {gameStatus === 'joining' && (
-        <div className="loading">
-          <div className="spinner"></div>
-          <p>Processing Solana payment...</p>
-          <p>Check your wallet for transaction approval</p>
-        </div>
-      )}
-      
-      {gameStatus === 'playing' && (
-        <div className="game-area">
-          <div className="game-info">
-            <div className="info-item">
-              <span>👥 Players:</span>
-              <span>{Object.keys(gameState.players).length}</span>
+
+          {gameStatus === 'playing' && (
+            <canvas
+              ref={canvasRef}
+              width={GAME_WIDTH}
+              height={GAME_HEIGHT}
+              className="game-canvas"
+            />
+          )}
+
+          {gameStatus === 'finished' && (
+            <div className="game-end">
+              <h2>Game Finished!</h2>
+              <p>{message}</p>
+              <button 
+                className="play-again-btn"
+                onClick={() => {
+                  setGameStatus('menu');
+                  setGameState({
+                    sessionId: null,
+                    playerId: null,
+                    players: {},
+                    food: [],
+                    status: 'waiting',
+                    connected: false
+                  });
+                }}
+              >
+                Play Again
+              </button>
             </div>
-            <div className="info-item">
-              <span>🎮 Controls:</span>
-              <span>Mouse + WASD</span>
+          )}
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="right-sidebar">
+          {/* Wallet */}
+          <div className="panel">
+            <div className="panel-header">
+              <span className="panel-icon">💳</span>
+              <span>Wallet</span>
+              <button className="copy-btn">📋 Copy Address</button>
+              <button className="refresh-balance-btn">🔄 Refresh Balance</button>
             </div>
-            <div className="info-item">
-              <span>📊 Status:</span>
-              <span className={`status-${gameState.status}`}>{gameState.status}</span>
-            </div>
+            
+            {!walletConnected ? (
+              <button className="connect-wallet-btn" onClick={connectWallet} disabled={loading}>
+                {loading ? 'Connecting...' : 'Connect Wallet'}
+              </button>
+            ) : (
+              <>
+                <div className="balance">
+                  <div className="balance-amount">${walletHandler.balance.toFixed(2)}</div>
+                  <div className="balance-label">{walletHandler.balance.toFixed(4)} SOL</div>
+                </div>
+                
+                <div className="wallet-actions">
+                  <button className="add-funds-btn">Add Funds</button>
+                  <button className="cash-out-btn">Cash out</button>
+                </div>
+              </>
+            )}
           </div>
-          <canvas
-            ref={canvasRef}
-            width={GAME_WIDTH}
-            height={GAME_HEIGHT}
-            className="game-canvas"
-          />
-          <div className="game-tips">
-            <p>💡 Move your mouse to change direction smoothly</p>
-            <p>🍎 Eat food to grow larger and increase your score</p>
-            <p>💀 Avoid hitting other players or yourself</p>
+
+          {/* Customize */}
+          <div className="panel">
+            <div className="panel-header">
+              <span className="panel-icon">🎨</span>
+              <span>Customize</span>
+            </div>
+            
+            <div className="snake-previews">
+              {SNAKE_COLORS.map((snake, index) => (
+                <div 
+                  key={index}
+                  className={`snake-preview ${selectedSnakeColor === index ? 'selected' : ''}`}
+                  onClick={() => setSelectedSnakeColor(index)}
+                  style={{ background: snake.gradient }}
+                >
+                  <div className="snake-eyes">👀</div>
+                </div>
+              ))}
+            </div>
+            
+            <button className="change-appearance-btn">Change Appearance</button>
           </div>
         </div>
-      )}
-      
-      {gameStatus === 'finished' && (
-        <div className="game-end">
-          <h2>🎉 Game Finished!</h2>
-          <p className="game-result">{message}</p>
-          <div className="game-actions">
-            <button 
-              className="btn btn-primary" 
-              onClick={() => {
-                setGameStatus('menu');
-                setGameState({
-                  sessionId: null,
-                  playerId: null,
-                  players: {},
-                  food: [],
-                  status: 'waiting',
-                  connected: false,
-                  myDirection: 0
-                });
-                setMessage('Ready to play again!');
-              }}
-            >
-              🔄 Play Again
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
+
+      {/* Status Bar */}
+      <div className="status-bar">
+        <span>{message}</span>
+      </div>
+
+      {/* Discord */}
+      <button className="discord-btn">
+        💬 Join Discord!
+      </button>
     </div>
   );
 };
