@@ -31,6 +31,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Enhanced Game Models
+class UserAuth(BaseModel):
+    user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    password_hash: str
+    wallet_address: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_login: datetime = Field(default_factory=datetime.utcnow)
+    is_active: bool = True
+
 class UserAccount(BaseModel):
     user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     wallet_address: str
