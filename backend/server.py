@@ -463,7 +463,7 @@ async def get_leaderboard():
     """Get top players leaderboard"""
     top_players = await db.user_accounts.find(
         {},
-        {"display_name": 1, "total_winnings": 1, "wallet_address": 1}
+        {"_id": 0, "display_name": 1, "total_winnings": 1, "wallet_address": 1}
     ).sort("total_winnings", -1).limit(10).to_list(10)
     
     # Calculate total winnings
