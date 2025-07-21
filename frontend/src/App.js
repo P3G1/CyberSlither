@@ -783,15 +783,15 @@ const GameComponent = () => {
     return food;
   };
 
-  // Enhanced game loop for mobile demo
+  // Enhanced game loop with proper slither.io mechanics
   const startDemoGameLoop = () => {
     let lastTime = 0;
-    const targetFPS = 30; // Optimize for mobile
+    const targetFPS = 60; // Higher FPS for smooth movement
     const frameTime = 1000 / targetFPS;
 
     const gameLoop = (currentTime) => {
       if (currentTime - lastTime >= frameTime) {
-        updateDemoGame();
+        updateSlitherGame();
         lastTime = currentTime;
       }
       gameLoopRef.current = requestAnimationFrame(gameLoop);
@@ -800,237 +800,260 @@ const GameComponent = () => {
     gameLoopRef.current = requestAnimationFrame(gameLoop);
   };
 
-  // Update demo game with full collision detection and growth mechanics
-  const updateDemoGame = () => {
+  // Proper slither.io game mechanics
+  const updateSlitherGame = () => {
     setGameState(prevState => {
       const newPlayers = { ...prevState.players };
       let newFood = [...prevState.food];
       const playerName = currentUser?.username || 'Player';
       
-      // Update each player/bot
+      // Update each snake
       Object.keys(newPlayers).forEach(playerId => {
-        const player = newPlayers[playerId];
-        if (!player.alive) return;
+        const snake = newPlayers[playerId];
+        if (!snake.alive) return;
         
-        // Move the snake
-        const head = { ...player.segments[0] };
-        const speed = player.speed || 2;
+        // Initialize snake properties if needed
+        if (!snake.targetAngle) snake.targetAngle = 0;
+        if (!snake.currentAngle) snake.currentAngle = 0;
+        if (!snake.speed) snake.speed = 3;
+        if (!snake.segments) snake.segments = initializeSnakeSegments(snake);
         
-        switch (player.direction) {
-          case 'up':
-            head.y -= speed;
-            break;
-          case 'down':
-            head.y += speed;
-            break;
-          case 'left':
-            head.x -= speed;
-            break;
-          case 'right':
-            head.x += speed;
-            break;
+        // Smooth angle interpolation for realistic movement
+        const angleDiff = snake.targetAngle - snake.currentAngle;
+        let smoothAngle = angleDiff;
+        
+        // Handle angle wrapping
+        if (smoothAngle > Math.PI) smoothAngle -= 2 * Math.PI;
+        if (smoothAngle < -Math.PI) smoothAngle += 2 * Math.PI;
+        
+        // Apply smooth rotation
+        snake.currentAngle += smoothAngle * 0.1; // Rotation smoothing factor
+        
+        // Move snake head based on angle
+        const newHead = {
+          x: snake.segments[0].x + Math.cos(snake.currentAngle) * snake.speed,
+          y: snake.segments[0].y + Math.sin(snake.currentAngle) * snake.speed
+        };
+        
+        // Wrap around screen edges
+        if (newHead.x < 0) newHead.x = canvasSize.width;
+        if (newHead.x > canvasSize.width) newHead.x = 0;
+        if (newHead.y < 0) newHead.y = canvasSize.height;
+        if (newHead.y > canvasSize.height) newHead.y = 0;
+        
+        // Update snake segments to follow head properly
+        const newSegments = [newHead];
+        const segmentDistance = 12; // Distance between segments
+        
+        for (let i = 1; i < snake.segments.length; i++) {
+          const prevSegment = newSegments[i - 1];
+          const currentSegment = snake.segments[i];
+          
+          // Calculate distance between segments
+          const dx = prevSegment.x - currentSegment.x;
+          const dy = prevSegment.y - currentSegment.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance > segmentDistance) {
+            // Move segment toward previous segment
+            const angle = Math.atan2(dy, dx);
+            newSegments.push({
+              x: prevSegment.x - Math.cos(angle) * segmentDistance,
+              y: prevSegment.y - Math.sin(angle) * segmentDistance
+            });
+          } else {
+            // Keep segment in same position
+            newSegments.push({ ...currentSegment });
+          }
         }
         
-        // Wrap around edges for demo
-        if (head.x < 0) head.x = canvasSize.width;
-        if (head.x > canvasSize.width) head.x = 0;
-        if (head.y < 0) head.y = canvasSize.height;
-        if (head.y > canvasSize.height) head.y = 0;
-        
-        // Collision detection with food
+        // Food collision detection
         let ateFood = false;
-        let foodEaten = null;
         newFood = newFood.filter(food => {
           const distance = Math.sqrt(
-            Math.pow(head.x - food.x, 2) + Math.pow(head.y - food.y, 2)
+            Math.pow(newHead.x - food.x, 2) + Math.pow(newHead.y - food.y, 2)
           );
           
-          if (distance < 15) { // Collision detected
+          if (distance < 20) { // Food collision radius
             ateFood = true;
-            foodEaten = food;
             
-            // Visual effect for eating food
             if (playerId === playerName) {
-              setMessage(`🎯 Food consumed! Snake growing...`);
+              setMessage(`🍎 Food consumed! Growing stronger...`);
               
               // Create eating particles
               const newParticles = [];
-              for (let i = 0; i < 8; i++) {
+              for (let i = 0; i < 6; i++) {
                 newParticles.push({
                   x: food.x,
                   y: food.y,
-                  vx: (Math.random() - 0.5) * 6,
-                  vy: (Math.random() - 0.5) * 6,
-                  color: foodEaten.color,
-                  life: 30,
-                  maxLife: 30,
-                  size: 3
+                  vx: (Math.random() - 0.5) * 8,
+                  vy: (Math.random() - 0.5) * 8,
+                  color: food.color,
+                  life: 25,
+                  maxLife: 25,
+                  size: 4
                 });
               }
-              
               setParticles(prev => [...prev, ...newParticles]);
             }
             
             return false; // Remove food
           }
-          return true; // Keep food
+          return true;
         });
         
-        // Update segments based on whether food was eaten
-        let newSegments;
+        // Grow snake when food is eaten
         if (ateFood) {
-          // Grow the snake by not removing the tail
-          newSegments = [head, ...player.segments];
-          player.score = (player.score || 10) + 5;
+          // Add new segments to the tail
+          const tailSegment = newSegments[newSegments.length - 1];
+          const secondToLast = newSegments[newSegments.length - 2] || tailSegment;
           
-          // Create visual eating effect
-          if (foodEaten && playerId === playerName) {
-            // You could add particle effects here
+          // Calculate direction from second-to-last to last segment
+          const dx = tailSegment.x - secondToLast.x;
+          const dy = tailSegment.y - secondToLast.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance > 0) {
+            const normalizedDx = dx / distance;
+            const normalizedDy = dy / distance;
+            
+            // Add 2 new segments for noticeable growth
+            newSegments.push({
+              x: tailSegment.x + normalizedDx * segmentDistance,
+              y: tailSegment.y + normalizedDy * segmentDistance
+            });
+            newSegments.push({
+              x: tailSegment.x + normalizedDx * segmentDistance * 2,
+              y: tailSegment.y + normalizedDy * segmentDistance * 2
+            });
           }
-        } else {
-          // Normal movement - remove tail
-          newSegments = [head, ...player.segments];
-          newSegments.pop();
+          
+          snake.score = (snake.score || 15) + 5;
         }
         
-        // Collision detection with other snakes (not including self)
-        let collisionDetected = false;
+        // Snake-to-snake collision detection
         Object.keys(newPlayers).forEach(otherPlayerId => {
-          if (otherPlayerId === playerId) return; // Skip self
+          if (otherPlayerId === playerId) return;
           
-          const otherPlayer = newPlayers[otherPlayerId];
-          if (!otherPlayer.alive) return;
+          const otherSnake = newPlayers[otherPlayerId];
+          if (!otherSnake.alive || !otherSnake.segments) return;
           
-          // Check collision with other snake's body (except head-to-head)
-          otherPlayer.segments.forEach((segment, index) => {
+          // Check collision with other snake's body (excluding head-to-head)
+          otherSnake.segments.forEach((segment, index) => {
             const distance = Math.sqrt(
-              Math.pow(head.x - segment.x, 2) + Math.pow(head.y - segment.y, 2)
+              Math.pow(newHead.x - segment.x, 2) + Math.pow(newHead.y - segment.y, 2)
             );
             
-            if (distance < 12) { // Collision with other snake
-              collisionDetected = true;
+            if (distance < 15) { // Collision radius
+              snake.alive = false;
               
-              // If player hits another snake, they die (unless it's head-to-head)
-              if (index > 0 || newSegments.length < otherPlayer.segments.length) {
-                player.alive = false;
-                
-                if (playerId === playerName) {
-                  setMessage(`💀 You crashed into ${otherPlayerId}! Game over!`);
-                } else {
-                  setMessage(`⚡ ${playerId} was eliminated by ${otherPlayerId}!`);
-                }
-                
-                // Convert dead snake to food particles
-                const deadSnakeFood = player.segments.map((segment, i) => ({
-                  x: segment.x + (Math.random() - 0.5) * 10,
-                  y: segment.y + (Math.random() - 0.5) * 10,
-                  id: `dead_${playerId}_${i}_${Date.now()}`,
-                  color: player.color,
-                  size: 6
-                }));
-                
-                newFood = [...newFood, ...deadSnakeFood];
+              if (playerId === playerName) {
+                setMessage(`💀 Crashed into ${otherPlayerId}!`);
               }
+              
+              // Convert dead snake to food
+              const deadSnakeFood = snake.segments.map((segment, i) => ({
+                x: segment.x + (Math.random() - 0.5) * 15,
+                y: segment.y + (Math.random() - 0.5) * 15,
+                id: `dead_${playerId}_${i}_${Date.now()}`,
+                color: snake.color,
+                size: 8
+              }));
+              
+              newFood = [...newFood, ...deadSnakeFood];
             }
           });
         });
         
-        // Self collision detection (hitting own body)
-        if (!collisionDetected && newSegments.length > 4) {
+        // Self-collision detection
+        if (newSegments.length > 5) {
           for (let i = 4; i < newSegments.length; i++) {
             const distance = Math.sqrt(
-              Math.pow(head.x - newSegments[i].x, 2) + Math.pow(head.y - newSegments[i].y, 2)
+              Math.pow(newHead.x - newSegments[i].x, 2) + Math.pow(newHead.y - newSegments[i].y, 2)
             );
             
-            if (distance < 10) {
-              player.alive = false;
-              collisionDetected = true;
-              
+            if (distance < 12) {
+              snake.alive = false;
               if (playerId === playerName) {
-                setMessage(`💀 You hit yourself! Game over!`);
+                setMessage(`💀 You hit yourself!`);
               }
-              
-              // Convert dead snake to food
-              const deadSnakeFood = player.segments.map((segment, i) => ({
-                x: segment.x + (Math.random() - 0.5) * 10,
-                y: segment.y + (Math.random() - 0.5) * 10,
-                id: `self_dead_${playerId}_${i}_${Date.now()}`,
-                color: player.color,
-                size: 6
-              }));
-              
-              newFood = [...newFood, ...deadSnakeFood];
               break;
             }
           }
         }
         
-        // Random direction change for bots (simple AI)
-        if (playerId !== playerName && Math.random() < 0.02) {
-          const directions = ['up', 'down', 'left', 'right'];
-          player.direction = directions[Math.floor(Math.random() * directions.length)];
+        // AI behavior for demo bots
+        if (playerId !== playerName && Math.random() < 0.005) {
+          // Find nearest food
+          let nearestFood = null;
+          let nearestDistance = Infinity;
+          
+          newFood.forEach(food => {
+            const distance = Math.sqrt(
+              Math.pow(newHead.x - food.x, 2) + Math.pow(newHead.y - food.y, 2)
+            );
+            if (distance < nearestDistance) {
+              nearestDistance = distance;
+              nearestFood = food;
+            }
+          });
+          
+          if (nearestFood) {
+            snake.targetAngle = Math.atan2(
+              nearestFood.y - newHead.y,
+              nearestFood.x - newHead.x
+            );
+          } else {
+            // Random movement
+            snake.targetAngle = Math.random() * Math.PI * 2;
+          }
         }
         
         newPlayers[playerId] = {
-          ...player,
+          ...snake,
           segments: newSegments
         };
       });
       
-      // Respawn food to maintain food count
-      while (newFood.length < Math.floor(canvasSize.width * canvasSize.height / 15000)) {
+      // Maintain food supply
+      while (newFood.length < Math.floor(canvasSize.width * canvasSize.height / 8000)) {
         newFood.push({
-          x: Math.random() * (canvasSize.width - 40) + 20,
-          y: Math.random() * (canvasSize.height - 40) + 20,
+          x: Math.random() * (canvasSize.width - 60) + 30,
+          y: Math.random() * (canvasSize.height - 60) + 30,
           id: `food_${Date.now()}_${Math.random()}`,
-          color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000'][Math.floor(Math.random() * 5)],
-          size: FOOD_SIZE
+          color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000', '#8000ff'][Math.floor(Math.random() * 6)],
+          size: 4 + Math.random() * 4
         });
       }
       
-      // Respawn dead AI bots after 5 seconds
+      // Respawn AI bots
       const alivePlayers = Object.values(newPlayers).filter(p => p.alive).length;
       if (alivePlayers < 3) {
-        const deadBots = ['DemoBot1', 'DemoBot2'].filter(botId => 
-          !newPlayers[botId] || !newPlayers[botId].alive
-        );
-        
-        deadBots.forEach(botId => {
-          if (Math.random() < 0.01) { // 1% chance per frame to respawn
-            const centerX = canvasSize.width / 2;
-            const centerY = canvasSize.height / 2;
-            const spawnRadius = 200;
-            const spawnAngle = Math.random() * 2 * Math.PI;
-            
-            newPlayers[botId] = {
-              player_id: botId,
-              segments: [
-                { 
-                  x: centerX + spawnRadius * Math.cos(spawnAngle), 
-                  y: centerY + spawnRadius * Math.sin(spawnAngle) 
-                },
-                { 
-                  x: centerX + spawnRadius * Math.cos(spawnAngle) - 20, 
-                  y: centerY + spawnRadius * Math.sin(spawnAngle) 
-                },
-                { 
-                  x: centerX + spawnRadius * Math.cos(spawnAngle) - 40, 
-                  y: centerY + spawnRadius * Math.sin(spawnAngle) 
-                }
-              ],
-              color: botId === 'DemoBot1' ? '#ff0080' : '#00ff00',
-              alive: true,
-              score: 10,
-              direction: ['up', 'down', 'left', 'right'][Math.floor(Math.random() * 4)],
-              speed: 1.5 + Math.random()
-            };
-            
-            setMessage(`🤖 ${botId} respawned!`);
+        ['DemoBot1', 'DemoBot2'].forEach(botId => {
+          if (!newPlayers[botId] || !newPlayers[botId].alive) {
+            if (Math.random() < 0.008) { // Respawn chance
+              const spawnX = Math.random() * canvasSize.width;
+              const spawnY = Math.random() * canvasSize.height;
+              
+              newPlayers[botId] = {
+                player_id: botId,
+                segments: initializeSnakeSegments({
+                  x: spawnX,
+                  y: spawnY
+                }),
+                color: botId === 'DemoBot1' ? '#ff0080' : '#00ff00',
+                alive: true,
+                score: 15,
+                targetAngle: Math.random() * Math.PI * 2,
+                currentAngle: Math.random() * Math.PI * 2,
+                speed: 2.5 + Math.random()
+              };
+            }
           }
         });
       }
       
-      // Update and clean up particles
+      // Update particles
       setParticles(prevParticles => {
         return prevParticles
           .map(particle => ({
@@ -1038,10 +1061,10 @@ const GameComponent = () => {
             x: particle.x + particle.vx,
             y: particle.y + particle.vy,
             life: particle.life - 1,
-            vx: particle.vx * 0.95, // Slow down particles
-            vy: particle.vy * 0.95
+            vx: particle.vx * 0.96,
+            vy: particle.vy * 0.96
           }))
-          .filter(particle => particle.life > 0); // Remove dead particles
+          .filter(particle => particle.life > 0);
       });
       
       return {
@@ -1050,6 +1073,22 @@ const GameComponent = () => {
         food: newFood
       };
     });
+  };
+
+  // Initialize snake segments properly
+  const initializeSnakeSegments = (startPos) => {
+    const segments = [];
+    const segmentCount = 5;
+    const segmentDistance = 12;
+    
+    for (let i = 0; i < segmentCount; i++) {
+      segments.push({
+        x: (startPos.x || canvasSize.width / 2) - (i * segmentDistance),
+        y: startPos.y || canvasSize.height / 2
+      });
+    }
+    
+    return segments;
   };
 
   const handleGameMessage = (data) => {
