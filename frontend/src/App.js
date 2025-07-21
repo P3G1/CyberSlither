@@ -1198,7 +1198,7 @@ const GameComponent = () => {
     updatePlayerDirection(gameX, gameY);
   }, [gameStatus, gameState.status, canvasSize]);
 
-  // Update player direction based on touch/mouse position
+  // Update player direction based on touch/mouse position (angle-based movement like slither.io)
   const updatePlayerDirection = (targetX, targetY) => {
     const playerId = currentUser?.username || 'Player';
     
@@ -1210,15 +1210,8 @@ const GameComponent = () => {
       const player = prevState.players[playerId];
       const head = player.segments[0];
       
-      const deltaX = targetX - head.x;
-      const deltaY = targetY - head.y;
-      
-      let newDirection;
-      if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        newDirection = deltaX > 0 ? 'right' : 'left';
-      } else {
-        newDirection = deltaY > 0 ? 'down' : 'up';
-      }
+      // Calculate angle from head to target position
+      const targetAngle = Math.atan2(targetY - head.y, targetX - head.x);
       
       return {
         ...prevState,
@@ -1226,7 +1219,7 @@ const GameComponent = () => {
           ...prevState.players,
           [playerId]: {
             ...player,
-            direction: newDirection
+            targetAngle: targetAngle
           }
         }
       };
