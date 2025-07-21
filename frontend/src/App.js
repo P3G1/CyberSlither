@@ -710,54 +710,52 @@ const GameComponent = () => {
     }
   };
 
-  // Local game mode for development/demo with moving elements
+  // Local game mode with proper slither.io mechanics
   const startLocalGame = () => {
     const centerX = canvasSize.width / 2;
     const centerY = canvasSize.height / 2;
+    const playerName = currentUser?.username || 'Player';
     
-    // Create demo game state with responsive sizing
+    // Create proper slither.io game state
     setGameState({
       sessionId: 'local_game',
-      playerId: currentUser?.username || 'Player',
+      playerId: playerName,
       players: {
-        [currentUser?.username || 'Player']: {
-          player_id: currentUser?.username || 'Player',
-          segments: [
-            { x: centerX, y: centerY },
-            { x: centerX - 20, y: centerY },
-            { x: centerX - 40, y: centerY }
-          ],
+        [playerName]: {
+          player_id: playerName,
+          segments: initializeSnakeSegments({ x: centerX, y: centerY }),
           color: SNAKE_SKINS[selectedSkin].color,
           alive: true,
-          score: 10,
-          direction: 'right',
-          speed: 2
+          score: 15,
+          targetAngle: 0,
+          currentAngle: 0,
+          speed: 3
         },
         'DemoBot1': {
           player_id: 'DemoBot1',
-          segments: [
-            { x: centerX - 200, y: centerY - 100 },
-            { x: centerX - 220, y: centerY - 100 },
-            { x: centerX - 240, y: centerY - 100 }
-          ],
+          segments: initializeSnakeSegments({ 
+            x: centerX - 200, 
+            y: centerY - 100 
+          }),
           color: '#ff0080',
           alive: true,
-          score: 8,
-          direction: 'down',
-          speed: 1.5
+          score: 15,
+          targetAngle: Math.PI / 4,
+          currentAngle: Math.PI / 4,
+          speed: 2.5
         },
         'DemoBot2': {
           player_id: 'DemoBot2',
-          segments: [
-            { x: centerX + 200, y: centerY + 100 },
-            { x: centerX + 220, y: centerY + 100 },
-            { x: centerX + 240, y: centerY + 100 }
-          ],
+          segments: initializeSnakeSegments({ 
+            x: centerX + 200, 
+            y: centerY + 100 
+          }),
           color: '#00ff00',
           alive: true,
-          score: 12,
-          direction: 'left',
-          speed: 1.8
+          score: 15,
+          targetAngle: -Math.PI / 4,
+          currentAngle: -Math.PI / 4,
+          speed: 2.8
         }
       },
       food: generateDemoFood(),
