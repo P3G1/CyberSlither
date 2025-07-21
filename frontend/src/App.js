@@ -768,14 +768,15 @@ const GameComponent = () => {
 
   const generateDemoFood = () => {
     const food = [];
-    const maxFood = Math.floor(canvasSize.width * canvasSize.height / 15000); // Scale food with canvas size
+    const maxFood = Math.floor(canvasSize.width * canvasSize.height / 8000); // More food for slither.io style
     
     for (let i = 0; i < maxFood; i++) {
       food.push({
-        x: Math.random() * (canvasSize.width - 40) + 20,
-        y: Math.random() * (canvasSize.height - 40) + 20,
+        x: Math.random() * (canvasSize.width - 60) + 30,
+        y: Math.random() * (canvasSize.height - 60) + 30,
         id: `food_${i}`,
-        color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000'][Math.floor(Math.random() * 5)]
+        color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000', '#8000ff'][Math.floor(Math.random() * 6)],
+        size: 3 + Math.random() * 5 // Variable food sizes like slither.io
       });
     }
     return food;
