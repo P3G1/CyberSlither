@@ -1383,101 +1383,106 @@ const GameComponent = () => {
           const playerName = currentUser?.username || 'Player';
           const isPlayerSnake = player.player_id === playerName;
           
-          // Dynamic radius based on snake length (growth effect)
-          let baseRadius = isHead ? SNAKE_HEAD_SIZE : SNAKE_SEGMENT_SIZE;
-          const growthFactor = Math.min(player.segments.length / 10, 2); // Grows up to 2x size
-          const radius = (baseRadius + growthFactor * 3) - (index * 0.1);
+          // Slither.io style circular segments with smooth size transition
+          const segmentCount = player.segments.length;
+          let radius;
           
-          // Enhanced intensity and glow for larger snakes
-          const intensity = Math.max(1 - (index / player.segments.length), 0.4);
-          const glowIntensity = Math.min(growthFactor, 1.5);
-          
-          // Special effects for player snake
-          if (isPlayerSnake) {
-            ctx.shadowBlur = 25 + (glowIntensity * 10);
-            ctx.shadowColor = skin.glow;
+          if (isHead) {
+            radius = 16 + (segmentCount * 0.3); // Head grows with length
+          } else {
+            // Body segments get smaller toward tail
+            const sizeMultiplier = Math.max(0.4, 1 - (index / segmentCount) * 0.6);
+            radius = (12 + (segmentCount * 0.2)) * sizeMultiplier;
           }
           
-          // Size-based gradient with growth effects
+          // Enhanced glow for player snake
+          if (isPlayerSnake) {
+            ctx.shadowBlur = 20 + (radius * 0.5);
+            ctx.shadowColor = skin.glow;
+          } else {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = player.color;
+          }
+          
+          // Create radial gradient for 3D effect
           const gradient = ctx.createRadialGradient(
             segment.x, segment.y, 0,
-            segment.x, segment.y, radius * glowIntensity
+            segment.x, segment.y, radius
           );
           
-          if (skin.pattern === 'striped') {
+          if (isHead) {
+            // Head has special gradient
             gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(0.3, skin.color);
-            gradient.addColorStop(0.7, skin.color + '80');
-            gradient.addColorStop(1, '#000000');
-          } else if (skin.pattern === 'digital') {
-            const digital = Math.random() > 0.5 ? skin.color : '#000000';
-            gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(0.5, digital);
+            gradient.addColorStop(0.3, skin.color || player.color);
+            gradient.addColorStop(0.8, skin.color || player.color);
             gradient.addColorStop(1, '#000000');
           } else {
-            // Enhanced gradient for larger snakes
-            gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(0.2, skin.color);
-            gradient.addColorStop(0.8, skin.color + Math.floor(intensity * 255).toString(16));
-            gradient.addColorStop(1, '#000000' + Math.floor(intensity * 100).toString(16));
+            // Body segments
+            const intensity = Math.max(0.4, 1 - (index / segmentCount) * 0.5);
+            gradient.addColorStop(0, '#ffffff' + Math.floor(intensity * 255).toString(16));
+            gradient.addColorStop(0.4, player.color);
+            gradient.addColorStop(1, '#000000' + Math.floor(intensity * 128).toString(16));
           }
           
           ctx.fillStyle = gradient;
           ctx.beginPath();
-          ctx.arc(segment.x, segment.y, Math.max(radius, 4), 0, Math.PI * 2);
+          ctx.arc(segment.x, segment.y, radius, 0, Math.PI * 2);
           ctx.fill();
           
-          // Head details with size-based enhancements
-          if (isHead) {
-            // Outer glow grows with snake size
-            ctx.shadowBlur = 40 + (growthFactor * 20);
-            ctx.shadowColor = skin.glow;
-            ctx.strokeStyle = skin.glow;
-            ctx.lineWidth = 2 + growthFactor;
+          // Outline for definition
+          if (isPlayerSnake || isHead) {
+            ctx.strokeStyle = skin.glow || player.color;
+            ctx.lineWidth = isHead ? 3 : 2;
             ctx.stroke();
+          }
+          
+          // Head details
+          if (isHead) {
+            // Eyes for the head
+            const eyeSize = 4 + (radius * 0.15);
+            const eyeOffset = radius * 0.3;
             
-            // Eyes scale with growth
-            const eyeSize = 4 + (growthFactor * 2);
-            const eyeOffset = radius * 0.4;
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowBlur = 10;
-            
-            ctx.beginPath();
-            ctx.arc(segment.x - eyeOffset, segment.y - eyeOffset, eyeSize, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.beginPath();
-            ctx.arc(segment.x + eyeOffset, segment.y - eyeOffset, eyeSize, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Eye glow enhances with size
-            ctx.fillStyle = isPlayerSnake ? '#00ffff' : skin.color;
-            ctx.shadowBlur = 15 + (growthFactor * 5);
-            
-            ctx.beginPath();
-            ctx.arc(segment.x - eyeOffset, segment.y - eyeOffset, eyeSize * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.beginPath();
-            ctx.arc(segment.x + eyeOffset, segment.y - eyeOffset, eyeSize * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Accessory scales with growth
-            if (accessory && accessory.icon !== "❌") {
-              ctx.font = `${20 + (growthFactor * 8)}px Arial`;
-              ctx.textAlign = 'center';
-              ctx.fillStyle = '#ffffff';
-              ctx.shadowBlur = 5;
-              ctx.fillText(accessory.icon, segment.x, segment.y - radius - 10);
+            // Calculate eye positions based on movement direction
+            let eyeAngle = 0;
+            if (player.currentAngle !== undefined) {
+              eyeAngle = player.currentAngle;
             }
             
-            // Size indicator for large snakes
-            if (player.segments.length > 8 && isPlayerSnake) {
-              ctx.font = 'bold 12px Arial';
-              ctx.fillStyle = '#00ffff';
-              ctx.shadowBlur = 10;
-              ctx.fillText(`${player.segments.length}`, segment.x, segment.y + radius + 20);
+            const leftEyeX = segment.x + Math.cos(eyeAngle + Math.PI/6) * eyeOffset;
+            const leftEyeY = segment.y + Math.sin(eyeAngle + Math.PI/6) * eyeOffset;
+            const rightEyeX = segment.x + Math.cos(eyeAngle - Math.PI/6) * eyeOffset;
+            const rightEyeY = segment.y + Math.sin(eyeAngle - Math.PI/6) * eyeOffset;
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 5;
+            
+            ctx.beginPath();
+            ctx.arc(leftEyeX, leftEyeY, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(rightEyeX, rightEyeY, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eye pupils
+            ctx.fillStyle = isPlayerSnake ? '#00ffff' : '#000000';
+            ctx.shadowBlur = 3;
+            
+            ctx.beginPath();
+            ctx.arc(leftEyeX, leftEyeY, eyeSize * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(rightEyeX, rightEyeY, eyeSize * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Accessory
+            if (accessory && accessory.icon !== "❌") {
+              ctx.font = `${16 + (radius * 0.3)}px Arial`;
+              ctx.textAlign = 'center';
+              ctx.fillStyle = '#ffffff';
+              ctx.shadowBlur = 8;
+              ctx.fillText(accessory.icon, segment.x, segment.y - radius - 15);
             }
           }
         });
