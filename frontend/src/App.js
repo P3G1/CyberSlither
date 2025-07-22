@@ -2496,10 +2496,10 @@ const GameComponent = () => {
                 
                 {/* Speed Boost Indicator */}
                 <div className="controls-hint">
-                  <p>🖱️ Mouse to steer • <kbd>SPACE</kbd> to boost</p>
-                  {boostCooldown > 0 && (
-                    <div className="boost-cooldown">
-                      Boost cooldown: {Math.ceil(boostCooldown / 10)}s
+                  <p>🖱️ Mouse to steer • <kbd>SPACE</kbd> to boost (hold to continue)</p>
+                  {isSpacePressed && (
+                    <div className="boost-active">
+                      ⚡ BOOST ACTIVE - Consuming length!
                     </div>
                   )}
                 </div>
