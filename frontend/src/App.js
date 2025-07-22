@@ -335,18 +335,18 @@ const GameComponent = () => {
     }
   };
 
-  // AUTHENTIC SLITHER.IO BOOST CONSUMPTION + SPECTATOR TIMER
+  // AUTHENTIC SLITHER.IO BOOST CONSUMPTION - BUG FIXED
   useEffect(() => {
     if (isSpacePressed && gameStatus === 'playing' && !spectatorMode) {
       const consumeInterval = setInterval(() => {
         setBoostConsumeCounter(prev => prev + 1);
         
-        // Consume length every 10 frames (like original slither.io)
-        if (boostConsumeCounter % 10 === 0) {
+        // Consume length every 20 frames (slower consumption - BUG FIX)
+        if (boostConsumeCounter % 20 === 0) {
           const playerName = currentUser?.username || 'Player';
           setGameState(prevState => {
             const player = prevState.players[playerName];
-            if (player && player.alive && player.segments.length > 5) {
+            if (player && player.alive && player.segments.length > 10) { // Higher minimum length
               return {
                 ...prevState,
                 players: {
@@ -363,7 +363,7 @@ const GameComponent = () => {
             return prevState;
           });
         }
-      }, 50); // Run at 20fps
+      }, 100); // Slower consumption rate - 10fps instead of 20fps
 
       return () => clearInterval(consumeInterval);
     }
