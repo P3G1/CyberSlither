@@ -101,6 +101,51 @@ const SNAKE_TRAILS = [
   { name: "Hologram", effect: "hologram" }
 ];
 
+// NEW SLITHER.IO CONSTANTS
+const GAME_SERVERS = [
+  { name: "US East", flag: "🇺🇸", ping: 25, players: 142 },
+  { name: "US West", flag: "🇺🇸", ping: 45, players: 98 },
+  { name: "Europe", flag: "🇪🇺", ping: 78, players: 203 },
+  { name: "Asia", flag: "🌏", ping: 120, players: 186 },
+  { name: "Australia", flag: "🇦🇺", ping: 95, players: 54 }
+];
+
+const SPECIAL_CODES = {
+  'CYBERPUNK2025': { reward: 'skin', skinId: 6, name: 'Quantum Serpent' },
+  'NEONVIBES': { reward: 'skin', skinId: 7, name: 'RGB Dragon' },
+  'MATRIXMODE': { reward: 'skin', skinId: 8, name: 'Digital Ghost' },
+  'SLITHERKING': { reward: 'accessory', accessoryId: 6, name: 'Golden Crown' },
+  'BOOSTMASTER': { reward: 'trail', trailId: 6, name: 'Lightning Bolt' }
+};
+
+// Add new skins for codes
+const ADDITIONAL_SKINS = [
+  { 
+    name: "Quantum Serpent", 
+    color: "#ff00ff", 
+    gradient: "linear-gradient(45deg, #ff00ff, #00ffff)",
+    glow: "#ff00ff",
+    pattern: "quantum"
+  },
+  { 
+    name: "RGB Dragon", 
+    color: "#ffffff", 
+    gradient: "linear-gradient(45deg, #ff0000, #00ff00, #0000ff)",
+    glow: "#ffffff",
+    pattern: "rgb"
+  },
+  { 
+    name: "Digital Ghost", 
+    color: "#80ff80", 
+    gradient: "linear-gradient(45deg, #80ff80, #40ff40)",
+    glow: "#80ff80",
+    pattern: "ghost"
+  }
+];
+
+// Combine all skins
+const ALL_SKINS = [...SNAKE_SKINS, ...ADDITIONAL_SKINS];
+
 const GameComponent = () => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, connected } = useWallet();
