@@ -1504,20 +1504,8 @@ const GameComponent = () => {
       };
     });
   };
-            vx: particle.vx * 0.92,
-            vy: particle.vy * 0.92
-          }))
-          .filter(particle => particle.life > 0);
-      });
-      
-      // Update death effects
-      setDeathEffects(prevEffects => {
-        return prevEffects
-          .map(effect => ({
-            ...effect,
-            life: effect.life - 1,
-            particles: effect.particles
-              .map(particle => ({
+
+  // Enhanced drawing system with world boundaries, minimap, and all orb types
                 ...particle,
                 x: particle.x + particle.vx,
                 y: particle.y + particle.vy,
