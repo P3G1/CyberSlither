@@ -330,13 +330,39 @@ const GameComponent = () => {
     }
   };
 
-  // Cooldown reducer effect
+  // AUTHENTIC SLITHER.IO BOOST CONSUMPTION
   useEffect(() => {
-    if (boostCooldown > 0) {
-      const timer = setTimeout(() => setBoostCooldown(prev => prev - 1), 50);
-      return () => clearTimeout(timer);
+    if (isSpacePressed && gameStatus === 'playing') {
+      const consumeInterval = setInterval(() => {
+        setBoostConsumeCounter(prev => prev + 1);
+        
+        // Consume length every 10 frames (like original slither.io)
+        if (boostConsumeCounter % 10 === 0) {
+          const playerName = currentUser?.username || 'Player';
+          setGameState(prevState => {
+            const player = prevState.players[playerName];
+            if (player && player.alive && player.segments.length > 5) {
+              return {
+                ...prevState,
+                players: {
+                  ...prevState.players,
+                  [playerName]: {
+                    ...player,
+                    segments: player.segments.slice(0, -1), // Remove last segment
+                    mass: player.segments.length - 1,
+                    boosting: true
+                  }
+                }
+              };
+            }
+            return prevState;
+          });
+        }
+      }, 50); // Run at 20fps
+
+      return () => clearInterval(consumeInterval);
     }
-  }, [boostCooldown]);
+  }, [isSpacePressed, gameStatus, boostConsumeCounter, currentUser]);
 
   // CODE ENTRY SYSTEM
   const handleCodeSubmit = () => {
