@@ -921,57 +921,64 @@ const GameComponent = () => {
     }
   };
 
-  // Local game mode with proper slither.io mechanics
+  // Enhanced local game with authentic slither.io world
   const startLocalGame = () => {
-    const centerX = canvasSize.width / 2;
-    const centerY = canvasSize.height / 2;
     const playerName = currentUser?.username || 'Player';
+    const { food, floatingOrbs } = generateSlitherWorld();
     
-    // Create proper slither.io game state
+    // Spawn players in world coordinates (center of world)
     setGameState({
       sessionId: 'local_game',
       playerId: playerName,
       players: {
         [playerName]: {
           player_id: playerName,
-          segments: initializeSnakeSegments({ x: centerX, y: centerY }),
-          color: SNAKE_SKINS[selectedSkin].color,
+          segments: initializeSnakeSegments({ x: 0, y: 0 }), // Center of world
+          color: ALL_SKINS[selectedSkin].color,
           alive: true,
           score: 15,
+          mass: 15,
           targetAngle: 0,
           currentAngle: 0,
-          speed: 3
+          speed: calculateSpeed(15)
         },
         'DemoBot1': {
           player_id: 'DemoBot1',
-          segments: initializeSnakeSegments({ 
-            x: centerX - 200, 
-            y: centerY - 100 
-          }),
+          segments: initializeSnakeSegments({ x: -300, y: -200 }),
           color: '#ff0080',
           alive: true,
-          score: 15,
+          score: 18,
+          mass: 18,
           targetAngle: Math.PI / 4,
           currentAngle: Math.PI / 4,
-          speed: 2.5
+          speed: calculateSpeed(18)
         },
         'DemoBot2': {
           player_id: 'DemoBot2',
-          segments: initializeSnakeSegments({ 
-            x: centerX + 200, 
-            y: centerY + 100 
-          }),
+          segments: initializeSnakeSegments({ x: 400, y: 300 }),
           color: '#00ff00',
           alive: true,
-          score: 15,
-          targetAngle: -Math.PI / 4,
-          currentAngle: -Math.PI / 4,
-          speed: 2.8
+          score: 20,
+          mass: 20,
+          targetAngle: -Math.PI / 3,
+          currentAngle: -Math.PI / 3,
+          speed: calculateSpeed(20)
         }
       },
-      food: generateDemoFood(),
+      food: food,
+      floatingOrbs: floatingOrbs,
+      deathOrbs: [],
       status: 'active',
-      connected: true
+      connected: true,
+      worldBounds: { radius: WORLD_RADIUS, center: { x: 0, y: 0 } }
+    });
+    
+    // Set initial camera to follow player
+    setCamera({
+      x: 0,
+      y: 0,
+      zoom: 1,
+      following: playerName
     });
     
     startDemoGameLoop();
