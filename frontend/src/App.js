@@ -1526,14 +1526,14 @@ const GameComponent = () => {
         }));
       }
       
-      // Maintain food supply with world-appropriate generation
-      if (newFood.length < 500) { // Keep good food density
+      // Maintain food supply with world-appropriate generation - PERFORMANCE OPTIMIZED
+      if (newFood.length < 300) { // Reduced from 500 for better performance
         const { food: newFoodBatch } = generateSlitherWorld();
-        newFood.push(...newFoodBatch.slice(0, 50)); // Add in batches
+        newFood.push(...newFoodBatch.slice(0, 25)); // Smaller batches
       }
       
-      // Respawn floating orbs if needed
-      if (newFloatingOrbs.length < FLOATING_ORB_COUNT) {
+      // Respawn floating orbs if needed - BUG FIX: Prevent infinite spawning
+      if (newFloatingOrbs.length < FLOATING_ORB_COUNT && Math.random() < 0.01) {
         const angle = Math.random() * 2 * Math.PI;
         const radius = Math.random() * (WORLD_RADIUS - 200);
         
@@ -1550,6 +1550,9 @@ const GameComponent = () => {
           birthTime: Date.now()
         });
       }
+      
+      // Clean up old death orbs for performance - BUG FIX
+      newDeathOrbs = newDeathOrbs.filter((orb, index) => index < 100); // Limit death orbs
       
       // Update minimap data
       setMinimap(prevMinimap => ({
