@@ -1495,7 +1495,7 @@ const GameComponent = () => {
         newPlayers[playerId] = snake;
       });
       
-      // Update camera to follow player or spectator target with authentic field of view scaling
+      // Update camera to follow player or spectator target with SMOOTH field of view scaling
       let targetSnake = null;
       
       if (spectatorMode && spectatorTarget) {
@@ -1507,16 +1507,21 @@ const GameComponent = () => {
       }
       
       if (targetSnake && targetSnake.alive && targetSnake.segments[0]) {
-        // Calculate field of view based on snake length (authentic slither.io)
+        // SMOOTH field of view based on snake length (prevent jarring zoom changes)
         const baseZoom = 1.0;
-        const maxZoom = 0.3; // Larger snakes zoom out more (see more)
-        const lengthFactor = Math.min(targetSnake.segments.length / 100, 1);
-        const targetZoom = baseZoom - (lengthFactor * (baseZoom - maxZoom));
+        const minZoom = 0.7; // Less aggressive zoom out
+        const lengthThreshold = 50; // Only start zooming after significant growth
+        const smoothFactor = Math.max(0, targetSnake.segments.length - lengthThreshold);
+        const lengthFactor = Math.min(smoothFactor / 200, 1); // Very gradual scaling
+        const targetZoom = baseZoom - (lengthFactor * (baseZoom - minZoom));
         
+        // Smooth camera transitions to prevent jarring movements
         setCamera(prevCamera => ({
           x: targetSnake.segments[0].x,
           y: targetSnake.segments[0].y,
-          zoom: targetZoom, // Smooth field of view scaling like original
+          zoom: prevCamera.zoom ? 
+            prevCamera.zoom + (targetZoom - prevCamera.zoom) * 0.02 : // Very smooth transition
+            targetZoom,
           following: spectatorMode ? spectatorTarget : playerName
         }));
       }
