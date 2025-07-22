@@ -30,14 +30,14 @@ const getCanvasSize = () => {
   return { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT };
 };
 
-// Enhanced Game Physics Constants
+// Enhanced Game Physics Constants - AUTHENTIC SLITHER.IO SPEEDS
 const FOOD_SIZE = 8;
 const SNAKE_SEGMENT_SIZE = 10;
 const SNAKE_HEAD_SIZE = 16;
-const BASE_SPEED = 3.5;
-const MIN_SPEED = 2.0;
-const BOOST_SPEED_MULTIPLIER = 1.8;
-const MASS_SPEED_FACTOR = 0.02; // Larger snakes are slower
+const BASE_SPEED = 1.8; // Much slower to match original slither.io
+const MIN_SPEED = 1.2; // Minimum speed for very large snakes
+const BOOST_SPEED_MULTIPLIER = 1.6; // More conservative boost
+const MASS_SPEED_FACTOR = 0.008; // More gradual speed reduction
 
 // Cyberpunk betting amounts
 const BET_AMOUNTS = [1, 5, 20, 50];
