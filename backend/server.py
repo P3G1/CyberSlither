@@ -724,12 +724,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, player_id: s
                                         eliminated_players.append(pid)
                                         break
                             
-                            # Check self collision (only if long enough)
-                            if player["alive"] and len(player["segments"]) > 10:
-                                if check_collision([player["segments"][0]], player["segments"][4:]):
-                                    player["alive"] = False
-                                    eliminated_players.append(pid)
-                            
                             session.players[pid] = player
                             if player["alive"]:
                                 alive_players.append(pid)
