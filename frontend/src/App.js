@@ -2036,16 +2036,16 @@ const GameComponent = () => {
       }
     }
     
-    // PERFORMANCE OPTIMIZED ORB RENDERING
-    const renderOrbs = (orbs, maxDistance = 300) => {
+    // PERFORMANCE OPTIMIZED ORB RENDERING - FOOD BUG FIX
+    const renderOrbs = (orbs, maxDistance = 400) => {
       const visibleOrbs = orbs.filter(orb => 
         orb.x >= visibleBounds.left && orb.x <= visibleBounds.right &&
         orb.y >= visibleBounds.top && orb.y <= visibleBounds.bottom
       );
       
-      // Limit orbs based on snake size for performance
+      // INCREASED orb limits to prevent food disappearing
       const orbLimit = playerSnake && playerSnake.segments ? 
-        Math.max(50, 200 - Math.floor(playerSnake.segments.length / 2)) : 200;
+        Math.max(100, 350 - Math.floor(playerSnake.segments.length / 3)) : 350;
       
       visibleOrbs.slice(0, orbLimit).forEach(orb => {
         ctx.save();
