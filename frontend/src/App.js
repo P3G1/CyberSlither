@@ -1864,6 +1864,7 @@ const GameComponent = () => {
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('contextmenu', handleRightClick); // Right-click mass ejection
       canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
       canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     }
@@ -1873,11 +1874,12 @@ const GameComponent = () => {
       window.removeEventListener('keyup', handleKeyUp);
       if (canvas) {
         canvas.removeEventListener('mousemove', handleMouseMove);
+        canvas.removeEventListener('contextmenu', handleRightClick);
         canvas.removeEventListener('touchstart', handleTouchStart);
         canvas.removeEventListener('touchmove', handleTouchMove);
       }
     };
-  }, [handleKeyDown, handleKeyUp, handleMouseMove, handleTouchStart, handleTouchMove]);
+  }, [handleKeyDown, handleKeyUp, handleMouseMove, handleRightClick, handleTouchStart, handleTouchMove]);
 
   // ENHANCED SLITHER.IO RENDERING SYSTEM
   useEffect(() => {
