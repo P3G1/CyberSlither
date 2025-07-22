@@ -447,7 +447,6 @@ const GameComponent = () => {
       }
     }
   }, [gameState.players, currentUser, spectatorTimeLeft]);
-  }, [gameState.players, currentUser]);
 
   // Save victory message
   const saveVictoryMessage = () => {
