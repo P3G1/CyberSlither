@@ -233,7 +233,7 @@ const GameComponent = () => {
     }
   }, [connected, publicKey, connection]);
 
-  // Load real leaderboard data
+  // Load real leaderboard data with enhanced length-based scoring
   const loadLeaderboard = async () => {
     try {
       const response = await fetch(`${API}/leaderboard`);
@@ -247,14 +247,95 @@ const GameComponent = () => {
       }
     } catch (error) {
       console.error('Failed to load leaderboard:', error);
-      // Fallback data
+      // Fallback data with length-based scores like slither.io
       setLeaderboard([
-        { display_name: "CyberViper", total_winnings: 1337.42 },
-        { display_name: "NeonHunter", total_winnings: 892.15 },
-        { display_name: "MatrixSlayer", total_winnings: 665.88 }
+        { display_name: "CyberViper", total_winnings: 1337.42, max_length: 2847 },
+        { display_name: "NeonHunter", total_winnings: 892.15, max_length: 1923 },
+        { display_name: "MatrixSlayer", total_winnings: 665.88, max_length: 1654 },
+        { display_name: "QuantumSerpent", total_winnings: 443.22, max_length: 1432 },
+        { display_name: "DigitalDragon", total_winnings: 321.15, max_length: 1298 }
       ]);
       setGlobalStats({ totalWinnings: 25420, playersInGame: 8 });
     }
+  };
+
+  // Cooldown reducer effect
+  useEffect(() => {
+    if (boostCooldown > 0) {
+      const timer = setTimeout(() => setBoostCooldown(prev => prev - 1), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [boostCooldown]);
+
+  // CODE ENTRY SYSTEM
+  const handleCodeSubmit = () => {
+    const code = codeEntry.toUpperCase().trim();
+    
+    if (SPECIAL_CODES[code]) {
+      const reward = SPECIAL_CODES[code];
+      
+      if (reward.reward === 'skin' && !unlockedSkins.includes(reward.skinId)) {
+        setUnlockedSkins(prev => [...prev, reward.skinId]);
+        setMessage(`🎉 Unlocked ${reward.name} skin!`);
+        localStorage.setItem('unlockedSkins', JSON.stringify([...unlockedSkins, reward.skinId]));
+      } else if (reward.reward === 'accessory') {
+        setMessage(`🎉 Unlocked ${reward.name} accessory!`);
+      } else if (reward.reward === 'trail') {
+        setMessage(`🎉 Unlocked ${reward.name} trail effect!`);
+      } else {
+        setMessage('⚠️ Reward already unlocked!');
+      }
+    } else {
+      setMessage('❌ Invalid code. Try: CYBERPUNK2025, NEONVIBES, MATRIXMODE');
+    }
+    
+    setCodeEntry('');
+    setShowCodeModal(false);
+  };
+
+  // DEATH SYSTEM with Victory Message
+  const handlePlayerDeath = useCallback((playerId, cause) => {
+    // Create death explosion effect
+    const player = gameState.players[playerId];
+    if (player && player.segments[0]) {
+      const deathEffect = {
+        x: player.segments[0].x,
+        y: player.segments[0].y,
+        particles: [],
+        life: 60,
+        maxLife: 60
+      };
+      
+      // Create explosion particles
+      for (let i = 0; i < 20; i++) {
+        deathEffect.particles.push({
+          x: player.segments[0].x,
+          y: player.segments[0].y,
+          vx: (Math.random() - 0.5) * 20,
+          vy: (Math.random() - 0.5) * 20,
+          color: player.color,
+          size: 8,
+          life: 40
+        });
+      }
+      
+      setDeathEffects(prev => [...prev, deathEffect]);
+    }
+    
+    // Show victory message modal for the eliminated player
+    if (playerId === (currentUser?.username || 'Player')) {
+      setShowVictoryModal(true);
+    }
+  }, [gameState.players, currentUser]);
+
+  // Save victory message
+  const saveVictoryMessage = () => {
+    if (victoryMessage.trim()) {
+      localStorage.setItem('victoryMessage', victoryMessage.trim());
+      setMessage(`💬 Victory message saved: "${victoryMessage.trim()}"`);
+    }
+    setShowVictoryModal(false);
+    setVictoryMessage('');
   };
 
   useEffect(() => {
