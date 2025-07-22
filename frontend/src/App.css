@@ -2092,3 +2092,39 @@
     gap: 2px;
   }
 }
+
+/* Locked/Unlocked Skins */
+.skin-option.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.skin-option.locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.lock-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 12px;
+  background: #000000aa;
+  padding: 2px;
+  border-radius: 50%;
+}
+
+.unlock-hint {
+  text-align: center;
+  margin-top: 10px;
+  padding: 8px;
+  background: #001122;
+  border-radius: 5px;
+  border-left: 3px solid #ff0080;
+}
+
+.unlock-hint p {
+  color: #ff0080;
+  font-size: 11px;
+  margin: 0;
+}
