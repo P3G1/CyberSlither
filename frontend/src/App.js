@@ -1505,27 +1505,6 @@ const GameComponent = () => {
     });
   };
 
-  // Enhanced drawing system with world boundaries, minimap, and all orb types
-                ...particle,
-                x: particle.x + particle.vx,
-                y: particle.y + particle.vy,
-                life: particle.life - 1,
-                vx: particle.vx * 0.95,
-                vy: particle.vy * 0.95
-              }))
-              .filter(particle => particle.life > 0)
-          }))
-          .filter(effect => effect.life > 0);
-      });
-      
-      return {
-        ...prevState,
-        players: newPlayers,
-        food: newFood
-      };
-    });
-  };
-
   // Initialize snake segments properly
   const initializeSnakeSegments = (startPos) => {
     const segments = [];
