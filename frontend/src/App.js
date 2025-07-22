@@ -369,7 +369,7 @@ const GameComponent = () => {
     }
   }, [isSpacePressed, gameStatus, boostConsumeCounter, currentUser, spectatorMode]);
 
-  // SPECTATOR MODE TIMER
+  // SPECTATOR MODE TIMER - BUG FIXED
   useEffect(() => {
     if (spectatorMode && spectatorTimeLeft > 0) {
       const timer = setTimeout(() => {
