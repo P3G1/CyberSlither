@@ -2134,13 +2134,13 @@ const GameComponent = () => {
         ctx.fillText(`Mass: ${playerSnake.mass || playerSnake.segments.length}`, 20, 60);
       }
       
-      // Boost cooldown indicator
-      if (boostCooldown > 0) {
-        ctx.fillStyle = '#ff8000';
-        ctx.fillText(`Boost: ${Math.ceil(boostCooldown/20)}s`, 20, 80);
+      // Boost status indicator (authentic slither.io)
+      if (isSpacePressed) {
+        ctx.fillStyle = '#ffff00';
+        ctx.fillText('Boost: ACTIVE', 20, 80);
       } else {
         ctx.fillStyle = '#00ff00';
-        ctx.fillText('Boost: Ready', 20, 80);
+        ctx.fillText('Boost: Hold SPACE', 20, 80);
       }
       
       ctx.restore();
