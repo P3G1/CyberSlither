@@ -1336,54 +1336,8 @@ const GameComponent = () => {
           snake.score = (snake.score || 15) + orbValue * 5;
           snake.mass = snake.segments.length;
         }
-                  x: food.x,
-                  y: food.y,
-                  vx: (Math.random() - 0.5) * 8,
-                  vy: (Math.random() - 0.5) * 8,
-                  color: food.color,
-                  life: 25,
-                  maxLife: 25,
-                  size: 4
-                });
-              }
-              setParticles(prev => [...prev, ...newParticles]);
-            }
-            
-            return false; // Remove food
-          }
-          return true;
-        });
         
-        // Grow snake when food is eaten
-        if (ateFood) {
-          // Add new segments to the tail
-          const tailSegment = newSegments[newSegments.length - 1];
-          const secondToLast = newSegments[newSegments.length - 2] || tailSegment;
-          
-          // Calculate direction from second-to-last to last segment
-          const dx = tailSegment.x - secondToLast.x;
-          const dy = tailSegment.y - secondToLast.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          if (distance > 0) {
-            const normalizedDx = dx / distance;
-            const normalizedDy = dy / distance;
-            
-            // Add 2 new segments for noticeable growth
-            newSegments.push({
-              x: tailSegment.x + normalizedDx * segmentDistance,
-              y: tailSegment.y + normalizedDy * segmentDistance
-            });
-            newSegments.push({
-              x: tailSegment.x + normalizedDx * segmentDistance * 2,
-              y: tailSegment.y + normalizedDy * segmentDistance * 2
-            });
-          }
-          
-          snake.score = (snake.score || 15) + 5;
-        }
-        
-        // Snake-to-snake collision detection with death handler
+        // Snake-to-snake collision detection with enhanced death orbs
         Object.keys(newPlayers).forEach(otherPlayerId => {
           if (otherPlayerId === playerId) return;
           
@@ -1400,54 +1354,93 @@ const GameComponent = () => {
               snake.alive = false;
               handlePlayerDeath(playerId, `Crashed into ${otherPlayerId}`);
               
+              // Generate death orbs from crashed snake
+              const deathOrbs = generateDeathOrbs(snake.segments, snake.score);
+              newDeathOrbs.push(...deathOrbs);
+              
               if (playerId === playerName) {
                 setMessage(`💀 Crashed into ${otherPlayerId}! Length: ${snake.segments.length}`);
               }
-              
-              // Convert dead snake to food
-              const deadSnakeFood = snake.segments.map((segment, i) => ({
-                x: segment.x + (Math.random() - 0.5) * 15,
-                y: segment.y + (Math.random() - 0.5) * 15,
-                id: `dead_${playerId}_${i}_${Date.now()}`,
-                color: snake.color,
-                size: 8
-              }));
-              
-              newFood = [...newFood, ...deadSnakeFood];
             }
           });
         });
         
-        // Self-collision detection with death handler
-        if (newSegments.length > 5) {
-          for (let i = 4; i < newSegments.length; i++) {
+        // Self-collision detection
+        if (snake.segments.length > 5) {
+          for (let i = 4; i < snake.segments.length; i++) {
             const distance = Math.sqrt(
-              Math.pow(newHead.x - newSegments[i].x, 2) + Math.pow(newHead.y - newSegments[i].y, 2)
+              Math.pow(newHead.x - snake.segments[i].x, 2) + Math.pow(newHead.y - snake.segments[i].y, 2)
             );
             
             if (distance < 12) {
               snake.alive = false;
               handlePlayerDeath(playerId, 'Self collision');
+              
+              // Generate death orbs from self-collision
+              const deathOrbs = generateDeathOrbs(snake.segments, snake.score);
+              newDeathOrbs.push(...deathOrbs);
+              
               if (playerId === playerName) {
-                setMessage(`💀 You hit yourself! Final length: ${newSegments.length}`);
+                setMessage(`💀 You hit yourself! Final length: ${snake.segments.length}`);
               }
               break;
             }
           }
         }
         
-        // AI behavior for demo bots
-        if (playerId !== playerName && Math.random() < 0.005) {
-          // Find nearest food
-          let nearestFood = null;
+        // AI behavior for demo bots (enhanced with orb targeting)
+        if (playerId !== playerName && snake.alive && Math.random() < 0.01) {
+          let nearestOrb = null;
           let nearestDistance = Infinity;
           
-          newFood.forEach(food => {
+          // Check for nearby floating orbs first (high value)
+          newFloatingOrbs.forEach(orb => {
             const distance = Math.sqrt(
-              Math.pow(newHead.x - food.x, 2) + Math.pow(newHead.y - food.y, 2)
+              Math.pow(newHead.x - orb.x, 2) + Math.pow(newHead.y - orb.y, 2)
             );
-            if (distance < nearestDistance) {
+            if (distance < nearestDistance && distance < 300) {
               nearestDistance = distance;
+              nearestOrb = orb;
+            }
+          });
+          
+          // If no floating orbs nearby, look for death orbs
+          if (!nearestOrb) {
+            newDeathOrbs.forEach(orb => {
+              const distance = Math.sqrt(
+                Math.pow(newHead.x - orb.x, 2) + Math.pow(newHead.y - orb.y, 2)
+              );
+              if (distance < nearestDistance && distance < 200) {
+                nearestDistance = distance;
+                nearestOrb = orb;
+              }
+            });
+          }
+          
+          // Finally check regular food
+          if (!nearestOrb) {
+            newFood.forEach(orb => {
+              const distance = Math.sqrt(
+                Math.pow(newHead.x - orb.x, 2) + Math.pow(newHead.y - orb.y, 2)
+              );
+              if (distance < nearestDistance && distance < 150) {
+                nearestDistance = distance;
+                nearestOrb = orb;
+              }
+            });
+          }
+          
+          if (nearestOrb) {
+            const targetAngle = Math.atan2(nearestOrb.y - newHead.y, nearestOrb.x - newHead.x);
+            snake.targetAngle = targetAngle;
+          } else {
+            // Random direction change
+            snake.targetAngle += (Math.random() - 0.5) * 0.5;
+          }
+        }
+        
+        newPlayers[playerId] = snake;
+      });
               nearestFood = food;
             }
           });
