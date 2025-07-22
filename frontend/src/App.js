@@ -1597,6 +1597,7 @@ const GameComponent = () => {
   const handleKeyDown = useCallback((event) => {
     if (gameStatus !== 'playing') return;
     
+    // BOOST SYSTEM - Spacebar
     if (event.code === 'Space') {
       event.preventDefault();
       if (!isSpacePressed) {
@@ -1622,6 +1623,12 @@ const GameComponent = () => {
           return prevState;
         });
       }
+    }
+    
+    // MASS EJECTION SYSTEM - W key (authentic slither.io)
+    if (event.code === 'KeyW') {
+      event.preventDefault();
+      ejectMass();
     }
   }, [gameStatus, isSpacePressed, currentUser]);
 
@@ -1650,6 +1657,64 @@ const GameComponent = () => {
       });
     }
   }, [currentUser]);
+
+  // MASS EJECTION FUNCTION (authentic slither.io mechanic)
+  const ejectMass = useCallback(() => {
+    const playerId = currentUser?.username || 'Player';
+    
+    setGameState(prevState => {
+      const player = prevState.players[playerId];
+      if (!player || !player.alive || player.segments.length <= 10) {
+        return prevState; // Need minimum length to eject
+      }
+      
+      const head = player.segments[0];
+      if (!head) return prevState;
+      
+      // Create ejected mass orb in direction snake is facing
+      const ejectionAngle = player.currentAngle || 0;
+      const ejectionDistance = 40;
+      
+      const ejectedOrb = {
+        x: head.x + Math.cos(ejectionAngle) * ejectionDistance,
+        y: head.y + Math.sin(ejectionAngle) * ejectionDistance,
+        id: `ejected_${Date.now()}_${Math.random()}`,
+        type: 'EJECTED_MASS',
+        size: 12,
+        value: 3,
+        color: player.color || '#ffffff',
+        glow: true,
+        birthTime: Date.now(),
+        ejectedBy: playerId
+      };
+      
+      // Remove segments from player (cost of ejecting mass)
+      const newSegments = player.segments.slice(0, -3); // Remove 3 segments
+      
+      return {
+        ...prevState,
+        players: {
+          ...prevState.players,
+          [playerId]: {
+            ...player,
+            segments: newSegments,
+            mass: newSegments.length
+          }
+        },
+        food: [...prevState.food, ejectedOrb]
+      };
+    });
+    
+    setMessage('⚡ Mass ejected!');
+  }, [currentUser]);
+
+  // RIGHT-CLICK MASS EJECTION
+  const handleRightClick = useCallback((event) => {
+    if (gameStatus === 'playing') {
+      event.preventDefault();
+      ejectMass();
+    }
+  }, [gameStatus, ejectMass]);
 
   const handleMouseMove = useCallback((event) => {
     if (gameStatus !== 'playing' || gameState.status !== 'active') return;
