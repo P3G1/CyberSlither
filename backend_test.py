@@ -821,12 +821,16 @@ class CryptoSlitherTester:
     
     async def run_all_tests(self):
         """Run all test suites"""
-        print("🚀 Starting Comprehensive Backend Tests for Crypto Slither Game")
+        print("🚀 Starting Comprehensive Backend Tests for Enhanced Cyberpunk Slither Arena")
         print(f"Testing against: {BACKEND_URL}")
         print("="*60)
         
         # Run synchronous tests
         self.test_basic_api_endpoints()
+        self.test_admin_functionality()
+        self.test_enhanced_authentication()
+        self.test_enhanced_leaderboard()
+        self.test_enhanced_game_mechanics()
         self.test_payment_flow()
         self.test_error_handling()
         self.test_database_integration()
