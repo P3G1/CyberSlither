@@ -1194,7 +1194,7 @@ const GameComponent = () => {
         });
       }
       
-      // Update particles
+      // Update particles (eating effects, boost trails, death effects)
       setParticles(prevParticles => {
         return prevParticles
           .map(particle => ({
@@ -1206,6 +1206,40 @@ const GameComponent = () => {
             vy: particle.vy * 0.96
           }))
           .filter(particle => particle.life > 0);
+      });
+      
+      // Update trail particles (for boost effects)
+      setTrailParticles(prevTrails => {
+        return prevTrails
+          .map(particle => ({
+            ...particle,
+            x: particle.x + particle.vx,
+            y: particle.y + particle.vy,
+            life: particle.life - 1,
+            vx: particle.vx * 0.92,
+            vy: particle.vy * 0.92
+          }))
+          .filter(particle => particle.life > 0);
+      });
+      
+      // Update death effects
+      setDeathEffects(prevEffects => {
+        return prevEffects
+          .map(effect => ({
+            ...effect,
+            life: effect.life - 1,
+            particles: effect.particles
+              .map(particle => ({
+                ...particle,
+                x: particle.x + particle.vx,
+                y: particle.y + particle.vy,
+                life: particle.life - 1,
+                vx: particle.vx * 0.95,
+                vy: particle.vy * 0.95
+              }))
+              .filter(particle => particle.life > 0)
+          }))
+          .filter(effect => effect.life > 0);
       });
       
       return {
