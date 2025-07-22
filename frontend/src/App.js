@@ -1452,13 +1452,19 @@ const GameComponent = () => {
         newPlayers[playerId] = snake;
       });
       
-      // Update camera to follow player (fixed zoom like original slither.io)
+      // Update camera to follow player with authentic field of view scaling
       const playerSnake = newPlayers[playerName];
       if (playerSnake && playerSnake.alive && playerSnake.segments[0]) {
+        // Calculate field of view based on snake length (authentic slither.io)
+        const baseZoom = 1.0;
+        const maxZoom = 0.3; // Larger snakes zoom out more (see more)
+        const lengthFactor = Math.min(playerSnake.segments.length / 100, 1);
+        const targetZoom = baseZoom - (lengthFactor * (baseZoom - maxZoom));
+        
         setCamera(prevCamera => ({
           x: playerSnake.segments[0].x,
           y: playerSnake.segments[0].y,
-          zoom: 1, // Fixed zoom like original slither.io - no dynamic zooming
+          zoom: targetZoom, // Smooth field of view scaling like original
           following: playerName
         }));
       }
