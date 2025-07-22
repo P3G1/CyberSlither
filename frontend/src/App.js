@@ -2011,12 +2011,20 @@ const GameComponent = () => {
             <div className="leaderboard-content">
               {leaderboard.length > 0 ? leaderboard.map((player, index) => (
                 <div key={index} className="leader-entry">
-                  <span className="rank-number">#{index + 1}</span>
-                  <span className="player-name">{player.display_name || `Player${index + 1}`}</span>
-                  <span className="winnings">${(player.total_winnings || 0).toFixed(2)}</span>
+                  <div className="leader-rank">#{index + 1}</div>
+                  <div className="leader-info">
+                    <div className="leader-name">{player.display_name}</div>
+                    <div className="leader-stats">
+                      <span className="leader-length">Length: {player.max_length || 0}</span>
+                      <span className="leader-winnings">${player.total_winnings}</span>
+                    </div>
+                  </div>
+                  <div className="leader-score">
+                    {player.max_length || 0}
+                  </div>
                 </div>
               )) : (
-                <div className="no-data">// LOADING NEURAL DATA //</div>
+                <div className="loading-text">⌛ Loading neural data...</div>
               )}
             </div>
             <button className="cyber-btn secondary small">VIEW FULL MATRIX</button>
