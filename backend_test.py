@@ -57,6 +57,9 @@ class CryptoSlitherTester:
         self.test_player_id = str(uuid.uuid4())
         self.test_wallet = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"  # Example Solana wallet
         self.test_transaction_id = None
+        self.admin_user_id = None
+        self.admin_username = None
+        self.free_session_id = None
     
     def test_basic_api_endpoints(self):
         """Test basic API endpoints"""
