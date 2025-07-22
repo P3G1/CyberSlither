@@ -1426,13 +1426,13 @@ const GameComponent = () => {
         newPlayers[playerId] = snake;
       });
       
-      // Update camera to follow player
+      // Update camera to follow player (fixed zoom like original slither.io)
       const playerSnake = newPlayers[playerName];
       if (playerSnake && playerSnake.alive && playerSnake.segments[0]) {
         setCamera(prevCamera => ({
           x: playerSnake.segments[0].x,
           y: playerSnake.segments[0].y,
-          zoom: Math.min(1 + (playerSnake.mass / 100), 2), // Bigger snakes zoom out more
+          zoom: 1, // Fixed zoom like original slither.io - no dynamic zooming
           following: playerName
         }));
       }
