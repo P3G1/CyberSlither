@@ -2243,33 +2243,85 @@ const GameComponent = () => {
   };
 
   const drawGameUI = (ctx, canvas) => {
-    // Game status and boost indicator
-    if (gameStatus === 'playing') {
-      ctx.save();
-      ctx.fillStyle = '#00ffff';
-      ctx.font = 'bold 14px Arial';
+    ctx.save();
+    
+    // AUTHENTIC SLITHER.IO UI ELEMENTS
+    if (gameStatus === 'playing' || spectatorMode) {
+      // Top-left: Length display (prominent like original)
+      const currentSnake = spectatorMode && spectatorTarget ? 
+        gameState.players[spectatorTarget] : 
+        gameState.players[currentUser?.username || 'Player'];
+        
+      if (currentSnake && currentSnake.segments) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'left';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#000000';
+        
+        const length = currentSnake.segments.length;
+        ctx.fillText(`Length: ${length}`, 20, 40);
+        
+        // Show spectator mode indicator
+        if (spectatorMode) {
+          ctx.fillStyle = '#ff0080';
+          ctx.font = 'bold 16px Arial';
+          ctx.fillText(`Spectating: ${spectatorTarget} (${spectatorTimeLeft}s)`, 20, 70);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 14px Arial';
+          ctx.fillText('Press SPACE to return to menu', 20, 95);
+        }
+      }
+      
+      // LIVE LEADERBOARD (top-right, authentic slither.io style)
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('Leaderboard', canvas.width - 20, 30);
+      
+      // Get top 10 players by length
+      const topPlayers = Object.values(gameState.players || {})
+        .filter(p => p.alive && p.segments)
+        .sort((a, b) => b.segments.length - a.segments.length)
+        .slice(0, 10);
+      
+      topPlayers.forEach((player, index) => {
+        const rank = index + 1;
+        const playerName = player.player_id.split('_')[0]; // Remove any suffixes
+        const length = player.segments.length;
+        
+        ctx.fillStyle = player.player_id === (currentUser?.username || 'Player') ? '#ffff00' : 
+                       player.player_id === spectatorTarget ? '#ff0080' : '#ffffff';
+        ctx.font = `${rank <= 3 ? 'bold' : 'normal'} 14px Arial`;
+        
+        const yPos = 55 + (rank * 20);
+        ctx.fillText(`${rank}. ${playerName} (${length})`, canvas.width - 20, yPos);
+      });
+      
+      // Bottom-left: Controls and boost status
       ctx.textAlign = 'left';
+      ctx.fillStyle = '#00ffff';
+      ctx.font = 'bold 12px Arial';
       
-      // Current position indicator
-      const playerSnake = gameState.players[currentUser?.username || 'Player'];
-      if (playerSnake && playerSnake.segments[0]) {
-        const pos = playerSnake.segments[0];
-        const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y);
-        ctx.fillText(`Position: ${Math.round(distance)}/${WORLD_RADIUS}`, 20, 40);
-        ctx.fillText(`Mass: ${playerSnake.mass || playerSnake.segments.length}`, 20, 60);
+      if (!spectatorMode) {
+        // Boost status indicator
+        if (isSpacePressed) {
+          ctx.fillStyle = '#ffff00';
+          ctx.fillText('⚡ BOOST ACTIVE - Consuming length!', 20, canvas.height - 60);
+        } else {
+          ctx.fillStyle = '#00ff00';
+          ctx.fillText('Hold SPACE to boost', 20, canvas.height - 60);
+        }
+        
+        // Mass ejection hint
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'normal 11px Arial';
+        ctx.fillText('Press W or Right-click to eject mass', 20, canvas.height - 40);
+        ctx.fillText('Move mouse to steer', 20, canvas.height - 25);
       }
-      
-      // Boost status indicator (authentic slither.io)
-      if (isSpacePressed) {
-        ctx.fillStyle = '#ffff00';
-        ctx.fillText('Boost: ACTIVE', 20, 80);
-      } else {
-        ctx.fillStyle = '#00ff00';
-        ctx.fillText('Boost: Hold SPACE', 20, 80);
-      }
-      
-      ctx.restore();
     }
+    
+    ctx.restore();
   };
 
   // Cleanup
