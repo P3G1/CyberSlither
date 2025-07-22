@@ -200,14 +200,32 @@ const GameComponent = () => {
   const animationRef = useRef(null);
   const gameLoopRef = useRef(null);
   
-  // Game State
+  // Game State - Enhanced for authentic slither.io
   const [gameState, setGameState] = useState({
     sessionId: null,
     playerId: null,
     players: {},
     food: [],
+    floatingOrbs: [],
+    deathOrbs: [],
     status: 'waiting',
-    connected: false
+    connected: false,
+    worldBounds: { radius: WORLD_RADIUS, center: { x: 0, y: 0 } }
+  });
+  
+  // Camera and Viewport State
+  const [camera, setCamera] = useState({
+    x: 0,
+    y: 0,
+    zoom: 1,
+    following: null
+  });
+  
+  // Minimap State
+  const [minimap, setMinimap] = useState({
+    visible: true,
+    playerDots: {},
+    hotspots: []
   });
   
   // UI State
