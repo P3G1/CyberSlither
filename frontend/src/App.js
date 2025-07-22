@@ -977,20 +977,124 @@ const GameComponent = () => {
     startDemoGameLoop();
   };
 
-  const generateDemoFood = () => {
-    const food = [];
-    const maxFood = Math.floor(canvasSize.width * canvasSize.height / 8000); // More food for slither.io style
+  // AUTHENTIC SLITHER.IO WORLD GENERATION
+  const generateSlitherWorld = () => {
+    const worldArea = Math.PI * WORLD_RADIUS * WORLD_RADIUS;
+    const normalOrbCount = Math.floor(worldArea * NORMAL_ORB_DENSITY);
+    const largeOrbCount = Math.floor(worldArea * LARGE_ORB_DENSITY);
     
-    for (let i = 0; i < maxFood; i++) {
+    const food = [];
+    const floatingOrbs = [];
+    
+    // Generate normal orbs scattered throughout the circular world
+    for (let i = 0; i < normalOrbCount; i++) {
+      const angle = Math.random() * 2 * Math.PI;
+      const radius = Math.sqrt(Math.random()) * (WORLD_RADIUS - 100);
+      
       food.push({
-        x: Math.random() * (canvasSize.width - 60) + 30,
-        y: Math.random() * (canvasSize.height - 60) + 30,
-        id: `food_${i}`,
-        color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000', '#8000ff'][Math.floor(Math.random() * 6)],
-        size: 3 + Math.random() * 5 // Variable food sizes like slither.io
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius,
+        id: `normal_${i}`,
+        type: 'NORMAL',
+        ...ORB_TYPES.NORMAL,
+        color: ORB_TYPES.NORMAL.color[Math.floor(Math.random() * ORB_TYPES.NORMAL.color.length)],
+        size: ORB_TYPES.NORMAL.size + Math.random() * 2
       });
     }
-    return food;
+    
+    // Generate large orbs
+    for (let i = 0; i < largeOrbCount; i++) {
+      const angle = Math.random() * 2 * Math.PI;
+      const radius = Math.sqrt(Math.random()) * (WORLD_RADIUS - 150);
+      
+      food.push({
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius,
+        id: `large_${i}`,
+        type: 'LARGE',
+        ...ORB_TYPES.LARGE,
+        color: ORB_TYPES.LARGE.color[Math.floor(Math.random() * ORB_TYPES.LARGE.color.length)],
+        pulsePhase: Math.random() * Math.PI * 2
+      });
+    }
+    
+    // Generate special floating orbs
+    for (let i = 0; i < FLOATING_ORB_COUNT; i++) {
+      const angle = Math.random() * 2 * Math.PI;
+      const radius = Math.random() * (WORLD_RADIUS - 200);
+      
+      floatingOrbs.push({
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius,
+        id: `floating_${i}`,
+        type: 'SPECIAL_FLOATING',
+        ...ORB_TYPES.SPECIAL_FLOATING,
+        color: ORB_TYPES.SPECIAL_FLOATING.color[Math.floor(Math.random() * ORB_TYPES.SPECIAL_FLOATING.color.length)],
+        vx: (Math.random() - 0.5) * 0.5, // Slow drift
+        vy: (Math.random() - 0.5) * 0.5,
+        pulsePhase: Math.random() * Math.PI * 2,
+        birthTime: Date.now()
+      });
+    }
+    
+    return { food, floatingOrbs };
+  };
+
+  // Generate death orbs when snake dies
+  const generateDeathOrbs = (snakeSegments, snakeScore) => {
+    const orbCount = Math.min(snakeSegments.length, 100); // Limit for performance
+    const orbs = [];
+    
+    for (let i = 0; i < orbCount; i++) {
+      const segment = snakeSegments[i] || snakeSegments[0];
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 50;
+      
+      orbs.push({
+        x: segment.x + Math.cos(angle) * distance,
+        y: segment.y + Math.sin(angle) * distance,
+        id: `death_${Date.now()}_${i}`,
+        type: 'DEATH_ORB',
+        ...ORB_TYPES.DEATH_ORB,
+        color: ORB_TYPES.DEATH_ORB.color[Math.floor(Math.random() * ORB_TYPES.DEATH_ORB.color.length)],
+        birthTime: Date.now(),
+        lifespan: 30000, // 30 seconds
+        fadeStartTime: Date.now() + 25000
+      });
+    }
+    
+    return orbs;
+  };
+
+  // Check if position is within world boundaries
+  const isWithinWorldBounds = (x, y) => {
+    const distance = Math.sqrt(x * x + y * y);
+    return distance <= WORLD_RADIUS;
+  };
+
+  // Mass-based speed calculation
+  const calculateSpeed = (mass, isBoosting = false) => {
+    let speed = BASE_SPEED - (mass * MASS_SPEED_FACTOR);
+    speed = Math.max(speed, MIN_SPEED);
+    
+    if (isBoosting) {
+      speed *= BOOST_SPEED_MULTIPLIER;
+    }
+    
+    return speed;
+  };
+
+  const generateDemoFood = () => {
+    // For demo mode, generate viewport-based orbs
+    const { food, floatingOrbs } = generateSlitherWorld();
+    
+    // Filter orbs that are visible in current viewport for demo
+    const viewportFood = food.filter(orb => 
+      Math.abs(orb.x) < canvasSize.width/2 + 200 &&
+      Math.abs(orb.y) < canvasSize.height/2 + 200
+    );
+    
+    return viewportFood.slice(0, 200); // Limit for demo performance
   };
 
   // Enhanced game loop with proper slither.io mechanics
