@@ -1644,30 +1644,6 @@ const GameComponent = () => {
       });
     }
   }, [currentUser]);
-        
-        setMessage('⚡ BOOST ACTIVATED! Speed increased!');
-        
-        // Reset boost after duration
-        setTimeout(() => {
-          setIsBoosting(false);
-          setGameState(prevState => ({
-            ...prevState,
-            players: {
-              ...prevState.players,
-              [playerId]: {
-                ...prevState.players[playerId],
-                speed: 3, // Reset to normal speed
-                boosting: false
-              }
-            }
-          }));
-        }, 1000);
-      } else if (player && player.segments.length <= 5) {
-        setMessage('⚠️ Need more length to boost!');
-      } else if (boostCooldown > 0) {
-        setMessage('⚠️ Boost cooling down...');
-      }
-      return;
     }
     
     let direction = null;
