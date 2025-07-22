@@ -1652,6 +1652,17 @@ const GameComponent = () => {
     // BOOST SYSTEM - Spacebar
     if (event.code === 'Space') {
       event.preventDefault();
+      
+      // If in spectator mode, exit to menu
+      if (spectatorMode) {
+        setSpectatorMode(false);
+        setSpectatorTarget(null);
+        setSpectatorTimeLeft(0);
+        setGameStatus('menu');
+        setShowVictoryModal(true);
+        return;
+      }
+      
       if (!isSpacePressed) {
         setIsSpacePressed(true);
         setBoostConsumeCounter(0);
