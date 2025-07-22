@@ -1070,7 +1070,7 @@ const GameComponent = () => {
           snake.score = (snake.score || 15) + 5;
         }
         
-        // Snake-to-snake collision detection
+        // Snake-to-snake collision detection with death handler
         Object.keys(newPlayers).forEach(otherPlayerId => {
           if (otherPlayerId === playerId) return;
           
@@ -1085,9 +1085,10 @@ const GameComponent = () => {
             
             if (distance < 15) { // Collision radius
               snake.alive = false;
+              handlePlayerDeath(playerId, `Crashed into ${otherPlayerId}`);
               
               if (playerId === playerName) {
-                setMessage(`💀 Crashed into ${otherPlayerId}!`);
+                setMessage(`💀 Crashed into ${otherPlayerId}! Length: ${snake.segments.length}`);
               }
               
               // Convert dead snake to food
@@ -1104,7 +1105,7 @@ const GameComponent = () => {
           });
         });
         
-        // Self-collision detection
+        // Self-collision detection with death handler
         if (newSegments.length > 5) {
           for (let i = 4; i < newSegments.length; i++) {
             const distance = Math.sqrt(
@@ -1113,8 +1114,9 @@ const GameComponent = () => {
             
             if (distance < 12) {
               snake.alive = false;
+              handlePlayerDeath(playerId, 'Self collision');
               if (playerId === playerName) {
-                setMessage(`💀 You hit yourself!`);
+                setMessage(`💀 You hit yourself! Final length: ${newSegments.length}`);
               }
               break;
             }
