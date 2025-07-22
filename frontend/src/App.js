@@ -1205,9 +1205,77 @@ const GameComponent = () => {
     }
   };
 
-  // Controls
+  // Controls with BOOST SYSTEM
   const handleKeyPress = useCallback((event) => {
     if (gameStatus !== 'playing') return;
+    
+    // SPEED BOOST SYSTEM - Spacebar consumes length for speed
+    if (event.code === 'Space') {
+      event.preventDefault();
+      const playerId = currentUser?.username || 'Player';
+      const player = gameState.players[playerId];
+      
+      if (player && player.alive && player.segments.length > 5 && boostCooldown === 0) {
+        setIsBoosting(true);
+        setBoostCooldown(30); // Cooldown frames
+        
+        // Consume snake length for boost
+        setGameState(prevState => ({
+          ...prevState,
+          players: {
+            ...prevState.players,
+            [playerId]: {
+              ...prevState.players[playerId],
+              segments: prevState.players[playerId].segments.slice(0, -1), // Remove last segment
+              speed: (prevState.players[playerId].speed || 3) * 2, // Double speed
+              boosting: true
+            }
+          }
+        }));
+        
+        // Trail particles for boost effect
+        if (player.segments[0]) {
+          const boostParticles = [];
+          for (let i = 0; i < 8; i++) {
+            boostParticles.push({
+              x: player.segments[0].x + (Math.random() - 0.5) * 30,
+              y: player.segments[0].y + (Math.random() - 0.5) * 30,
+              vx: (Math.random() - 0.5) * 10,
+              vy: (Math.random() - 0.5) * 10,
+              color: '#ffff00',
+              life: 15,
+              maxLife: 15,
+              size: 6,
+              type: 'boost'
+            });
+          }
+          setTrailParticles(prev => [...prev, ...boostParticles]);
+        }
+        
+        setMessage('⚡ BOOST ACTIVATED! Speed increased!');
+        
+        // Reset boost after duration
+        setTimeout(() => {
+          setIsBoosting(false);
+          setGameState(prevState => ({
+            ...prevState,
+            players: {
+              ...prevState.players,
+              [playerId]: {
+                ...prevState.players[playerId],
+                speed: 3, // Reset to normal speed
+                boosting: false
+              }
+            }
+          }));
+        }, 1000);
+      } else if (player && player.segments.length <= 5) {
+        setMessage('⚠️ Need more length to boost!');
+      } else if (boostCooldown > 0) {
+        setMessage('⚠️ Boost cooling down...');
+      }
+      return;
+    }
     
     let direction = null;
     
@@ -1237,7 +1305,7 @@ const GameComponent = () => {
         direction: direction
       }));
     }
-  }, [gameStatus]);
+  }, [gameStatus, gameState.players, boostCooldown, currentUser]);
 
   const handleMouseMove = useCallback((event) => {
     if (gameStatus !== 'playing' || gameState.status !== 'active') return;
