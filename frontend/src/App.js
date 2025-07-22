@@ -1734,9 +1734,10 @@ const GameComponent = () => {
     updatePlayerDirection(gameX, gameY);
   }, [gameStatus, gameState.status, canvasSize]);
 
-  // Event listeners
+  // Event listeners for authentic slither.io controls
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyPress);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.addEventListener('mousemove', handleMouseMove);
@@ -1745,14 +1746,15 @@ const GameComponent = () => {
     }
     
     return () => {
-      window.removeEventListener('keydown', handleKeyPress);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
       if (canvas) {
         canvas.removeEventListener('mousemove', handleMouseMove);
         canvas.removeEventListener('touchstart', handleTouchStart);
         canvas.removeEventListener('touchmove', handleTouchMove);
       }
     };
-  }, [handleKeyPress, handleMouseMove, handleTouchStart, handleTouchMove]);
+  }, [handleKeyDown, handleKeyUp, handleMouseMove, handleTouchStart, handleTouchMove]);
 
   // ENHANCED SLITHER.IO RENDERING SYSTEM
   useEffect(() => {
