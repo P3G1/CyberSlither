@@ -1372,29 +1372,6 @@ const GameComponent = () => {
           });
         });
         
-        // Self-collision detection
-        if (snake.segments.length > 5) {
-          for (let i = 4; i < snake.segments.length; i++) {
-            const distance = Math.sqrt(
-              Math.pow(newHead.x - snake.segments[i].x, 2) + Math.pow(newHead.y - snake.segments[i].y, 2)
-            );
-            
-            if (distance < 12) {
-              snake.alive = false;
-              handlePlayerDeath(playerId, 'Self collision');
-              
-              // Generate death orbs from self-collision
-              const deathOrbs = generateDeathOrbs(snake.segments, snake.score);
-              newDeathOrbs.push(...deathOrbs);
-              
-              if (playerId === playerName) {
-                setMessage(`💀 You hit yourself! Final length: ${snake.segments.length}`);
-              }
-              break;
-            }
-          }
-        }
-        
         // AI behavior for demo bots (enhanced with orb targeting)
         if (playerId !== playerName && snake.alive && Math.random() < 0.01) {
           let nearestOrb = null;
