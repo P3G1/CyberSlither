@@ -1504,60 +1504,6 @@ const GameComponent = () => {
       };
     });
   };
-          color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000', '#8000ff'][Math.floor(Math.random() * 6)],
-          size: 4 + Math.random() * 4
-        });
-      }
-      
-      // Respawn AI bots
-      const alivePlayers = Object.values(newPlayers).filter(p => p.alive).length;
-      if (alivePlayers < 3) {
-        ['DemoBot1', 'DemoBot2'].forEach(botId => {
-          if (!newPlayers[botId] || !newPlayers[botId].alive) {
-            if (Math.random() < 0.008) { // Respawn chance
-              const spawnX = Math.random() * canvasSize.width;
-              const spawnY = Math.random() * canvasSize.height;
-              
-              newPlayers[botId] = {
-                player_id: botId,
-                segments: initializeSnakeSegments({
-                  x: spawnX,
-                  y: spawnY
-                }),
-                color: botId === 'DemoBot1' ? '#ff0080' : '#00ff00',
-                alive: true,
-                score: 15,
-                targetAngle: Math.random() * Math.PI * 2,
-                currentAngle: Math.random() * Math.PI * 2,
-                speed: 2.5 + Math.random()
-              };
-            }
-          }
-        });
-      }
-      
-      // Update particles (eating effects, boost trails, death effects)
-      setParticles(prevParticles => {
-        return prevParticles
-          .map(particle => ({
-            ...particle,
-            x: particle.x + particle.vx,
-            y: particle.y + particle.vy,
-            life: particle.life - 1,
-            vx: particle.vx * 0.96,
-            vy: particle.vy * 0.96
-          }))
-          .filter(particle => particle.life > 0);
-      });
-      
-      // Update trail particles (for boost effects)
-      setTrailParticles(prevTrails => {
-        return prevTrails
-          .map(particle => ({
-            ...particle,
-            x: particle.x + particle.vx,
-            y: particle.y + particle.vy,
-            life: particle.life - 1,
             vx: particle.vx * 0.92,
             vy: particle.vy * 0.92
           }))
