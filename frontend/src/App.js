@@ -156,6 +156,20 @@ const GameComponent = () => {
   });
   const [particles, setParticles] = useState([]); // For eating effects
 
+  // NEW SLITHER.IO FEATURES
+  const [isBoosting, setIsBoosting] = useState(false);
+  const [boostCooldown, setBoostCooldown] = useState(0);
+  const [victoryMessage, setVictoryMessage] = useState('');
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
+  const [selectedServer, setSelectedServer] = useState('US East');
+  const [showServerSelection, setShowServerSelection] = useState(false);
+  const [codeEntry, setCodeEntry] = useState('');
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [unlockedSkins, setUnlockedSkins] = useState([0, 1, 2]); // Default unlocked skins
+  const [showPlayButton, setShowPlayButton] = useState(true);
+  const [deathEffects, setDeathEffects] = useState([]);
+  const [trailParticles, setTrailParticles] = useState([]);
+
   // Load wallet balance
   const loadWalletBalance = async () => {
     if (connected && publicKey && connection) {
