@@ -1421,32 +1421,51 @@ const GameComponent = () => {
           snake.mass = snake.segments.length;
         }
         
-        // Snake-to-snake collision detection with enhanced death orbs
+        // OPTIMIZED Snake-to-snake collision detection for large snakes
         Object.keys(newPlayers).forEach(otherPlayerId => {
           if (otherPlayerId === playerId) return;
           
           const otherSnake = newPlayers[otherPlayerId];
           if (!otherSnake.alive || !otherSnake.segments) return;
           
-          // Check collision with other snake's body (excluding head-to-head)
-          otherSnake.segments.forEach((segment, index) => {
+          // PERFORMANCE OPTIMIZATION: Only check collision with nearby segments
+          const maxCheckDistance = 100; // Only check segments within this distance
+          const headX = newHead.x;
+          const headY = newHead.y;
+          
+          // Pre-filter segments for collision checking (massive performance improvement)
+          const nearbySegments = otherSnake.segments.filter(segment => 
+            Math.abs(segment.x - headX) < maxCheckDistance && 
+            Math.abs(segment.y - headY) < maxCheckDistance
+          );
+          
+          // For very large snakes, only check every 3rd segment to improve performance
+          const segmentsToCheck = otherSnake.segments.length > 100 ? 
+            nearbySegments.filter((_, index) => index % 3 === 0 || index < 5) : 
+            nearbySegments;
+          
+          // Check collision with filtered segments
+          for (let i = 0; i < segmentsToCheck.length; i++) {
+            const segment = segmentsToCheck[i];
             const distance = Math.sqrt(
-              Math.pow(newHead.x - segment.x, 2) + Math.pow(newHead.y - segment.y, 2)
+              Math.pow(headX - segment.x, 2) + Math.pow(headY - segment.y, 2)
             );
             
             if (distance < 15) { // Collision radius
               snake.alive = false;
               handlePlayerDeath(playerId, `Crashed into ${otherPlayerId}`);
               
-              // Generate death orbs from crashed snake
-              const deathOrbs = generateDeathOrbs(snake.segments, snake.score);
+              // Generate death orbs from crashed snake - OPTIMIZED
+              const maxDeathOrbs = Math.min(snake.segments.length, 50); // Limit death orbs
+              const deathOrbs = generateDeathOrbs(snake.segments.slice(0, maxDeathOrbs), snake.score);
               newDeathOrbs.push(...deathOrbs);
               
               if (playerId === playerName) {
                 setMessage(`💀 Crashed into ${otherPlayerId}! Length: ${snake.segments.length}`);
               }
+              return; // Exit collision checking
             }
-          });
+          }
         });
         
         // AI behavior for demo bots (enhanced with orb targeting)
