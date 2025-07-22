@@ -1300,37 +1300,43 @@ const GameComponent = () => {
         
         snake.segments = newSegments;
         
-        // Enhanced orb collision detection for all orb types
+        // Enhanced orb collision detection for all orb types - OPTIMIZED
         let ateOrb = false;
         let orbValue = 0;
         
-        // Check normal food collision
+        // Check normal food collision - PERFORMANCE OPTIMIZED
+        const nearbyFood = newFood.filter(orb => {
+          const dx = newHead.x - orb.x;
+          const dy = newHead.y - orb.y;
+          return Math.abs(dx) < 50 && Math.abs(dy) < 50; // Pre-filter for performance
+        });
+        
         newFood = newFood.filter(orb => {
           const distance = Math.sqrt(
             Math.pow(newHead.x - orb.x, 2) + Math.pow(newHead.y - orb.y, 2)
           );
           
-          const collisionRadius = (orb.size || 6) + 15;
+          const collisionRadius = (orb.size || 6) + 12; // Slightly smaller collision
           if (distance < collisionRadius) {
             ateOrb = true;
             orbValue += orb.value || 1;
             
             if (playerId === playerName) {
-              // Create eating particles
+              // Create eating particles - REDUCED for performance
               const particles = [];
-              for (let i = 0; i < (orb.value || 1) * 3; i++) {
+              for (let i = 0; i < Math.min((orb.value || 1) * 2, 6); i++) {
                 particles.push({
                   x: orb.x,
                   y: orb.y,
-                  vx: (Math.random() - 0.5) * 8,
-                  vy: (Math.random() - 0.5) * 8,
+                  vx: (Math.random() - 0.5) * 6,
+                  vy: (Math.random() - 0.5) * 6,
                   color: orb.color,
-                  life: 25,
-                  maxLife: 25,
-                  size: 4
+                  life: 20,
+                  maxLife: 20,
+                  size: 3
                 });
               }
-              setParticles(prev => [...prev, ...particles]);
+              setParticles(prev => [...prev.slice(-50), ...particles]); // Limit particles
             }
             
             return false; // Remove orb
