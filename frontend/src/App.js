@@ -2042,7 +2042,150 @@ const GameComponent = () => {
 
         {/* Central Arena */}
         <div className="arena-zone">
-          {gameStatus === 'menu' && (
+          {/* NEW SLITHER.IO FEATURES UI */}
+          
+          {/* Server Selection Modal */}
+          {showServerSelection && (
+            <div className="cyber-modal-overlay">
+              <div className="cyber-modal">
+                <div className="modal-header">
+                  <h2>// SELECT SERVER //</h2>
+                  <button className="close-btn" onClick={() => setShowServerSelection(false)}>×</button>
+                </div>
+                
+                <div className="server-list">
+                  {GAME_SERVERS.map(server => (
+                    <div 
+                      key={server.name} 
+                      className={`server-option ${selectedServer === server.name ? 'selected' : ''}`}
+                      onClick={() => setSelectedServer(server.name)}
+                    >
+                      <span className="server-flag">{server.flag}</span>
+                      <span className="server-name">{server.name}</span>
+                      <span className="server-ping">{server.ping}ms</span>
+                      <span className="server-players">{server.players} players</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <button className="cyber-btn primary" onClick={() => setShowServerSelection(false)}>
+                  SELECT SERVER
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Code Entry Modal */}
+          {showCodeModal && (
+            <div className="cyber-modal-overlay">
+              <div className="cyber-modal">
+                <div className="modal-header">
+                  <h2>// ENTER CODE //</h2>
+                  <button className="close-btn" onClick={() => setShowCodeModal(false)}>×</button>
+                </div>
+                
+                <div className="code-entry">
+                  <p>Enter special codes to unlock skins, accessories, and effects!</p>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="cyber-input"
+                      placeholder="Enter code..."
+                      value={codeEntry}
+                      onChange={(e) => setCodeEntry(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleCodeSubmit()}
+                    />
+                    <button className="cyber-btn primary" onClick={handleCodeSubmit}>
+                      REDEEM
+                    </button>
+                  </div>
+                  <div className="code-hints">
+                    <p>💡 Try: CYBERPUNK2025, NEONVIBES, MATRIXMODE</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Victory Message Modal */}
+          {showVictoryModal && (
+            <div className="cyber-modal-overlay">
+              <div className="cyber-modal">
+                <div className="modal-header">
+                  <h2>// GAME OVER //</h2>
+                </div>
+                
+                <div className="victory-message">
+                  <p>💀 You were eliminated!</p>
+                  <p>Save a victory message for other players to see:</p>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="cyber-input"
+                      placeholder="Enter your victory message..."
+                      value={victoryMessage}
+                      onChange={(e) => setVictoryMessage(e.target.value)}
+                      maxLength={50}
+                    />
+                  </div>
+                  <div className="modal-actions">
+                    <button className="cyber-btn secondary" onClick={() => setShowVictoryModal(false)}>
+                      SKIP
+                    </button>
+                    <button className="cyber-btn primary" onClick={saveVictoryMessage}>
+                      SAVE MESSAGE
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {gameStatus === 'menu' && showPlayButton && (
+            <div className="slither-play-overlay">
+              <div className="play-section">
+                <h1 className="game-title">slither<span className="game-accent">.cyber</span></h1>
+                
+                {/* Server Display */}
+                <div className="current-server" onClick={() => setShowServerSelection(true)}>
+                  <span>📡 {selectedServer}</span>
+                  <span className="change-btn">CHANGE</span>
+                </div>
+                
+                {/* Play Button */}
+                <button 
+                  className="slither-play-btn" 
+                  onClick={() => setShowPlayButton(false)}
+                  disabled={!isLoggedIn && !isAdmin}
+                >
+                  <span className="play-icon">▶</span>
+                  <span>PLAY</span>
+                </button>
+                
+                {/* Options */}
+                <div className="slither-options">
+                  <button className="option-btn" onClick={() => setShowCodeModal(true)}>
+                    🎁 ENTER CODE
+                  </button>
+                  <button className="option-btn" onClick={() => setShowCustomization(true)}>
+                    🎨 CUSTOMIZE
+                  </button>
+                </div>
+                
+                {/* Speed Boost Indicator */}
+                <div className="controls-hint">
+                  <p>🖱️ Mouse to steer • <kbd>SPACE</kbd> to boost</p>
+                  {boostCooldown > 0 && (
+                    <div className="boost-cooldown">
+                      Boost cooldown: {Math.ceil(boostCooldown / 10)}s
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {gameStatus === 'menu' && !showPlayButton && (
             <div className="arena-lobby">
               <div className="arena-title">
                 <h1>// CYBER<span className="title-glow">SLITHER</span> ARENA //</h1>
