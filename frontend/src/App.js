@@ -1553,14 +1553,14 @@ const GameComponent = () => {
         }));
       }
       
-      // Maintain food supply with world-appropriate generation - PERFORMANCE OPTIMIZED
-      if (newFood.length < 300) { // Reduced from 500 for better performance
+      // PERFORMANCE OPTIMIZATION: Aggressive cleanup for large snakes
+      if (newFood.length < 200) { // Reduced from 300
         const { food: newFoodBatch } = generateSlitherWorld();
-        newFood.push(...newFoodBatch.slice(0, 25)); // Smaller batches
+        newFood.push(...newFoodBatch.slice(0, 15)); // Smaller batches
       }
       
-      // Respawn floating orbs if needed - BUG FIX: Prevent infinite spawning
-      if (newFloatingOrbs.length < FLOATING_ORB_COUNT && Math.random() < 0.01) {
+      // Respawn floating orbs if needed - PERFORMANCE OPTIMIZED
+      if (newFloatingOrbs.length < FLOATING_ORB_COUNT && Math.random() < 0.005) { // Reduced spawn rate
         const angle = Math.random() * 2 * Math.PI;
         const radius = Math.random() * (WORLD_RADIUS - 200);
         
@@ -1571,15 +1571,26 @@ const GameComponent = () => {
           type: 'SPECIAL_FLOATING',
           ...ORB_TYPES.SPECIAL_FLOATING,
           color: ORB_TYPES.SPECIAL_FLOATING.color[Math.floor(Math.random() * ORB_TYPES.SPECIAL_FLOATING.color.length)],
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
+          vx: (Math.random() - 0.5) * 0.3, // Slower movement for performance
+          vy: (Math.random() - 0.5) * 0.3,
           pulsePhase: Math.random() * Math.PI * 2,
           birthTime: Date.now()
         });
       }
       
-      // Clean up old death orbs for performance - BUG FIX
-      newDeathOrbs = newDeathOrbs.filter((orb, index) => index < 100); // Limit death orbs
+      // AGGRESSIVE memory management for large snakes
+      const currentPlayerSnake = newPlayers[playerName];
+      const isLargeSnake = currentPlayerSnake && currentPlayerSnake.segments && currentPlayerSnake.segments.length > 80;
+      
+      if (isLargeSnake) {
+        // More aggressive cleanup for large snakes
+        newDeathOrbs = newDeathOrbs.filter((orb, index) => index < 30); // Much smaller limit
+        newFood = newFood.slice(0, 150); // Limit total food
+        newFloatingOrbs = newFloatingOrbs.slice(0, Math.max(5, FLOATING_ORB_COUNT - 5)); // Reduce floating orbs
+      } else {
+        // Normal cleanup for smaller snakes
+        newDeathOrbs = newDeathOrbs.filter((orb, index) => index < 50);
+      }
       
       // Update minimap data
       setMinimap(prevMinimap => ({
