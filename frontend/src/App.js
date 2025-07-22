@@ -264,9 +264,9 @@ const GameComponent = () => {
   });
   const [particles, setParticles] = useState([]); // For eating effects
 
-  // NEW SLITHER.IO FEATURES
-  const [isBoosting, setIsBoosting] = useState(false);
-  const [boostCooldown, setBoostCooldown] = useState(0);
+  // AUTHENTIC SLITHER.IO BOOST SYSTEM
+  const [isSpacePressed, setIsSpacePressed] = useState(false); // Track if spacebar is held
+  const [boostConsumeCounter, setBoostConsumeCounter] = useState(0); // For length consumption timing
   const [victoryMessage, setVictoryMessage] = useState('');
   const [showVictoryModal, setShowVictoryModal] = useState(false);
   const [selectedServer, setSelectedServer] = useState('US East');
