@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Integrate every single thing from the original slither.io (http://slither.com/io) into the existing Cyberpunk Slither Arena game while preserving current features like Solana wallet integration, admin functionality, and cyberpunk theme."
+user_problem_statement: "Integrate every single thing from the original slither.io (http://slither.com/io) into the existing Cyberpunk Slither Arena game while preserving current features like Solana wallet integration, admin functionality, and cyberpunk theme. FINAL ENHANCEMENT: Authentic slither.io behavior where snakes cannot kill themselves by hitting their own body - they simply pass through it."
 
 frontend:
   - task: "Speed Boost System Integration"
