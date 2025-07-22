@@ -7,7 +7,7 @@ import requests
 import json
 import uuid
 
-BACKEND_URL = "https://13ab768b-5e97-4a4e-b05e-5f3bb9d7e54b.preview.emergentagent.com"
+BACKEND_URL = "https://e6c5f9ea-47fe-4b4f-884e-7a3c8906a379.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_specific_user_concerns():
