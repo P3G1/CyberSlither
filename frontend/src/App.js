@@ -1839,7 +1839,7 @@ const GameComponent = () => {
       }
     });
     
-  }, [gameState.players, gameState.food, particles, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail, canvasSize]);
+  }, [gameState.players, gameState.food, particles, trailParticles, deathEffects, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail, canvasSize, currentUser]);
 
   // Cleanup
   useEffect(() => {
