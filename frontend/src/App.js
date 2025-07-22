@@ -1689,14 +1689,19 @@ const GameComponent = () => {
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
     
-    // Convert to game coordinates
-    const gameX = (mouseX / rect.width) * canvasSize.width;
-    const gameY = (mouseY / rect.height) * canvasSize.height;
+    // Convert to screen coordinates first
+    const screenX = (mouseX / rect.width) * canvasSize.width;
+    const screenY = (mouseY / rect.height) * canvasSize.height;
     
-    updatePlayerDirection(gameX, gameY);
-  }, [gameStatus, gameState.status, canvasSize]);
+    // Convert to world coordinates using camera transform
+    const zoom = camera.zoom || 1;
+    const worldX = (screenX - canvasSize.width / 2) / zoom + (camera.x || 0);
+    const worldY = (screenY - canvasSize.height / 2) / zoom + (camera.y || 0);
+    
+    updatePlayerDirection(worldX, worldY);
+  }, [gameStatus, gameState.status, canvasSize, camera]);
 
-  // Update player direction based on touch/mouse position (angle-based movement like slither.io)
+  // Update player direction based on world position (angle-based movement like slither.io)
   const updatePlayerDirection = (targetX, targetY) => {
     const playerId = currentUser?.username || 'Player';
     
@@ -1708,7 +1713,7 @@ const GameComponent = () => {
       const player = prevState.players[playerId];
       const head = player.segments[0];
       
-      // Calculate angle from head to target position
+      // Calculate angle from head to target position in world coordinates
       const targetAngle = Math.atan2(targetY - head.y, targetX - head.x);
       
       return {
