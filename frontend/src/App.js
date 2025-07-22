@@ -1644,37 +1644,6 @@ const GameComponent = () => {
       });
     }
   }, [currentUser]);
-    }
-    
-    let direction = null;
-    
-    switch(event.key.toLowerCase()) {
-      case 'w':
-      case 'arrowup':
-        direction = 'up';
-        break;
-      case 's':
-      case 'arrowdown':
-        direction = 'down';
-        break;
-      case 'a':
-      case 'arrowleft':
-        direction = 'left';
-        break;
-      case 'd':
-      case 'arrowright':
-        direction = 'right';
-        break;
-    }
-    
-    if (direction && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      event.preventDefault();
-      wsRef.current.send(JSON.stringify({
-        type: 'move',
-        direction: direction
-      }));
-    }
-  }, [gameStatus, gameState.players, boostCooldown, currentUser]);
 
   const handleMouseMove = useCallback((event) => {
     if (gameStatus !== 'playing' || gameState.status !== 'active') return;
