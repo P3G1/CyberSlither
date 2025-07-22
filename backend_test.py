@@ -61,7 +61,372 @@ class CryptoSlitherTester:
         self.admin_username = None
         self.free_session_id = None
     
-    def test_basic_api_endpoints(self):
+    def test_admin_functionality(self):
+        """Test admin account creation and free game access"""
+        print("\n👑 Testing Admin Functionality...")
+        
+        # Test 1: Create admin account
+        try:
+            admin_username = f"admin_{uuid.uuid4().hex[:8]}"
+            payload = {
+                "username": admin_username,
+                "password": "admin123456",
+                "admin_secret": "cyberslither_admin_2025"
+            }
+            response = requests.post(f"{API_BASE}/admin/create-admin", json=payload, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["user_id", "username", "is_admin", "message"]
+                has_all_fields = all(field in data for field in required_fields)
+                if has_all_fields and data.get("is_admin") == True:
+                    self.admin_user_id = data["user_id"]
+                    self.admin_username = admin_username
+                    self.results.add_result(
+                        "POST /api/admin/create-admin - Create admin account", 
+                        True,
+                        f"Admin created: {admin_username}, User ID: {self.admin_user_id}"
+                    )
+                else:
+                    self.results.add_result(
+                        "POST /api/admin/create-admin - Create admin account", 
+                        False,
+                        f"Missing fields or not admin. Got: {data}"
+                    )
+            else:
+                self.results.add_result(
+                    "POST /api/admin/create-admin - Create admin account", 
+                    False,
+                    f"Status: {response.status_code}, Response: {response.text}"
+                )
+        except Exception as e:
+            self.results.add_result("POST /api/admin/create-admin - Create admin account", False, str(e))
+        
+        # Test 2: Test admin secret validation (should fail with wrong secret)
+        try:
+            payload = {
+                "username": f"badmin_{uuid.uuid4().hex[:8]}",
+                "password": "admin123456",
+                "admin_secret": "wrong_secret"
+            }
+            response = requests.post(f"{API_BASE}/admin/create-admin", json=payload, timeout=10)
+            
+            success = response.status_code == 403  # Should be forbidden
+            self.results.add_result(
+                "POST /api/admin/create-admin - Invalid admin secret validation", 
+                success,
+                f"Status: {response.status_code} (should be 403)"
+            )
+        except Exception as e:
+            self.results.add_result("POST /api/admin/create-admin - Invalid admin secret validation", False, str(e))
+        
+        # Test 3: Create free game for admin
+        if self.admin_user_id:
+            try:
+                payload = {
+                    "user_id": self.admin_user_id,
+                    "bet_amount": 20  # $20 bet but should be free for admin
+                }
+                response = requests.post(f"{API_BASE}/admin/create-free-game", json=payload, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    required_fields = ["session_id", "entry_fee", "admin_mode"]
+                    has_all_fields = all(field in data for field in required_fields)
+                    if has_all_fields and data.get("entry_fee") == 0.0 and data.get("admin_mode") == True:
+                        self.free_session_id = data["session_id"]
+                        self.results.add_result(
+                            "POST /api/admin/create-free-game - Create free game", 
+                            True,
+                            f"Free game created: {self.free_session_id}, Entry fee: {data['entry_fee']}"
+                        )
+                    else:
+                        self.results.add_result(
+                            "POST /api/admin/create-free-game - Create free game", 
+                            False,
+                            f"Invalid response. Got: {data}"
+                        )
+                else:
+                    self.results.add_result(
+                        "POST /api/admin/create-free-game - Create free game", 
+                        False,
+                        f"Status: {response.status_code}, Response: {response.text}"
+                    )
+            except Exception as e:
+                self.results.add_result("POST /api/admin/create-free-game - Create free game", False, str(e))
+        else:
+            self.results.add_result("POST /api/admin/create-free-game - Create free game", False, "No admin user ID available")
+        
+        # Test 4: Join free game as admin
+        if self.admin_user_id and self.free_session_id:
+            try:
+                payload = {
+                    "session_id": self.free_session_id,
+                    "user_id": self.admin_user_id,
+                    "player_id": f"admin_player_{uuid.uuid4().hex[:8]}"
+                }
+                response = requests.post(f"{API_BASE}/admin/join-free-game", json=payload, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    required_fields = ["message", "player_id", "session_id", "admin_mode", "entry_fee"]
+                    has_all_fields = all(field in data for field in required_fields)
+                    if has_all_fields and data.get("admin_mode") == True and data.get("entry_fee") == 0.0:
+                        self.results.add_result(
+                            "POST /api/admin/join-free-game - Join as admin", 
+                            True,
+                            f"Admin joined free game: {data['player_id']}"
+                        )
+                    else:
+                        self.results.add_result(
+                            "POST /api/admin/join-free-game - Join as admin", 
+                            False,
+                            f"Invalid response. Got: {data}"
+                        )
+                else:
+                    self.results.add_result(
+                        "POST /api/admin/join-free-game - Join as admin", 
+                        False,
+                        f"Status: {response.status_code}, Response: {response.text}"
+                    )
+            except Exception as e:
+                self.results.add_result("POST /api/admin/join-free-game - Join as admin", False, str(e))
+        else:
+            self.results.add_result("POST /api/admin/join-free-game - Join as admin", False, "Missing admin user ID or free session ID")
+        
+        # Test 5: Test non-admin user cannot create free game
+        try:
+            payload = {
+                "user_id": "fake_user_id",
+                "bet_amount": 5
+            }
+            response = requests.post(f"{API_BASE}/admin/create-free-game", json=payload, timeout=10)
+            
+            success = response.status_code == 403  # Should be forbidden
+            self.results.add_result(
+                "POST /api/admin/create-free-game - Non-admin access denied", 
+                success,
+                f"Status: {response.status_code} (should be 403)"
+            )
+        except Exception as e:
+            self.results.add_result("POST /api/admin/create-free-game - Non-admin access denied", False, str(e))
+
+    def test_enhanced_authentication(self):
+        """Test enhanced authentication system"""
+        print("\n🔐 Testing Enhanced Authentication System...")
+        
+        # Test 1: User registration with validation
+        try:
+            test_username = f"slitheruser_{uuid.uuid4().hex[:8]}"
+            payload = {
+                "username": test_username,
+                "password": "slither123456"
+            }
+            response = requests.post(f"{API_BASE}/auth/register", json=payload, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["user_id", "username", "created_at", "message"]
+                has_all_fields = all(field in data for field in required_fields)
+                success = has_all_fields and data.get("username") == test_username.lower()
+                self.results.add_result(
+                    "POST /api/auth/register - Enhanced user registration", 
+                    success,
+                    f"User created: {test_username}, User ID: {data.get('user_id', 'N/A')}"
+                )
+                
+                # Test 2: User login
+                if success:
+                    try:
+                        login_payload = {
+                            "username": test_username,
+                            "password": "slither123456"
+                        }
+                        login_response = requests.post(f"{API_BASE}/auth/login", json=login_payload, timeout=10)
+                        
+                        if login_response.status_code == 200:
+                            login_data = login_response.json()
+                            login_fields = ["user_id", "username", "is_admin", "message"]
+                            has_login_fields = all(field in login_data for field in login_fields)
+                            login_success = has_login_fields and login_data.get("username") == test_username.lower()
+                            self.results.add_result(
+                                "POST /api/auth/login - User login", 
+                                login_success,
+                                f"Login successful for: {test_username}"
+                            )
+                            
+                            # Test 3: Wallet connection
+                            if login_success:
+                                try:
+                                    wallet_payload = {
+                                        "user_id": login_data["user_id"],
+                                        "wallet_address": self.test_wallet
+                                    }
+                                    wallet_response = requests.post(f"{API_BASE}/user/connect-wallet", json=wallet_payload, timeout=10)
+                                    
+                                    wallet_success = wallet_response.status_code == 200
+                                    if wallet_success:
+                                        wallet_data = wallet_response.json()
+                                        wallet_success = "wallet_address" in wallet_data
+                                    
+                                    self.results.add_result(
+                                        "POST /api/user/connect-wallet - Wallet connection", 
+                                        wallet_success,
+                                        f"Wallet connected: {self.test_wallet}"
+                                    )
+                                except Exception as e:
+                                    self.results.add_result("POST /api/user/connect-wallet - Wallet connection", False, str(e))
+                        else:
+                            self.results.add_result(
+                                "POST /api/auth/login - User login", 
+                                False,
+                                f"Login failed: {login_response.status_code}"
+                            )
+                    except Exception as e:
+                        self.results.add_result("POST /api/auth/login - User login", False, str(e))
+            else:
+                self.results.add_result(
+                    "POST /api/auth/register - Enhanced user registration", 
+                    False,
+                    f"Registration failed: {response.status_code}"
+                )
+        except Exception as e:
+            self.results.add_result("POST /api/auth/register - Enhanced user registration", False, str(e))
+        
+        # Test 4: Username validation (too short)
+        try:
+            payload = {
+                "username": "ab",  # Too short
+                "password": "validpassword123"
+            }
+            response = requests.post(f"{API_BASE}/auth/register", json=payload, timeout=10)
+            
+            success = response.status_code == 400  # Should be bad request
+            self.results.add_result(
+                "POST /api/auth/register - Username validation (too short)", 
+                success,
+                f"Status: {response.status_code} (should be 400)"
+            )
+        except Exception as e:
+            self.results.add_result("POST /api/auth/register - Username validation (too short)", False, str(e))
+        
+        # Test 5: Password validation (too short)
+        try:
+            payload = {
+                "username": "validusername",
+                "password": "123"  # Too short
+            }
+            response = requests.post(f"{API_BASE}/auth/register", json=payload, timeout=10)
+            
+            success = response.status_code == 400  # Should be bad request
+            self.results.add_result(
+                "POST /api/auth/register - Password validation (too short)", 
+                success,
+                f"Status: {response.status_code} (should be 400)"
+            )
+        except Exception as e:
+            self.results.add_result("POST /api/auth/register - Password validation (too short)", False, str(e))
+
+    def test_enhanced_leaderboard(self):
+        """Test enhanced leaderboard with length tracking"""
+        print("\n🏆 Testing Enhanced Leaderboard System...")
+        
+        # Test 1: Get leaderboard with enhanced data
+        try:
+            response = requests.get(f"{API_BASE}/leaderboard", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["leaderboard", "total_winnings", "active_players"]
+                has_all_fields = all(field in data for field in required_fields)
+                
+                # Check if leaderboard has proper structure
+                leaderboard_valid = True
+                if data.get("leaderboard") and len(data["leaderboard"]) > 0:
+                    first_entry = data["leaderboard"][0]
+                    expected_fields = ["display_name", "total_winnings", "wallet_address"]
+                    leaderboard_valid = all(field in first_entry for field in expected_fields)
+                
+                success = has_all_fields and leaderboard_valid
+                self.results.add_result(
+                    "GET /api/leaderboard - Enhanced leaderboard structure", 
+                    success,
+                    f"Active players: {data.get('active_players', 0)}, Total winnings: ${data.get('total_winnings', 0):.2f}"
+                )
+            else:
+                self.results.add_result(
+                    "GET /api/leaderboard - Enhanced leaderboard structure", 
+                    False,
+                    f"Status: {response.status_code}, Response: {response.text}"
+                )
+        except Exception as e:
+            self.results.add_result("GET /api/leaderboard - Enhanced leaderboard structure", False, str(e))
+
+    def test_enhanced_game_mechanics(self):
+        """Test enhanced slither.io game mechanics"""
+        print("\n🐍 Testing Enhanced Slither.io Game Mechanics...")
+        
+        # Test 1: Create game with enhanced mechanics
+        try:
+            payload = {"bet_amount": 10}  # $10 bet for enhanced testing
+            response = requests.post(f"{API_BASE}/game/create", json=payload, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["session_id", "entry_fee", "status", "max_players"]
+                has_all_fields = all(field in data for field in required_fields)
+                if has_all_fields:
+                    enhanced_session_id = data["session_id"]
+                    self.results.add_result(
+                        "POST /api/game/create - Enhanced game session", 
+                        True,
+                        f"Enhanced session: {enhanced_session_id}, Max players: {data.get('max_players', 'N/A')}"
+                    )
+                    
+                    # Test 2: Create bet for enhanced game
+                    try:
+                        bet_payload = {
+                            "session_id": enhanced_session_id,
+                            "player_id": f"enhanced_player_{uuid.uuid4().hex[:8]}",
+                            "wallet_address": self.test_wallet,
+                            "bet_amount": 10
+                        }
+                        bet_response = requests.post(f"{API_BASE}/payment/create-bet", json=bet_payload, timeout=10)
+                        
+                        if bet_response.status_code == 200:
+                            bet_data = bet_response.json()
+                            bet_fields = ["transaction_id", "amount", "recipient", "message"]
+                            has_bet_fields = all(field in bet_data for field in bet_fields)
+                            
+                            # Check if message contains bet amount
+                            message_valid = "$10 bet" in bet_data.get("message", "")
+                            
+                            success = has_bet_fields and message_valid
+                            self.results.add_result(
+                                "POST /api/payment/create-bet - Enhanced game betting", 
+                                success,
+                                f"Bet created: ${bet_data.get('bet_amount', 'N/A')}, Message: {bet_data.get('message', 'N/A')}"
+                            )
+                        else:
+                            self.results.add_result(
+                                "POST /api/payment/create-bet - Enhanced game betting", 
+                                False,
+                                f"Bet creation failed: {bet_response.status_code}"
+                            )
+                    except Exception as e:
+                        self.results.add_result("POST /api/payment/create-bet - Enhanced game betting", False, str(e))
+                else:
+                    self.results.add_result(
+                        "POST /api/game/create - Enhanced game session", 
+                        False,
+                        f"Missing required fields. Got: {list(data.keys())}"
+                    )
+            else:
+                self.results.add_result(
+                    "POST /api/game/create - Enhanced game session", 
+                    False,
+                    f"Status: {response.status_code}, Response: {response.text}"
+                )
+        except Exception as e:
+            self.results.add_result("POST /api/game/create - Enhanced game session", False, str(e))
         """Test basic API endpoints"""
         print("\n🔍 Testing Basic API Endpoints...")
         
