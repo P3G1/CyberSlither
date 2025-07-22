@@ -233,6 +233,14 @@ const GameComponent = () => {
     }
   }, [connected, publicKey, connection]);
 
+  // Initialize unlocked skins from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('unlockedSkins');
+    if (saved) {
+      setUnlockedSkins(JSON.parse(saved));
+    }
+  }, []);
+
   // Load real leaderboard data with enhanced length-based scoring
   const loadLeaderboard = async () => {
     try {
