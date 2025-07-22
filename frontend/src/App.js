@@ -335,9 +335,9 @@ const GameComponent = () => {
     }
   };
 
-  // AUTHENTIC SLITHER.IO BOOST CONSUMPTION
+  // AUTHENTIC SLITHER.IO BOOST CONSUMPTION + SPECTATOR TIMER
   useEffect(() => {
-    if (isSpacePressed && gameStatus === 'playing') {
+    if (isSpacePressed && gameStatus === 'playing' && !spectatorMode) {
       const consumeInterval = setInterval(() => {
         setBoostConsumeCounter(prev => prev + 1);
         
@@ -367,7 +367,27 @@ const GameComponent = () => {
 
       return () => clearInterval(consumeInterval);
     }
-  }, [isSpacePressed, gameStatus, boostConsumeCounter, currentUser]);
+  }, [isSpacePressed, gameStatus, boostConsumeCounter, currentUser, spectatorMode]);
+
+  // SPECTATOR MODE TIMER
+  useEffect(() => {
+    if (spectatorMode && spectatorTimeLeft > 0) {
+      const timer = setTimeout(() => {
+        setSpectatorTimeLeft(prev => {
+          if (prev <= 1) {
+            // End spectator mode
+            setSpectatorMode(false);
+            setSpectatorTarget(null);
+            setShowVictoryModal(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [spectatorMode, spectatorTimeLeft]);
 
   // CODE ENTRY SYSTEM
   const handleCodeSubmit = () => {
