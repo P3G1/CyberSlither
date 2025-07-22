@@ -264,7 +264,11 @@ const GameComponent = () => {
   });
   const [particles, setParticles] = useState([]); // For eating effects
 
-  // AUTHENTIC SLITHER.IO BOOST CONSUMPTION + SPECTATOR MODE
+  // AUTHENTIC SLITHER.IO BOOST SYSTEM  
+  const [isSpacePressed, setIsSpacePressed] = useState(false); // Track if spacebar is held
+  const [boostConsumeCounter, setBoostConsumeCounter] = useState(0); // For length consumption timing
+  
+  // SPECTATOR MODE SYSTEM
   const [spectatorMode, setSpectatorMode] = useState(false);
   const [spectatorTarget, setSpectatorTarget] = useState(null);
   const [spectatorTimeLeft, setSpectatorTimeLeft] = useState(0);
