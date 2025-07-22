@@ -427,6 +427,73 @@ class CryptoSlitherTester:
                 )
         except Exception as e:
             self.results.add_result("POST /api/game/create - Enhanced game session", False, str(e))
+
+    def test_basic_api_endpoints(self):
+        """Test basic API endpoints"""
+        print("\n🔍 Testing Basic API Endpoints...")
+        
+        # Test 1: Root endpoint
+        try:
+            response = requests.get(f"{API_BASE}/", timeout=10)
+            success = response.status_code == 200 and "Crypto Slither Game API" in response.text
+            self.results.add_result(
+                "GET /api/ - Root endpoint", 
+                success,
+                f"Status: {response.status_code}, Response: {response.text[:100]}"
+            )
+        except Exception as e:
+            self.results.add_result("GET /api/ - Root endpoint", False, str(e))
+        
+        # Test 2: Create game session
+        try:
+            payload = {"bet_amount": 5}  # $5 bet
+            response = requests.post(f"{API_BASE}/game/create", json=payload, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["session_id", "entry_fee", "status"]
+                has_all_fields = all(field in data for field in required_fields)
+                if has_all_fields:
+                    self.test_session_id = data["session_id"]
+                    self.results.add_result(
+                        "POST /api/game/create - Create game session", 
+                        True,
+                        f"Session ID: {self.test_session_id}, Entry fee: {data['entry_fee']}"
+                    )
+                else:
+                    self.results.add_result(
+                        "POST /api/game/create - Create game session", 
+                        False,
+                        f"Missing required fields. Got: {list(data.keys())}"
+                    )
+            else:
+                self.results.add_result(
+                    "POST /api/game/create - Create game session", 
+                    False,
+                    f"Status: {response.status_code}, Response: {response.text}"
+                )
+        except Exception as e:
+            self.results.add_result("POST /api/game/create - Create game session", False, str(e))
+        
+        # Test 3: Get leaderboard (since there's no individual game session endpoint)
+        try:
+            response = requests.get(f"{API_BASE}/leaderboard", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["leaderboard", "total_winnings", "active_players"]
+                has_all_fields = all(field in data for field in required_fields)
+                self.results.add_result(
+                    "GET /api/leaderboard - Get leaderboard", 
+                    has_all_fields,
+                    f"Active players: {data.get('active_players', 'N/A')}, Total winnings: {data.get('total_winnings', 'N/A')}"
+                )
+            else:
+                self.results.add_result(
+                    "GET /api/leaderboard - Get leaderboard", 
+                    False,
+                    f"Status: {response.status_code}, Response: {response.text}"
+                )
+        except Exception as e:
+            self.results.add_result("GET /api/leaderboard - Get leaderboard", False, str(e))
         """Test basic API endpoints"""
         print("\n🔍 Testing Basic API Endpoints...")
         
