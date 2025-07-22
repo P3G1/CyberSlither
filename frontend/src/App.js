@@ -1804,310 +1804,396 @@ const GameComponent = () => {
     };
   }, [handleKeyPress, handleMouseMove, handleTouchStart, handleTouchMove]);
 
-  // Enhanced canvas rendering with cyberpunk effects
+  // ENHANCED SLITHER.IO RENDERING SYSTEM
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
+    canvas.width = canvasSize.width;
+    canvas.height = canvasSize.height;
     
-    // Cyberpunk background
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, '#0a0a1a');
-    gradient.addColorStop(0.5, '#1a0a2a');
-    gradient.addColorStop(1, '#0a0a1a');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Neon grid
-    ctx.strokeStyle = '#00ffff20';
+    // Calculate camera offset for world rendering
+    const cameraOffsetX = canvas.width / 2 - (camera.x || 0);
+    const cameraOffsetY = canvas.height / 2 - (camera.y || 0);
+    const zoom = camera.zoom || 1;
+    
+    ctx.save();
+    ctx.scale(zoom, zoom);
+    ctx.translate(cameraOffsetX / zoom, cameraOffsetY / zoom);
+    
+    // DRAW WORLD BACKGROUND (large scale like slither.io)
+    const worldGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, WORLD_RADIUS);
+    worldGradient.addColorStop(0, '#0a0a1a');
+    worldGradient.addColorStop(0.3, '#1a0a2a');
+    worldGradient.addColorStop(0.7, '#2a0a3a');
+    worldGradient.addColorStop(1, '#0a0a0a');
+    
+    ctx.fillStyle = worldGradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, WORLD_RADIUS, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // DRAW WORLD BOUNDARY (red barrier like slither.io)
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 20;
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = '#ff0000';
+    ctx.beginPath();
+    ctx.arc(0, 0, WORLD_RADIUS - 10, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    // Draw subtle grid pattern in visible area
+    ctx.strokeStyle = '#00ffff10';
     ctx.lineWidth = 1;
-    for (let x = 0; x < canvas.width; x += 40) {
+    const gridSpacing = 100;
+    const visibleBounds = {
+      left: (camera.x || 0) - canvas.width / 2 / zoom - 200,
+      right: (camera.x || 0) + canvas.width / 2 / zoom + 200,
+      top: (camera.y || 0) - canvas.height / 2 / zoom - 200,
+      bottom: (camera.y || 0) + canvas.height / 2 / zoom + 200
+    };
+    
+    for (let x = Math.floor(visibleBounds.left / gridSpacing) * gridSpacing; x <= visibleBounds.right; x += gridSpacing) {
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
+      ctx.moveTo(x, visibleBounds.top);
+      ctx.lineTo(x, visibleBounds.bottom);
       ctx.stroke();
     }
-    for (let y = 0; y < canvas.height; y += 40) {
+    for (let y = Math.floor(visibleBounds.top / gridSpacing) * gridSpacing; y <= visibleBounds.bottom; y += gridSpacing) {
       ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(canvas.width, y);
+      ctx.moveTo(visibleBounds.left, y);
+      ctx.lineTo(visibleBounds.right, y);
       ctx.stroke();
     }
     
-    // Glowing food
-    gameState.food.forEach(food => {
-      ctx.save();
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = food.color || '#00ffff';
-      ctx.fillStyle = food.color || '#00ffff';
-      
-      // Pulsating effect
-      const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 1;
-      const size = (food.size || FOOD_SIZE) * pulse;
-      
-      ctx.beginPath();
-      ctx.arc(food.x, food.y, size, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Inner glow
-      ctx.shadowBlur = 10;
-      ctx.fillStyle = '#ffffff80';
-      ctx.beginPath();
-      ctx.arc(food.x, food.y, size * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    });
-    
-    // Render eating particles
-    particles.forEach(particle => {
-      ctx.save();
-      const alpha = particle.life / particle.maxLife;
-      ctx.globalAlpha = alpha;
-      ctx.shadowBlur = 15 * alpha;
-      ctx.shadowColor = particle.color;
-      ctx.fillStyle = particle.color;
-      
-      ctx.beginPath();
-      ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Sparkle effect
-      if (particle.life % 4 === 0) {
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size * alpha * 0.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      ctx.restore();
-    });
-    
-    // Render trail particles (boost effects)
-    trailParticles.forEach(particle => {
-      ctx.save();
-      const alpha = particle.life / particle.maxLife;
-      ctx.globalAlpha = alpha;
-      ctx.shadowBlur = 25 * alpha;
-      ctx.shadowColor = particle.color;
-      ctx.fillStyle = particle.color;
-      
-      // Lightning bolt effect for boost
-      if (particle.type === 'boost') {
-        ctx.strokeStyle = particle.color;
-        ctx.lineWidth = 3 * alpha;
-        ctx.beginPath();
-        ctx.moveTo(particle.x - 5, particle.y);
-        ctx.lineTo(particle.x + 5, particle.y);
-        ctx.moveTo(particle.x, particle.y - 5);
-        ctx.lineTo(particle.x, particle.y + 5);
-        ctx.stroke();
-      }
-      
-      ctx.beginPath();
-      ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    });
-    
-    // Render death effects
-    deathEffects.forEach(effect => {
-      effect.particles.forEach(particle => {
+    // DRAW FLOATING ORBS (special large orbs that move around)
+    (gameState.floatingOrbs || []).forEach(orb => {
+      if (isOrbVisible(orb, visibleBounds)) {
         ctx.save();
-        const alpha = particle.life / 40;
-        ctx.globalAlpha = alpha;
-        ctx.shadowBlur = 20 * alpha;
-        ctx.shadowColor = particle.color;
-        ctx.fillStyle = particle.color;
         
+        // Pulsing effect
+        const pulseSize = orb.size + Math.sin(orb.pulsePhase || 0) * 3;
+        const glowIntensity = 20 + Math.sin((orb.pulsePhase || 0) * 1.5) * 10;
+        
+        ctx.shadowBlur = glowIntensity;
+        ctx.shadowColor = orb.color;
+        ctx.fillStyle = orb.color;
+        
+        // Outer glow
+        ctx.globalAlpha = 0.3;
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+        ctx.arc(orb.x, orb.y, pulseSize * 1.5, 0, Math.PI * 2);
         ctx.fill();
         
-        // Explosion ring effect
-        if (particle.life > 35) {
-          ctx.strokeStyle = particle.color;
-          ctx.lineWidth = 2;
-          ctx.globalAlpha = 0.5;
-          ctx.beginPath();
-          ctx.arc(particle.x, particle.y, (40 - particle.life) * 3, 0, Math.PI * 2);
-          ctx.stroke();
-        }
+        // Main orb
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, pulseSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Inner highlight
+        ctx.shadowBlur = 5;
+        ctx.fillStyle = '#ffffff80';
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, pulseSize * 0.4, 0, Math.PI * 2);
+        ctx.fill();
         
         ctx.restore();
-      });
+      }
     });
     
-    // Enhanced snakes with customization
-    Object.values(gameState.players).forEach(player => {
-      if (player.alive && player.segments && player.segments.length > 0) {
-        const skin = ALL_SKINS[selectedSkin] || ALL_SKINS[0];
-        const accessory = SNAKE_ACCESSORIES[selectedAccessory];
-        const trail = SNAKE_TRAILS[selectedTrail];
+    // DRAW DEATH ORBS (from dead snakes)
+    (gameState.deathOrbs || []).forEach(orb => {
+      if (isOrbVisible(orb, visibleBounds)) {
+        ctx.save();
+        ctx.globalAlpha = orb.opacity || 1;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = orb.color;
+        ctx.fillStyle = orb.color;
         
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, orb.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Smaller inner highlight
+        ctx.shadowBlur = 3;
+        ctx.fillStyle = '#ffffff60';
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, orb.size * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+      }
+    });
+    
+    // DRAW NORMAL FOOD ORBS
+    (gameState.food || []).forEach(orb => {
+      if (isOrbVisible(orb, visibleBounds)) {
         ctx.save();
         
-        // Snake trail effect
-        if (trail.effect !== 'none') {
-          ctx.shadowBlur = 30;
-          ctx.shadowColor = skin.glow;
+        const size = orb.size || 6;
+        let effectiveSize = size;
+        
+        // Add pulsing for large orbs
+        if (orb.type === 'LARGE' && orb.pulsePhase !== undefined) {
+          effectiveSize = size + Math.sin(orb.pulsePhase) * 2;
         }
         
+        ctx.shadowBlur = orb.glow ? 15 : 8;
+        ctx.shadowColor = orb.color;
+        ctx.fillStyle = orb.color;
+        
+        // Main orb
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, effectiveSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Inner highlight
+        ctx.shadowBlur = 3;
+        ctx.fillStyle = '#ffffff50';
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, effectiveSize * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+      }
+    });
+    
+    // DRAW EATING PARTICLES
+    particles.forEach(particle => {
+      if (particle.life > 0 && isOrbVisible(particle, visibleBounds)) {
+        ctx.save();
+        ctx.globalAlpha = particle.life / particle.maxLife;
+        ctx.fillStyle = particle.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = particle.color;
+        
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+    
+    // DRAW SNAKES with enhanced mass-based rendering
+    Object.values(gameState.players || {}).forEach(player => {
+      if (player.alive && player.segments && player.segments.length > 0) {
+        const isPlayer = player.player_id === (currentUser?.username || 'Player');
+        const mass = player.mass || player.segments.length;
+        const growthFactor = Math.min(mass / 50, 3);
+        
+        // Enhanced snake body rendering
         player.segments.forEach((segment, index) => {
-          const isHead = index === 0;
-          const playerName = currentUser?.username || 'Player';
-          const isPlayerSnake = player.player_id === playerName;
+          ctx.save();
           
-          // Slither.io style circular segments with smooth size transition
-          const segmentCount = player.segments.length;
-          let radius;
+          // Size decreases from head to tail
+          const segmentRatio = 1 - (index / player.segments.length) * 0.3;
+          const segmentSize = (8 + growthFactor * 2) * segmentRatio;
           
-          if (isHead) {
-            radius = 16 + (segmentCount * 0.3); // Head grows with length
-          } else {
-            // Body segments get smaller toward tail
-            const sizeMultiplier = Math.max(0.4, 1 - (index / segmentCount) * 0.6);
-            radius = (12 + (segmentCount * 0.2)) * sizeMultiplier;
-          }
+          // Enhanced glow for larger snakes
+          ctx.shadowBlur = 10 + growthFactor * 8;
+          ctx.shadowColor = player.color;
           
-          // Enhanced glow for player snake
-          if (isPlayerSnake) {
-            ctx.shadowBlur = 20 + (radius * 0.5);
-            ctx.shadowColor = skin.glow;
-          } else {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = player.color;
-          }
-          
-          // Create radial gradient for 3D effect
-          const gradient = ctx.createRadialGradient(
-            segment.x, segment.y, 0,
-            segment.x, segment.y, radius
-          );
-          
-          if (isHead) {
-            // Head has special gradient
-            gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(0.3, skin.color || player.color);
-            gradient.addColorStop(0.8, skin.color || player.color);
-            gradient.addColorStop(1, '#000000');
+          if (index === 0) {
+            // Snake head - larger and more prominent
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.arc(segment.x, segment.y, segmentSize + 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eyes based on movement direction
+            if (player.currentAngle !== undefined) {
+              ctx.fillStyle = '#ffffff';
+              ctx.shadowBlur = 3;
+              
+              const eyeDistance = segmentSize * 0.6;
+              const eyeSize = 2 + growthFactor * 0.5;
+              const angle1 = player.currentAngle + 0.5;
+              const angle2 = player.currentAngle - 0.5;
+              
+              // Left eye
+              ctx.beginPath();
+              ctx.arc(
+                segment.x + Math.cos(angle1) * eyeDistance,
+                segment.y + Math.sin(angle1) * eyeDistance,
+                eyeSize, 0, Math.PI * 2
+              );
+              ctx.fill();
+              
+              // Right eye
+              ctx.beginPath();
+              ctx.arc(
+                segment.x + Math.cos(angle2) * eyeDistance,
+                segment.y + Math.sin(angle2) * eyeDistance,
+                eyeSize, 0, Math.PI * 2
+              );
+              ctx.fill();
+            }
           } else {
             // Body segments
-            const intensity = Math.max(0.4, 1 - (index / segmentCount) * 0.5);
-            gradient.addColorStop(0, '#ffffff' + Math.floor(intensity * 255).toString(16));
-            gradient.addColorStop(0.4, player.color);
-            gradient.addColorStop(1, '#000000' + Math.floor(intensity * 128).toString(16));
-          }
-          
-          ctx.fillStyle = gradient;
-          ctx.beginPath();
-          ctx.arc(segment.x, segment.y, radius, 0, Math.PI * 2);
-          ctx.fill();
-          
-          // Outline for definition
-          if (isPlayerSnake || isHead) {
-            ctx.strokeStyle = skin.glow || player.color;
-            ctx.lineWidth = isHead ? 3 : 2;
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.arc(segment.x, segment.y, segmentSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Segment borders for definition
+            ctx.strokeStyle = '#ffffff20';
+            ctx.lineWidth = 1;
             ctx.stroke();
           }
           
-          // Head details
-          if (isHead) {
-            // Eyes for the head
-            const eyeSize = 4 + (radius * 0.15);
-            const eyeOffset = radius * 0.3;
-            
-            // Calculate eye positions based on movement direction
-            let eyeAngle = 0;
-            if (player.currentAngle !== undefined) {
-              eyeAngle = player.currentAngle;
-            }
-            
-            const leftEyeX = segment.x + Math.cos(eyeAngle + Math.PI/6) * eyeOffset;
-            const leftEyeY = segment.y + Math.sin(eyeAngle + Math.PI/6) * eyeOffset;
-            const rightEyeX = segment.x + Math.cos(eyeAngle - Math.PI/6) * eyeOffset;
-            const rightEyeY = segment.y + Math.sin(eyeAngle - Math.PI/6) * eyeOffset;
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowBlur = 5;
-            
-            ctx.beginPath();
-            ctx.arc(leftEyeX, leftEyeY, eyeSize, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.beginPath();
-            ctx.arc(rightEyeX, rightEyeY, eyeSize, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Eye pupils
-            ctx.fillStyle = isPlayerSnake ? '#00ffff' : '#000000';
-            ctx.shadowBlur = 3;
-            
-            ctx.beginPath();
-            ctx.arc(leftEyeX, leftEyeY, eyeSize * 0.4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.beginPath();
-            ctx.arc(rightEyeX, rightEyeY, eyeSize * 0.4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Accessory
-            if (accessory && accessory.icon !== "❌") {
-              ctx.font = `${16 + (radius * 0.3)}px Arial`;
-              ctx.textAlign = 'center';
-              ctx.fillStyle = '#ffffff';
-              ctx.shadowBlur = 8;
-              ctx.fillText(accessory.icon, segment.x, segment.y - radius - 15);
-            }
-          }
+          ctx.restore();
         });
         
-        // Player name with cyberpunk styling and growth stats
+        // Player name and stats (with zoom-based scaling)
         if (player.segments[0]) {
-          const growthFactor = Math.min(player.segments.length / 10, 2);
-          const fontSize = 14 + (growthFactor * 3);
+          ctx.save();
           
+          const fontSize = Math.max(10, (14 + growthFactor * 2) / zoom);
           ctx.font = `bold ${fontSize}px "Courier New", monospace`;
           ctx.textAlign = 'center';
-          ctx.fillStyle = '#00ffff';
-          ctx.shadowBlur = 10 + (growthFactor * 5);
-          ctx.shadowColor = '#00ffff';
+          ctx.fillStyle = isPlayer ? '#ffff00' : '#00ffff';
+          ctx.shadowBlur = 8 / zoom;
+          ctx.shadowColor = ctx.fillStyle;
           
           const playerName = player.player_id.split('_')[0];
-          const scoreText = `${playerName} [${player.segments.length}] [$${selectedBetAmount}]`;
-          const textX = player.segments[0].x;
-          const textY = player.segments[0].y - (35 + growthFactor * 5);
+          const scoreText = `${playerName} [${player.segments.length}]`;
+          const textY = player.segments[0].y - (25 + growthFactor * 5);
           
-          // Enhanced text background for larger snakes
+          // Text background
           const textWidth = ctx.measureText(scoreText).width;
-          const bgPadding = 5 + (growthFactor * 2);
-          const bgHeight = 20 + (growthFactor * 3);
-          
           ctx.fillStyle = '#000000aa';
-          ctx.fillRect(textX - textWidth/2 - bgPadding, textY - 15, textWidth + bgPadding*2, bgHeight);
+          ctx.fillRect(player.segments[0].x - textWidth/2 - 5, textY - 12, textWidth + 10, 16);
           
-          // Text with enhanced glow for larger snakes
-          ctx.fillStyle = player.player_id === (currentUser?.username || 'Player') ? '#ffff00' : '#00ffff';
-          ctx.shadowColor = player.player_id === (currentUser?.username || 'Player') ? '#ffff00' : '#00ffff';
-          ctx.fillText(scoreText, textX, textY);
+          // Main text
+          ctx.fillStyle = isPlayer ? '#ffff00' : '#00ffff';
+          ctx.fillText(scoreText, player.segments[0].x, textY);
           
-          // Additional size milestone indicators
-          if (player.segments.length > 15) {
-            ctx.font = 'bold 10px Arial';
+          // Size milestone indicators
+          if (mass > 50) {
+            ctx.font = `bold ${Math.max(8, 12/zoom)}px Arial`;
             ctx.fillStyle = '#ff0080';
-            ctx.fillText('🔥 LARGE', textX, textY + 18);
-          } else if (player.segments.length > 25) {
-            ctx.font = 'bold 12px Arial';
+            ctx.fillText('👑 KING', player.segments[0].x, textY + 20);
+          } else if (mass > 25) {
+            ctx.font = `bold ${Math.max(8, 10/zoom)}px Arial`;
             ctx.fillStyle = '#ff4000';
-            ctx.fillText('⚡ HUGE', textX, textY + 20);
+            ctx.fillText('⚡ LARGE', player.segments[0].x, textY + 18);
           }
+          
+          ctx.restore();
         }
-        
-        ctx.restore();
       }
     });
     
-  }, [gameState.players, gameState.food, particles, trailParticles, deathEffects, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail, canvasSize, currentUser]);
+    ctx.restore();
+    
+    // DRAW MINIMAP (bottom-right corner)
+    drawMinimap(ctx, canvas);
+    
+    // DRAW UI ELEMENTS
+    drawGameUI(ctx, canvas);
+    
+  }, [gameState.players, gameState.food, gameState.floatingOrbs, gameState.deathOrbs, particles, trailParticles, deathEffects, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail, canvasSize, currentUser, camera, minimap]);
+
+  // Helper functions for drawing
+  const isOrbVisible = (orb, bounds) => {
+    return orb.x >= bounds.left && orb.x <= bounds.right && 
+           orb.y >= bounds.top && orb.y <= bounds.bottom;
+  };
+
+  const drawMinimap = (ctx, canvas) => {
+    if (!minimap.visible) return;
+    
+    ctx.save();
+    
+    // Minimap position (bottom-right)
+    const mmX = canvas.width - MINIMAP_SIZE - 20;
+    const mmY = canvas.height - MINIMAP_SIZE - 20;
+    
+    // Minimap background (circular like slither.io)
+    ctx.fillStyle = '#000000aa';
+    ctx.beginPath();
+    ctx.arc(mmX + MINIMAP_SIZE/2, mmY + MINIMAP_SIZE/2, MINIMAP_SIZE/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // World boundary on minimap
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(mmX + MINIMAP_SIZE/2, mmY + MINIMAP_SIZE/2, MINIMAP_SIZE/2 - 2, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Draw player dots
+    Object.entries(minimap.playerDots).forEach(([playerId, playerData]) => {
+      const scale = (MINIMAP_SIZE/2 - 10) / WORLD_RADIUS;
+      const dotX = mmX + MINIMAP_SIZE/2 + playerData.x * scale;
+      const dotY = mmY + MINIMAP_SIZE/2 + playerData.y * scale;
+      
+      // Check if within minimap bounds
+      const distFromCenter = Math.sqrt(
+        Math.pow(dotX - (mmX + MINIMAP_SIZE/2), 2) + 
+        Math.pow(dotY - (mmY + MINIMAP_SIZE/2), 2)
+      );
+      
+      if (distFromCenter <= MINIMAP_SIZE/2 - 5) {
+        ctx.fillStyle = playerId === (currentUser?.username || 'Player') ? '#ffff00' : '#00ffff';
+        const dotSize = Math.max(2, Math.min(6, (playerData.mass || 15) / 10));
+        
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+    
+    // Draw hotspots (areas with death orbs)
+    minimap.hotspots.forEach(hotspot => {
+      const scale = (MINIMAP_SIZE/2 - 10) / WORLD_RADIUS;
+      const hotX = mmX + MINIMAP_SIZE/2 + hotspot.x * scale;
+      const hotY = mmY + MINIMAP_SIZE/2 + hotspot.y * scale;
+      
+      ctx.fillStyle = '#ff8000aa';
+      ctx.beginPath();
+      ctx.arc(hotX, hotY, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    ctx.restore();
+  };
+
+  const drawGameUI = (ctx, canvas) => {
+    // Game status and boost indicator
+    if (gameStatus === 'playing') {
+      ctx.save();
+      ctx.fillStyle = '#00ffff';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'left';
+      
+      // Current position indicator
+      const playerSnake = gameState.players[currentUser?.username || 'Player'];
+      if (playerSnake && playerSnake.segments[0]) {
+        const pos = playerSnake.segments[0];
+        const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y);
+        ctx.fillText(`Position: ${Math.round(distance)}/${WORLD_RADIUS}`, 20, 40);
+        ctx.fillText(`Mass: ${playerSnake.mass || playerSnake.segments.length}`, 20, 60);
+      }
+      
+      // Boost cooldown indicator
+      if (boostCooldown > 0) {
+        ctx.fillStyle = '#ff8000';
+        ctx.fillText(`Boost: ${Math.ceil(boostCooldown/20)}s`, 20, 80);
+      } else {
+        ctx.fillStyle = '#00ff00';
+        ctx.fillText('Boost: Ready', 20, 80);
+      }
+      
+      ctx.restore();
+    }
+  };
 
   // Cleanup
   useEffect(() => {
