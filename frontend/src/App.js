@@ -1254,25 +1254,29 @@ const GameComponent = () => {
         if (smoothAngle < -Math.PI) smoothAngle += 2 * Math.PI;
         snake.currentAngle += smoothAngle * 0.12; // Faster turning like original slither.io
         
-        // Move snake head with mass-based speed
+        // Move snake head with mass-based speed - BOUNDARY COLLISION FIX
         const newHead = {
           x: snake.segments[0].x + Math.cos(snake.currentAngle) * snake.speed,
           y: snake.segments[0].y + Math.sin(snake.currentAngle) * snake.speed
         };
         
-        // CHECK WORLD BOUNDARIES - Kill snake if it hits the red barrier
-        if (!isWithinWorldBounds(newHead.x, newHead.y)) {
-          snake.alive = false;
-          handlePlayerDeath(playerId, "Hit world boundary");
+        // CHECK WORLD BOUNDARIES - SOLID WALL (no death, just stop movement)
+        const distanceFromCenter = Math.sqrt(newHead.x * newHead.x + newHead.y * newHead.y);
+        if (distanceFromCenter > WORLD_RADIUS - 20) {
+          // Hit boundary - push snake back inside and stop movement in that direction
+          const angle = Math.atan2(newHead.y, newHead.x);
+          const maxDistance = WORLD_RADIUS - 25;
           
-          // Generate death orbs
-          const deathOrbs = generateDeathOrbs(snake.segments, snake.score);
-          newDeathOrbs.push(...deathOrbs);
+          newHead.x = Math.cos(angle) * maxDistance;
+          newHead.y = Math.sin(angle) * maxDistance;
+          
+          // Optional: Slightly redirect the snake away from the wall
+          const redirectAngle = angle + Math.PI + (Math.random() - 0.5) * 0.5;
+          snake.currentAngle = redirectAngle;
           
           if (playerId === playerName) {
-            setMessage(`💀 Hit the red barrier! Length: ${snake.segments.length}`);
+            setMessage(`🚧 Boundary reached - redirecting...`);
           }
-          return;
         }
         
         // Update snake segments with proper following
