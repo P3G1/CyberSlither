@@ -424,10 +424,29 @@ const GameComponent = () => {
       setDeathEffects(prev => [...prev, deathEffect]);
     }
     
-    // Show victory message modal for the eliminated player
+    // SPECTATOR MODE SYSTEM (authentic slither.io)
     if (playerId === (currentUser?.username || 'Player')) {
-      setShowVictoryModal(true);
+      // Find largest snake to spectate
+      const alivePlayers = Object.values(gameState.players).filter(p => 
+        p.alive && p.player_id !== playerId && p.segments && p.segments.length > 0
+      );
+      
+      if (alivePlayers.length > 0) {
+        // Spectate the largest snake
+        const largestSnake = alivePlayers.reduce((largest, current) => 
+          (current.segments.length > largest.segments.length) ? current : largest
+        );
+        
+        setSpectatorMode(true);
+        setSpectatorTarget(largestSnake.player_id);
+        setSpectatorTimeLeft(15); // 15 seconds spectator mode
+        setMessage(`💀 ${cause}! Spectating ${largestSnake.player_id}... (${spectatorTimeLeft}s)`);
+      } else {
+        // No one to spectate, show victory modal
+        setShowVictoryModal(true);
+      }
     }
+  }, [gameState.players, currentUser, spectatorTimeLeft]);
   }, [gameState.players, currentUser]);
 
   // Save victory message
