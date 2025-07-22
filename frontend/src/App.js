@@ -1441,33 +1441,69 @@ const GameComponent = () => {
         
         newPlayers[playerId] = snake;
       });
-              nearestFood = food;
-            }
-          });
-          
-          if (nearestFood) {
-            snake.targetAngle = Math.atan2(
-              nearestFood.y - newHead.y,
-              nearestFood.x - newHead.x
-            );
-          } else {
-            // Random movement
-            snake.targetAngle = Math.random() * Math.PI * 2;
-          }
-        }
-        
-        newPlayers[playerId] = {
-          ...snake,
-          segments: newSegments
-        };
-      });
       
-      // Maintain food supply
-      while (newFood.length < Math.floor(canvasSize.width * canvasSize.height / 8000)) {
-        newFood.push({
-          x: Math.random() * (canvasSize.width - 60) + 30,
-          y: Math.random() * (canvasSize.height - 60) + 30,
-          id: `food_${Date.now()}_${Math.random()}`,
+      // Update camera to follow player
+      const playerSnake = newPlayers[playerName];
+      if (playerSnake && playerSnake.alive && playerSnake.segments[0]) {
+        setCamera(prevCamera => ({
+          x: playerSnake.segments[0].x,
+          y: playerSnake.segments[0].y,
+          zoom: Math.min(1 + (playerSnake.mass / 100), 2), // Bigger snakes zoom out more
+          following: playerName
+        }));
+      }
+      
+      // Maintain food supply with world-appropriate generation
+      if (newFood.length < 500) { // Keep good food density
+        const { food: newFoodBatch } = generateSlitherWorld();
+        newFood.push(...newFoodBatch.slice(0, 50)); // Add in batches
+      }
+      
+      // Respawn floating orbs if needed
+      if (newFloatingOrbs.length < FLOATING_ORB_COUNT) {
+        const angle = Math.random() * 2 * Math.PI;
+        const radius = Math.random() * (WORLD_RADIUS - 200);
+        
+        newFloatingOrbs.push({
+          x: Math.cos(angle) * radius,
+          y: Math.sin(angle) * radius,
+          id: `floating_respawn_${Date.now()}`,
+          type: 'SPECIAL_FLOATING',
+          ...ORB_TYPES.SPECIAL_FLOATING,
+          color: ORB_TYPES.SPECIAL_FLOATING.color[Math.floor(Math.random() * ORB_TYPES.SPECIAL_FLOATING.color.length)],
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          pulsePhase: Math.random() * Math.PI * 2,
+          birthTime: Date.now()
+        });
+      }
+      
+      // Update minimap data
+      setMinimap(prevMinimap => ({
+        ...prevMinimap,
+        playerDots: Object.keys(newPlayers).reduce((dots, playerId) => {
+          const player = newPlayers[playerId];
+          if (player.alive && player.segments[0]) {
+            dots[playerId] = {
+              x: player.segments[0].x,
+              y: player.segments[0].y,
+              mass: player.mass || player.segments.length
+            };
+          }
+          return dots;
+        }, {}),
+        hotspots: newDeathOrbs.map(orb => ({ x: orb.x, y: orb.y, intensity: orb.value }))
+      }));
+      
+      return {
+        ...prevState,
+        players: newPlayers,
+        food: newFood,
+        floatingOrbs: newFloatingOrbs,
+        deathOrbs: newDeathOrbs
+      };
+    });
+  };
           color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000', '#8000ff'][Math.floor(Math.random() * 6)],
           size: 4 + Math.random() * 4
         });
