@@ -1114,90 +1114,228 @@ const GameComponent = () => {
     gameLoopRef.current = requestAnimationFrame(gameLoop);
   };
 
-  // Proper slither.io game mechanics
+  // ENHANCED SLITHER.IO GAME MECHANICS
   const updateSlitherGame = () => {
     setGameState(prevState => {
       const newPlayers = { ...prevState.players };
       let newFood = [...prevState.food];
+      let newFloatingOrbs = [...(prevState.floatingOrbs || [])];
+      let newDeathOrbs = [...(prevState.deathOrbs || [])];
       const playerName = currentUser?.username || 'Player';
       
-      // Update each snake
+      // Update floating orbs (they drift around the map)
+      newFloatingOrbs.forEach(orb => {
+        orb.x += orb.vx;
+        orb.y += orb.vy;
+        
+        // Bounce off world boundaries
+        const distance = Math.sqrt(orb.x * orb.x + orb.y * orb.y);
+        if (distance > WORLD_RADIUS - 100) {
+          const angle = Math.atan2(orb.y, orb.x);
+          orb.vx = -Math.cos(angle) * Math.abs(orb.vx);
+          orb.vy = -Math.sin(angle) * Math.abs(orb.vy);
+        }
+        
+        // Update pulse animation
+        orb.pulsePhase = (orb.pulsePhase + 0.1) % (Math.PI * 2);
+      });
+      
+      // Update death orbs (fade over time)
+      const currentTime = Date.now();
+      newDeathOrbs = newDeathOrbs.filter(orb => {
+        if (currentTime > orb.birthTime + orb.lifespan) {
+          return false; // Remove expired orbs
+        }
+        
+        // Apply fade effect
+        if (currentTime > orb.fadeStartTime) {
+          const fadeProgress = (currentTime - orb.fadeStartTime) / (orb.lifespan - orb.fadeStartTime + orb.birthTime);
+          orb.opacity = Math.max(0.1, 1 - fadeProgress);
+        }
+        
+        return true;
+      });
+      
+      // Update each snake with mass-based physics
       Object.keys(newPlayers).forEach(playerId => {
         const snake = newPlayers[playerId];
         if (!snake.alive) return;
         
-        // Initialize snake properties if needed
+        // Initialize snake properties
         if (!snake.targetAngle) snake.targetAngle = 0;
         if (!snake.currentAngle) snake.currentAngle = 0;
-        if (!snake.speed) snake.speed = 3;
+        if (!snake.mass) snake.mass = snake.segments?.length || 15;
         if (!snake.segments) snake.segments = initializeSnakeSegments(snake);
         
-        // Smooth angle interpolation for realistic movement
+        // Calculate speed based on mass (larger snakes are slower)
+        const isBoosting = snake.boosting || false;
+        snake.speed = calculateSpeed(snake.mass, isBoosting);
+        
+        // Smooth angle interpolation
         const angleDiff = snake.targetAngle - snake.currentAngle;
         let smoothAngle = angleDiff;
-        
-        // Handle angle wrapping
         if (smoothAngle > Math.PI) smoothAngle -= 2 * Math.PI;
         if (smoothAngle < -Math.PI) smoothAngle += 2 * Math.PI;
+        snake.currentAngle += smoothAngle * 0.08; // Slightly slower turning for larger snakes
         
-        // Apply smooth rotation
-        snake.currentAngle += smoothAngle * 0.1; // Rotation smoothing factor
-        
-        // Move snake head based on angle
+        // Move snake head with mass-based speed
         const newHead = {
           x: snake.segments[0].x + Math.cos(snake.currentAngle) * snake.speed,
           y: snake.segments[0].y + Math.sin(snake.currentAngle) * snake.speed
         };
         
-        // Wrap around screen edges
-        if (newHead.x < 0) newHead.x = canvasSize.width;
-        if (newHead.x > canvasSize.width) newHead.x = 0;
-        if (newHead.y < 0) newHead.y = canvasSize.height;
-        if (newHead.y > canvasSize.height) newHead.y = 0;
+        // CHECK WORLD BOUNDARIES - Kill snake if it hits the red barrier
+        if (!isWithinWorldBounds(newHead.x, newHead.y)) {
+          snake.alive = false;
+          handlePlayerDeath(playerId, "Hit world boundary");
+          
+          // Generate death orbs
+          const deathOrbs = generateDeathOrbs(snake.segments, snake.score);
+          newDeathOrbs.push(...deathOrbs);
+          
+          if (playerId === playerName) {
+            setMessage(`💀 Hit the red barrier! Length: ${snake.segments.length}`);
+          }
+          return;
+        }
         
-        // Update snake segments to follow head properly
+        // Update snake segments with proper following
         const newSegments = [newHead];
-        const segmentDistance = 12; // Distance between segments
+        const segmentDistance = 12;
         
         for (let i = 1; i < snake.segments.length; i++) {
           const prevSegment = newSegments[i - 1];
           const currentSegment = snake.segments[i];
           
-          // Calculate distance between segments
           const dx = prevSegment.x - currentSegment.x;
           const dy = prevSegment.y - currentSegment.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
           
           if (distance > segmentDistance) {
-            // Move segment toward previous segment
             const angle = Math.atan2(dy, dx);
             newSegments.push({
               x: prevSegment.x - Math.cos(angle) * segmentDistance,
               y: prevSegment.y - Math.sin(angle) * segmentDistance
             });
           } else {
-            // Keep segment in same position
             newSegments.push({ ...currentSegment });
           }
         }
         
-        // Food collision detection
-        let ateFood = false;
-        newFood = newFood.filter(food => {
+        snake.segments = newSegments;
+        
+        // Enhanced orb collision detection for all orb types
+        let ateOrb = false;
+        let orbValue = 0;
+        
+        // Check normal food collision
+        newFood = newFood.filter(orb => {
           const distance = Math.sqrt(
-            Math.pow(newHead.x - food.x, 2) + Math.pow(newHead.y - food.y, 2)
+            Math.pow(newHead.x - orb.x, 2) + Math.pow(newHead.y - orb.y, 2)
           );
           
-          if (distance < 20) { // Food collision radius
-            ateFood = true;
+          const collisionRadius = (orb.size || 6) + 15;
+          if (distance < collisionRadius) {
+            ateOrb = true;
+            orbValue += orb.value || 1;
             
             if (playerId === playerName) {
-              setMessage(`🍎 Food consumed! Growing stronger...`);
-              
               // Create eating particles
-              const newParticles = [];
-              for (let i = 0; i < 6; i++) {
-                newParticles.push({
+              const particles = [];
+              for (let i = 0; i < (orb.value || 1) * 3; i++) {
+                particles.push({
+                  x: orb.x,
+                  y: orb.y,
+                  vx: (Math.random() - 0.5) * 8,
+                  vy: (Math.random() - 0.5) * 8,
+                  color: orb.color,
+                  life: 25,
+                  maxLife: 25,
+                  size: 4
+                });
+              }
+              setParticles(prev => [...prev, ...particles]);
+            }
+            
+            return false; // Remove orb
+          }
+          return true;
+        });
+        
+        // Check floating orb collision
+        newFloatingOrbs = newFloatingOrbs.filter(orb => {
+          const distance = Math.sqrt(
+            Math.pow(newHead.x - orb.x, 2) + Math.pow(newHead.y - orb.y, 2)
+          );
+          
+          if (distance < orb.size + 15) {
+            ateOrb = true;
+            orbValue += orb.value;
+            
+            if (playerId === playerName) {
+              setMessage(`⭐ Special orb consumed! +${orb.value} mass!`);
+              
+              // Special particles for floating orbs
+              const particles = [];
+              for (let i = 0; i < 12; i++) {
+                particles.push({
+                  x: orb.x,
+                  y: orb.y,
+                  vx: (Math.random() - 0.5) * 12,
+                  vy: (Math.random() - 0.5) * 12,
+                  color: orb.color,
+                  life: 35,
+                  maxLife: 35,
+                  size: 6
+                });
+              }
+              setParticles(prev => [...prev, ...particles]);
+            }
+            
+            return false;
+          }
+          return true;
+        });
+        
+        // Check death orb collision
+        newDeathOrbs = newDeathOrbs.filter(orb => {
+          const distance = Math.sqrt(
+            Math.pow(newHead.x - orb.x, 2) + Math.pow(newHead.y - orb.y, 2)
+          );
+          
+          if (distance < orb.size + 12) {
+            ateOrb = true;
+            orbValue += orb.value;
+            return false;
+          }
+          return true;
+        });
+        
+        // Grow snake when orbs are eaten
+        if (ateOrb) {
+          // Add segments based on orb value
+          for (let i = 0; i < orbValue * 2; i++) {
+            const tailSegment = snake.segments[snake.segments.length - 1];
+            const secondToLast = snake.segments[snake.segments.length - 2] || tailSegment;
+            
+            const dx = tailSegment.x - secondToLast.x;
+            const dy = tailSegment.y - secondToLast.y;
+            const distance = Math.sqrt(dx * dx + dy * dy) || 12;
+            
+            if (distance > 0) {
+              const normalizedDx = dx / distance;
+              const normalizedDy = dy / distance;
+              
+              snake.segments.push({
+                x: tailSegment.x + normalizedDx * 12,
+                y: tailSegment.y + normalizedDy * 12
+              });
+            }
+          }
+          
+          snake.score = (snake.score || 15) + orbValue * 5;
+          snake.mass = snake.segments.length;
+        }
                   x: food.x,
                   y: food.y,
                   vx: (Math.random() - 0.5) * 8,
