@@ -1393,10 +1393,12 @@ const GameComponent = () => {
           return true;
         });
         
-        // Grow snake when orbs are eaten
-        if (ateOrb) {
-          // Add segments based on orb value
-          for (let i = 0; i < orbValue * 2; i++) {
+        // Grow snake when orbs are eaten - GRADUAL GROWTH BUG FIX
+        if (ateOrb && orbValue > 0) {
+          // Add segments based on orb value - MORE GRADUAL
+          const segmentsToAdd = Math.min(orbValue, 2); // Max 2 segments per eating event
+          
+          for (let i = 0; i < segmentsToAdd; i++) {
             const tailSegment = snake.segments[snake.segments.length - 1];
             const secondToLast = snake.segments[snake.segments.length - 2] || tailSegment;
             
