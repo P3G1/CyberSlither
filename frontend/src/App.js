@@ -2548,6 +2548,7 @@ const GameComponent = () => {
                   </div>
                 </div>
               ) : !connected && !isAdmin ? (
+                {/* Debug: connected={connected}, isAdmin={isAdmin} */}
                 <div className="wallet-zone">
                   <div className="connection-status">
                     <p>OPERATOR: <span className="highlight">{currentUser.username}</span></p>
