@@ -2377,7 +2377,33 @@ const GameComponent = () => {
     ctx.restore();
   };
 
-  // Cleanup
+  // PERFORMANCE OPTIMIZED PARTICLE CLEANUP
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      // Aggressive particle cleanup for performance
+      setParticles(prevParticles => {
+        const currentPlayerSnake = gameState.players[currentUser?.username || 'Player'];
+        const isLargeSnake = currentPlayerSnake && currentPlayerSnake.segments && currentPlayerSnake.segments.length > 80;
+        
+        // More aggressive cleanup for large snakes
+        const maxParticles = isLargeSnake ? 15 : 40;
+        
+        return prevParticles
+          .filter(particle => particle.life > 0)
+          .slice(-maxParticles) // Keep only recent particles
+          .map(particle => ({
+            ...particle,
+            x: particle.x + particle.vx,
+            y: particle.y + particle.vy,
+            life: particle.life - 1,
+            vx: particle.vx * 0.95,
+            vy: particle.vy * 0.95
+          }));
+      });
+    }, 100); // Clean up every 100ms instead of every frame
+
+    return () => clearInterval(cleanupInterval);
+  }, [gameState.players, currentUser]);
   useEffect(() => {
     return () => {
       stopGameLoop();
