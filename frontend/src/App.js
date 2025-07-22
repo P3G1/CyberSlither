@@ -1304,28 +1304,21 @@ const GameComponent = () => {
         
         snake.segments = newSegments;
         
-        // OPTIMIZED orb collision detection - PERFORMANCE ENHANCED
+        // OPTIMIZED orb collision detection - FOOD BUG FIX
         let ateOrb = false;
         let orbValue = 0;
         
-        // PERFORMANCE: Skip collision detection for very large snakes (over 150 segments)
-        const isVeryLargeSnake = snake.segments.length > 150;
-        if (isVeryLargeSnake && Math.random() > 0.3) {
-          // Skip some collision checks for extremely large snakes
-          return;
-        }
-        
-        // Check normal food collision - ULTRA OPTIMIZED
-        const collisionRadius = 18; // Slightly larger collision for better UX
+        // Check normal food collision - BALANCED OPTIMIZATION
+        const collisionRadius = 18;
         const nearbyFood = newFood.filter(orb => {
           const dx = Math.abs(newHead.x - orb.x);
           const dy = Math.abs(newHead.y - orb.y);
-          return dx < 30 && dy < 30; // Quick pre-filter
+          return dx < 40 && dy < 40; // Slightly larger pre-filter
         });
         
         newFood = newFood.filter(orb => {
           // Only check collision with nearby food
-          if (!nearbyFood.includes(orb)) return true;
+          if (nearbyFood.length > 0 && !nearbyFood.includes(orb)) return true;
           
           const distance = Math.sqrt(
             Math.pow(newHead.x - orb.x, 2) + Math.pow(newHead.y - orb.y, 2)
@@ -1335,23 +1328,23 @@ const GameComponent = () => {
             ateOrb = true;
             orbValue += orb.value || 1;
             
-            // REDUCED particle generation for large snakes
-            if (playerId === playerName && !isVeryLargeSnake) {
-              const particleCount = Math.max(1, Math.min((orb.value || 1) * 2, 4));
+            // REDUCED particle generation for very large snakes only
+            if (playerId === playerName && snake.segments.length < 200) {
+              const particleCount = Math.max(1, Math.min((orb.value || 1) * 2, 6));
               const particles = [];
               for (let i = 0; i < particleCount; i++) {
                 particles.push({
                   x: orb.x,
                   y: orb.y,
-                  vx: (Math.random() - 0.5) * 4,
-                  vy: (Math.random() - 0.5) * 4,
+                  vx: (Math.random() - 0.5) * 5,
+                  vy: (Math.random() - 0.5) * 5,
                   color: orb.color,
-                  life: 15,
-                  maxLife: 15,
-                  size: 2
+                  life: 18,
+                  maxLife: 18,
+                  size: 3
                 });
               }
-              setParticles(prev => [...prev.slice(-30), ...particles]); // Aggressive particle limit
+              setParticles(prev => [...prev.slice(-40), ...particles]);
             }
             
             return false; // Remove orb
