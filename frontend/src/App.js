@@ -154,6 +154,43 @@ const ADDITIONAL_SKINS = [
 // Combine all skins
 const ALL_SKINS = [...SNAKE_SKINS, ...ADDITIONAL_SKINS];
 
+// ENHANCED SLITHER.IO ORB SYSTEM
+const ORB_TYPES = {
+  NORMAL: {
+    size: 6,
+    value: 1,
+    color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000', '#8000ff', '#ff8000'],
+    glow: true
+  },
+  LARGE: {
+    size: 12,
+    value: 3,
+    color: ['#ffaa00', '#ff6600', '#ff0000'],
+    glow: true,
+    pulse: true
+  },
+  SPECIAL_FLOATING: {
+    size: 18,
+    value: 8,
+    color: ['#ffffff', '#ffff00'],
+    glow: true,
+    pulse: true,
+    float: true, // Moves around the map
+    rare: true
+  },
+  DEATH_ORB: {
+    size: 10,
+    value: 2,
+    color: ['#ff6666', '#ff3333', '#ff0000'],
+    glow: true,
+    fade: true // Fades over time
+  }
+};
+
+const FLOATING_ORB_COUNT = 15; // Number of special floating orbs on map
+const NORMAL_ORB_DENSITY = 0.00008; // Orbs per square pixel
+const LARGE_ORB_DENSITY = 0.00002;
+
 const GameComponent = () => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, connected } = useWallet();
