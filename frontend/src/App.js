@@ -2273,8 +2273,15 @@ const GameComponent = () => {
                   )}
                   
                   <div className="arena-options">
-                    <button className="option-chip">🌐 GLOBAL SERVERS</button>
-                    <button className="option-chip">🎯 TOURNAMENT MODE</button>
+                    <button className="option-chip" onClick={() => setShowServerSelection(true)}>
+                      🌐 SERVER: {selectedServer}
+                    </button>
+                    <button className="option-chip" onClick={() => setShowCodeModal(true)}>
+                      🎁 ENTER CODE
+                    </button>
+                    <button className="option-chip" onClick={() => setShowCustomization(true)}>
+                      🎨 CUSTOMIZE SNAKE
+                    </button>
                   </div>
                 </div>
               )}
