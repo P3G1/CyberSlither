@@ -1587,52 +1587,63 @@ const GameComponent = () => {
     }
   };
 
-  // Controls with BOOST SYSTEM
-  const handleKeyPress = useCallback((event) => {
+  // AUTHENTIC SLITHER.IO KEY HANDLERS
+  const handleKeyDown = useCallback((event) => {
     if (gameStatus !== 'playing') return;
     
-    // SPEED BOOST SYSTEM - Spacebar consumes length for speed
     if (event.code === 'Space') {
       event.preventDefault();
-      const playerId = currentUser?.username || 'Player';
-      const player = gameState.players[playerId];
+      if (!isSpacePressed) {
+        setIsSpacePressed(true);
+        setBoostConsumeCounter(0);
+        
+        // Set boost state immediately
+        const playerId = currentUser?.username || 'Player';
+        setGameState(prevState => {
+          const player = prevState.players[playerId];
+          if (player && player.alive && player.segments.length > 5) {
+            return {
+              ...prevState,
+              players: {
+                ...prevState.players,
+                [playerId]: {
+                  ...player,
+                  boosting: true
+                }
+              }
+            };
+          }
+          return prevState;
+        });
+      }
+    }
+  }, [gameStatus, isSpacePressed, currentUser]);
+
+  const handleKeyUp = useCallback((event) => {
+    if (event.code === 'Space') {
+      event.preventDefault();
+      setIsSpacePressed(false);
       
-      if (player && player.alive && player.segments.length > 5 && boostCooldown === 0) {
-        setIsBoosting(true);
-        setBoostCooldown(30); // Cooldown frames
-        
-        // Consume snake length for boost
-        setGameState(prevState => ({
-          ...prevState,
-          players: {
-            ...prevState.players,
-            [playerId]: {
-              ...prevState.players[playerId],
-              segments: prevState.players[playerId].segments.slice(0, -1), // Remove last segment
-              speed: (prevState.players[playerId].speed || 3) * 2, // Double speed
-              boosting: true
+      // Stop boost immediately
+      const playerId = currentUser?.username || 'Player';
+      setGameState(prevState => {
+        const player = prevState.players[playerId];
+        if (player) {
+          return {
+            ...prevState,
+            players: {
+              ...prevState.players,
+              [playerId]: {
+                ...player,
+                boosting: false
+              }
             }
-          }
-        }));
-        
-        // Trail particles for boost effect
-        if (player.segments[0]) {
-          const boostParticles = [];
-          for (let i = 0; i < 8; i++) {
-            boostParticles.push({
-              x: player.segments[0].x + (Math.random() - 0.5) * 30,
-              y: player.segments[0].y + (Math.random() - 0.5) * 30,
-              vx: (Math.random() - 0.5) * 10,
-              vy: (Math.random() - 0.5) * 10,
-              color: '#ffff00',
-              life: 15,
-              maxLife: 15,
-              size: 6,
-              type: 'boost'
-            });
-          }
-          setTrailParticles(prev => [...prev, ...boostParticles]);
+          };
         }
+        return prevState;
+      });
+    }
+  }, [currentUser]);
         
         setMessage('⚡ BOOST ACTIVATED! Speed increased!');
         
