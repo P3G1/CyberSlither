@@ -1607,6 +1607,61 @@ const GameComponent = () => {
       ctx.restore();
     });
     
+    // Render trail particles (boost effects)
+    trailParticles.forEach(particle => {
+      ctx.save();
+      const alpha = particle.life / particle.maxLife;
+      ctx.globalAlpha = alpha;
+      ctx.shadowBlur = 25 * alpha;
+      ctx.shadowColor = particle.color;
+      ctx.fillStyle = particle.color;
+      
+      // Lightning bolt effect for boost
+      if (particle.type === 'boost') {
+        ctx.strokeStyle = particle.color;
+        ctx.lineWidth = 3 * alpha;
+        ctx.beginPath();
+        ctx.moveTo(particle.x - 5, particle.y);
+        ctx.lineTo(particle.x + 5, particle.y);
+        ctx.moveTo(particle.x, particle.y - 5);
+        ctx.lineTo(particle.x, particle.y + 5);
+        ctx.stroke();
+      }
+      
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    
+    // Render death effects
+    deathEffects.forEach(effect => {
+      effect.particles.forEach(particle => {
+        ctx.save();
+        const alpha = particle.life / 40;
+        ctx.globalAlpha = alpha;
+        ctx.shadowBlur = 20 * alpha;
+        ctx.shadowColor = particle.color;
+        ctx.fillStyle = particle.color;
+        
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Explosion ring effect
+        if (particle.life > 35) {
+          ctx.strokeStyle = particle.color;
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.5;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, (40 - particle.life) * 3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+      });
+    });
+    
     // Enhanced snakes with customization
     Object.values(gameState.players).forEach(player => {
       if (player.alive && player.segments && player.segments.length > 0) {
