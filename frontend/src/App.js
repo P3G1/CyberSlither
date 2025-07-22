@@ -1909,7 +1909,7 @@ const GameComponent = () => {
     };
   }, [handleKeyDown, handleKeyUp, handleMouseMove, handleRightClick, handleTouchStart, handleTouchMove]);
 
-  // ENHANCED SLITHER.IO RENDERING SYSTEM
+  // ENHANCED SLITHER.IO RENDERING SYSTEM - OPTIMIZED FOR LARGE SNAKES
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1926,11 +1926,19 @@ const GameComponent = () => {
     const cameraOffsetY = canvas.height / 2 - (camera.y || 0);
     const zoom = camera.zoom || 1;
     
+    // PERFORMANCE: Calculate visible bounds for culling
+    const visibleBounds = {
+      left: (camera.x || 0) - (canvas.width / 2 / zoom) - 100,
+      right: (camera.x || 0) + (canvas.width / 2 / zoom) + 100,
+      top: (camera.y || 0) - (canvas.height / 2 / zoom) - 100,
+      bottom: (camera.y || 0) + (canvas.height / 2 / zoom) + 100
+    };
+    
     ctx.save();
     ctx.scale(zoom, zoom);
     ctx.translate(cameraOffsetX / zoom, cameraOffsetY / zoom);
     
-    // DRAW WORLD BACKGROUND (large scale like slither.io)
+    // DRAW WORLD BACKGROUND (simplified for performance)
     const worldGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, WORLD_RADIUS);
     worldGradient.addColorStop(0, '#0a0a1a');
     worldGradient.addColorStop(0.3, '#1a0a2a');
@@ -1942,114 +1950,63 @@ const GameComponent = () => {
     ctx.arc(0, 0, WORLD_RADIUS, 0, Math.PI * 2);
     ctx.fill();
     
-    // DRAW WORLD BOUNDARY (red barrier like slither.io)
+    // DRAW WORLD BOUNDARY (red barrier)
     ctx.strokeStyle = '#ff0000';
-    ctx.lineWidth = 20;
-    ctx.shadowBlur = 30;
+    ctx.lineWidth = 15; // Reduced for performance
+    ctx.shadowBlur = 20; // Reduced
     ctx.shadowColor = '#ff0000';
     ctx.beginPath();
     ctx.arc(0, 0, WORLD_RADIUS - 10, 0, Math.PI * 2);
     ctx.stroke();
     ctx.shadowBlur = 0;
     
-    // Draw subtle grid pattern in visible area
-    ctx.strokeStyle = '#00ffff10';
-    ctx.lineWidth = 1;
-    const gridSpacing = 100;
-    const visibleBounds = {
-      left: (camera.x || 0) - canvas.width / 2 / zoom - 200,
-      right: (camera.x || 0) + canvas.width / 2 / zoom + 200,
-      top: (camera.y || 0) - canvas.height / 2 / zoom - 200,
-      bottom: (camera.y || 0) + canvas.height / 2 / zoom + 200
-    };
+    // PERFORMANCE OPTIMIZED: Skip grid for large snakes
+    const playerSnake = gameState.players[currentUser?.username || 'Player'];
+    const skipGrid = playerSnake && playerSnake.segments && playerSnake.segments.length > 50;
     
-    for (let x = Math.floor(visibleBounds.left / gridSpacing) * gridSpacing; x <= visibleBounds.right; x += gridSpacing) {
-      ctx.beginPath();
-      ctx.moveTo(x, visibleBounds.top);
-      ctx.lineTo(x, visibleBounds.bottom);
-      ctx.stroke();
-    }
-    for (let y = Math.floor(visibleBounds.top / gridSpacing) * gridSpacing; y <= visibleBounds.bottom; y += gridSpacing) {
-      ctx.beginPath();
-      ctx.moveTo(visibleBounds.left, y);
-      ctx.lineTo(visibleBounds.right, y);
-      ctx.stroke();
-    }
-    
-    // DRAW FLOATING ORBS (special large orbs that move around)
-    (gameState.floatingOrbs || []).forEach(orb => {
-      if (isOrbVisible(orb, visibleBounds)) {
-        ctx.save();
-        
-        // Pulsing effect
-        const pulseSize = orb.size + Math.sin(orb.pulsePhase || 0) * 3;
-        const glowIntensity = 20 + Math.sin((orb.pulsePhase || 0) * 1.5) * 10;
-        
-        ctx.shadowBlur = glowIntensity;
-        ctx.shadowColor = orb.color;
-        ctx.fillStyle = orb.color;
-        
-        // Outer glow
-        ctx.globalAlpha = 0.3;
+    if (!skipGrid) {
+      // Draw subtle grid pattern (only for smaller snakes)
+      ctx.strokeStyle = '#00ffff05';
+      ctx.lineWidth = 1;
+      const gridSpacing = 200; // Larger spacing for performance
+      
+      for (let x = Math.floor(visibleBounds.left / gridSpacing) * gridSpacing; x <= visibleBounds.right; x += gridSpacing) {
         ctx.beginPath();
-        ctx.arc(orb.x, orb.y, pulseSize * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Main orb
-        ctx.globalAlpha = 1;
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, pulseSize, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Inner highlight
-        ctx.shadowBlur = 5;
-        ctx.fillStyle = '#ffffff80';
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, pulseSize * 0.4, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.restore();
+        ctx.moveTo(x, visibleBounds.top);
+        ctx.lineTo(x, visibleBounds.bottom);
+        ctx.stroke();
       }
-    });
-    
-    // DRAW DEATH ORBS (from dead snakes)
-    (gameState.deathOrbs || []).forEach(orb => {
-      if (isOrbVisible(orb, visibleBounds)) {
-        ctx.save();
-        ctx.globalAlpha = orb.opacity || 1;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = orb.color;
-        ctx.fillStyle = orb.color;
-        
+      for (let y = Math.floor(visibleBounds.top / gridSpacing) * gridSpacing; y <= visibleBounds.bottom; y += gridSpacing) {
         ctx.beginPath();
-        ctx.arc(orb.x, orb.y, orb.size, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Smaller inner highlight
-        ctx.shadowBlur = 3;
-        ctx.fillStyle = '#ffffff60';
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, orb.size * 0.3, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.restore();
+        ctx.moveTo(visibleBounds.left, y);
+        ctx.lineTo(visibleBounds.right, y);
+        ctx.stroke();
       }
-    });
+    }
     
-    // DRAW NORMAL FOOD ORBS
-    (gameState.food || []).forEach(orb => {
-      if (isOrbVisible(orb, visibleBounds)) {
+    // PERFORMANCE OPTIMIZED ORB RENDERING
+    const renderOrbs = (orbs, maxDistance = 300) => {
+      const visibleOrbs = orbs.filter(orb => 
+        orb.x >= visibleBounds.left && orb.x <= visibleBounds.right &&
+        orb.y >= visibleBounds.top && orb.y <= visibleBounds.bottom
+      );
+      
+      // Limit orbs based on snake size for performance
+      const orbLimit = playerSnake && playerSnake.segments ? 
+        Math.max(50, 200 - Math.floor(playerSnake.segments.length / 2)) : 200;
+      
+      visibleOrbs.slice(0, orbLimit).forEach(orb => {
         ctx.save();
         
-        const size = orb.size || 6;
-        let effectiveSize = size;
+        let effectiveSize = orb.size || 6;
         
-        // Add pulsing for large orbs
-        if (orb.type === 'LARGE' && orb.pulsePhase !== undefined) {
-          effectiveSize = size + Math.sin(orb.pulsePhase) * 2;
+        // Add pulsing for large orbs only
+        if (orb.type === 'LARGE' && orb.pulsePhase !== undefined && !skipGrid) {
+          effectiveSize = effectiveSize + Math.sin(orb.pulsePhase) * 1;
         }
         
-        ctx.shadowBlur = orb.glow ? 15 : 8;
+        // Reduced glow for performance
+        ctx.shadowBlur = orb.glow ? 8 : 4;
         ctx.shadowColor = orb.color;
         ctx.fillStyle = orb.color;
         
@@ -2058,24 +2015,32 @@ const GameComponent = () => {
         ctx.arc(orb.x, orb.y, effectiveSize, 0, Math.PI * 2);
         ctx.fill();
         
-        // Inner highlight
-        ctx.shadowBlur = 3;
-        ctx.fillStyle = '#ffffff50';
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, effectiveSize * 0.4, 0, Math.PI * 2);
-        ctx.fill();
+        // Skip inner highlight for large snakes
+        if (!skipGrid && effectiveSize > 10) {
+          ctx.shadowBlur = 2;
+          ctx.fillStyle = '#ffffff40';
+          ctx.beginPath();
+          ctx.arc(orb.x, orb.y, effectiveSize * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
         
         ctx.restore();
-      }
-    });
+      });
+    };
     
-    // DRAW EATING PARTICLES
-    particles.forEach(particle => {
-      if (particle.life > 0 && isOrbVisible(particle, visibleBounds)) {
+    // Draw all orb types with performance optimization
+    renderOrbs(gameState.food || []);
+    renderOrbs(gameState.floatingOrbs || []);
+    renderOrbs(gameState.deathOrbs || []);
+    
+    // OPTIMIZED PARTICLE RENDERING (reduced for large snakes)
+    const particleLimit = skipGrid ? 20 : 50;
+    particles.slice(0, particleLimit).forEach(particle => {
+      if (particle.life > 0) {
         ctx.save();
-        ctx.globalAlpha = particle.life / particle.maxLife;
+        ctx.globalAlpha = Math.min(particle.life / particle.maxLife, 0.8);
         ctx.fillStyle = particle.color;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = skipGrid ? 3 : 6;
         ctx.shadowColor = particle.color;
         
         ctx.beginPath();
@@ -2085,59 +2050,76 @@ const GameComponent = () => {
       }
     });
     
-    // DRAW SNAKES with enhanced mass-based rendering
+    // OPTIMIZED SNAKE RENDERING FOR LARGE SNAKES
     Object.values(gameState.players || {}).forEach(player => {
       if (player.alive && player.segments && player.segments.length > 0) {
         const isPlayer = player.player_id === (currentUser?.username || 'Player');
         const mass = player.mass || player.segments.length;
-        const growthFactor = Math.min(mass / 50, 3);
+        const growthFactor = Math.min(mass / 50, 2);
+        const isLargeSnake = player.segments.length > 80;
         
-        // Enhanced snake body rendering
-        player.segments.forEach((segment, index) => {
+        // PERFORMANCE: Level of Detail (LOD) system for large snakes
+        let segments = player.segments;
+        if (isLargeSnake && !isPlayer) {
+          // Reduce detail for large non-player snakes
+          segments = player.segments.filter((_, index) => index % 2 === 0 || index < 10);
+        }
+        
+        // Enhanced snake body rendering with LOD
+        segments.forEach((segment, index) => {
+          // Skip rendering segments outside view for performance
+          if (segment.x < visibleBounds.left - 50 || segment.x > visibleBounds.right + 50 ||
+              segment.y < visibleBounds.top - 50 || segment.y > visibleBounds.bottom + 50) {
+            return;
+          }
+          
           ctx.save();
           
           // Size decreases from head to tail
-          const segmentRatio = 1 - (index / player.segments.length) * 0.3;
-          const segmentSize = (8 + growthFactor * 2) * segmentRatio;
+          const segmentRatio = 1 - (index / segments.length) * 0.3;
+          const segmentSize = (6 + growthFactor) * segmentRatio;
           
-          // Enhanced glow for larger snakes
-          ctx.shadowBlur = 10 + growthFactor * 8;
+          // Reduced glow for large snakes performance
+          const glowIntensity = isLargeSnake ? 5 + growthFactor * 2 : 10 + growthFactor * 4;
+          ctx.shadowBlur = glowIntensity;
           ctx.shadowColor = player.color;
           
           if (index === 0) {
-            // Snake head - larger and more prominent
+            // Snake head - enhanced
             ctx.fillStyle = player.color;
             ctx.beginPath();
-            ctx.arc(segment.x, segment.y, segmentSize + 4, 0, Math.PI * 2);
+            ctx.arc(segment.x, segment.y, segmentSize + 3, 0, Math.PI * 2);
             ctx.fill();
             
-            // Eyes based on movement direction
-            if (player.currentAngle !== undefined) {
-              ctx.fillStyle = '#ffffff';
-              ctx.shadowBlur = 3;
-              
-              const eyeDistance = segmentSize * 0.6;
-              const eyeSize = 2 + growthFactor * 0.5;
-              const angle1 = player.currentAngle + 0.5;
-              const angle2 = player.currentAngle - 0.5;
-              
-              // Left eye
-              ctx.beginPath();
-              ctx.arc(
-                segment.x + Math.cos(angle1) * eyeDistance,
-                segment.y + Math.sin(angle1) * eyeDistance,
-                eyeSize, 0, Math.PI * 2
-              );
-              ctx.fill();
-              
-              // Right eye
-              ctx.beginPath();
-              ctx.arc(
-                segment.x + Math.cos(angle2) * eyeDistance,
-                segment.y + Math.sin(angle2) * eyeDistance,
-                eyeSize, 0, Math.PI * 2
-              );
-              ctx.fill();
+            // Eyes (skip for very large snakes to improve performance)
+            if (!isLargeSnake || isPlayer) {
+              if (player.currentAngle !== undefined) {
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 2;
+                
+                const eyeDistance = segmentSize * 0.6;
+                const eyeSize = Math.max(1, 2 + growthFactor * 0.3);
+                const angle1 = player.currentAngle + 0.5;
+                const angle2 = player.currentAngle - 0.5;
+                
+                // Left eye
+                ctx.beginPath();
+                ctx.arc(
+                  segment.x + Math.cos(angle1) * eyeDistance,
+                  segment.y + Math.sin(angle1) * eyeDistance,
+                  eyeSize, 0, Math.PI * 2
+                );
+                ctx.fill();
+                
+                // Right eye
+                ctx.beginPath();
+                ctx.arc(
+                  segment.x + Math.cos(angle2) * eyeDistance,
+                  segment.y + Math.sin(angle2) * eyeDistance,
+                  eyeSize, 0, Math.PI * 2
+                );
+                ctx.fill();
+              }
             }
           } else {
             // Body segments
@@ -2146,48 +2128,50 @@ const GameComponent = () => {
             ctx.arc(segment.x, segment.y, segmentSize, 0, Math.PI * 2);
             ctx.fill();
             
-            // Segment borders for definition
-            ctx.strokeStyle = '#ffffff20';
-            ctx.lineWidth = 1;
-            ctx.stroke();
+            // Skip borders for large snakes
+            if (!isLargeSnake) {
+              ctx.strokeStyle = '#ffffff15';
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
           }
           
           ctx.restore();
         });
         
-        // Player name and stats (with zoom-based scaling)
-        if (player.segments[0]) {
+        // OPTIMIZED player name display
+        if (player.segments[0] && (!isLargeSnake || isPlayer)) {
           ctx.save();
           
-          const fontSize = Math.max(10, (14 + growthFactor * 2) / zoom);
+          const fontSize = Math.max(10, Math.min(18, (12 + growthFactor * 2) / zoom));
           ctx.font = `bold ${fontSize}px "Courier New", monospace`;
           ctx.textAlign = 'center';
           ctx.fillStyle = isPlayer ? '#ffff00' : '#00ffff';
-          ctx.shadowBlur = 8 / zoom;
+          ctx.shadowBlur = Math.max(3, 8 / zoom);
           ctx.shadowColor = ctx.fillStyle;
           
           const playerName = player.player_id.split('_')[0];
           const scoreText = `${playerName} [${player.segments.length}]`;
-          const textY = player.segments[0].y - (25 + growthFactor * 5);
+          const textY = player.segments[0].y - (20 + growthFactor * 3);
           
-          // Text background
+          // Optimized text background
           const textWidth = ctx.measureText(scoreText).width;
-          ctx.fillStyle = '#000000aa';
-          ctx.fillRect(player.segments[0].x - textWidth/2 - 5, textY - 12, textWidth + 10, 16);
+          ctx.fillStyle = '#000000cc';
+          ctx.fillRect(player.segments[0].x - textWidth/2 - 3, textY - 10, textWidth + 6, 14);
           
           // Main text
           ctx.fillStyle = isPlayer ? '#ffff00' : '#00ffff';
           ctx.fillText(scoreText, player.segments[0].x, textY);
           
-          // Size milestone indicators
-          if (mass > 50) {
-            ctx.font = `bold ${Math.max(8, 12/zoom)}px Arial`;
+          // Size milestone indicators (simplified for large snakes)
+          if (mass > 100 && !isLargeSnake) {
+            ctx.font = `bold ${Math.max(8, 10/zoom)}px Arial`;
             ctx.fillStyle = '#ff0080';
-            ctx.fillText('👑 KING', player.segments[0].x, textY + 20);
-          } else if (mass > 25) {
+            ctx.fillText('🏆 GIANT', player.segments[0].x, textY + 16);
+          } else if (mass > 50 && !isLargeSnake) {
             ctx.font = `bold ${Math.max(8, 10/zoom)}px Arial`;
             ctx.fillStyle = '#ff4000';
-            ctx.fillText('⚡ LARGE', player.segments[0].x, textY + 18);
+            ctx.fillText('👑 KING', player.segments[0].x, textY + 16);
           }
           
           ctx.restore();
@@ -2197,13 +2181,13 @@ const GameComponent = () => {
     
     ctx.restore();
     
-    // DRAW MINIMAP (bottom-right corner)
+    // DRAW MINIMAP (optimized)
     drawMinimap(ctx, canvas);
     
-    // DRAW UI ELEMENTS
+    // DRAW UI ELEMENTS (optimized)
     drawGameUI(ctx, canvas);
     
-  }, [gameState.players, gameState.food, gameState.floatingOrbs, gameState.deathOrbs, particles, trailParticles, deathEffects, selectedBetAmount, selectedSkin, selectedAccessory, selectedTrail, canvasSize, currentUser, camera, minimap]);
+  }, [gameState.players, gameState.food, gameState.floatingOrbs, gameState.deathOrbs, particles, canvasSize, currentUser, camera, minimap]);
 
   // Helper functions for drawing
   const isOrbVisible = (orb, bounds) => {
