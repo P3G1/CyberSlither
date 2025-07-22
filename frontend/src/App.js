@@ -2449,19 +2449,27 @@ const GameComponent = () => {
               <div className="customize-section">
                 <label>SKIN MODULE:</label>
                 <div className="skin-grid">
-                  {SNAKE_SKINS.map((skin, index) => (
-                    <div 
+                  {ALL_SKINS.map((skin, index) => (
+                    <div
                       key={index}
-                      className={`skin-preview ${selectedSkin === index ? 'selected' : ''}`}
-                      onClick={() => setSelectedSkin(index)}
-                      style={{ background: skin.gradient }}
-                      title={skin.name}
+                      className={`skin-option ${selectedSkin === index ? 'selected' : ''} ${!unlockedSkins.includes(index) ? 'locked' : ''}`}
+                      onClick={() => unlockedSkins.includes(index) && setSelectedSkin(index)}
                     >
-                      <div className="skin-pattern"></div>
+                      <div 
+                        className="skin-preview" 
+                        style={{
+                          background: skin.gradient,
+                          boxShadow: `0 0 10px ${skin.glow}40`
+                        }}
+                      ></div>
+                      <span className="skin-name">{skin.name}</span>
+                      {!unlockedSkins.includes(index) && <span className="lock-icon">🔒</span>}
                     </div>
                   ))}
                 </div>
-                <div className="skin-name">{SNAKE_SKINS[selectedSkin].name}</div>
+                <div className="unlock-hint">
+                  <p>💡 Use codes to unlock more skins!</p>
+                </div>
               </div>
               
               {/* Accessories */}
