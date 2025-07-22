@@ -1673,7 +1673,7 @@ const GameComponent = () => {
     // Enhanced snakes with customization
     Object.values(gameState.players).forEach(player => {
       if (player.alive && player.segments && player.segments.length > 0) {
-        const skin = SNAKE_SKINS[selectedSkin] || SNAKE_SKINS[0];
+        const skin = ALL_SKINS[selectedSkin] || ALL_SKINS[0];
         const accessory = SNAKE_ACCESSORIES[selectedAccessory];
         const trail = SNAKE_TRAILS[selectedTrail];
         
