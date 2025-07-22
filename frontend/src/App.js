@@ -1726,7 +1726,7 @@ const GameComponent = () => {
     }
   }, [currentUser]);
 
-  // MASS EJECTION FUNCTION (authentic slither.io mechanic)
+  // MASS EJECTION FUNCTION (authentic slither.io mechanic) - BUG FIXED
   const ejectMass = useCallback(() => {
     const playerId = currentUser?.username || 'Player';
     
@@ -1756,8 +1756,9 @@ const GameComponent = () => {
         ejectedBy: playerId
       };
       
-      // Remove segments from player (cost of ejecting mass)
-      const newSegments = player.segments.slice(0, -3); // Remove 3 segments
+      // Remove segments from player (cost of ejecting mass) - FIXED: Only remove 2 segments
+      const segmentsToRemove = 2;
+      const newSegments = player.segments.slice(0, -segmentsToRemove);
       
       return {
         ...prevState,
