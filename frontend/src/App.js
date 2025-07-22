@@ -13,9 +13,11 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 const WS_URL = BACKEND_URL.replace('https://', 'wss://').replace('http://', 'ws://');
 
-// Cyberpunk Game Constants
-const GAME_WIDTH = 1200;
-const GAME_HEIGHT = 700;
+// Enhanced Slither.io Game Constants - AUTHENTIC MAP SIZE
+const WORLD_RADIUS = 6000; // Large circular world like original slither.io
+const VIEWPORT_WIDTH = 1200;
+const VIEWPORT_HEIGHT = 700;
+const MINIMAP_SIZE = 150; // Minimap in bottom-right corner
 
 // Mobile responsive canvas sizing
 const getCanvasSize = () => {
@@ -25,11 +27,17 @@ const getCanvasSize = () => {
     const height = Math.min(window.innerHeight * 0.6, 500);
     return { width, height };
   }
-  return { width: GAME_WIDTH, height: GAME_HEIGHT };
+  return { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT };
 };
+
+// Enhanced Game Physics Constants
 const FOOD_SIZE = 8;
 const SNAKE_SEGMENT_SIZE = 10;
 const SNAKE_HEAD_SIZE = 16;
+const BASE_SPEED = 3.5;
+const MIN_SPEED = 2.0;
+const BOOST_SPEED_MULTIPLIER = 1.8;
+const MASS_SPEED_FACTOR = 0.02; // Larger snakes are slower
 
 // Cyberpunk betting amounts
 const BET_AMOUNTS = [1, 5, 20, 50];
