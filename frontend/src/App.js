@@ -1023,62 +1023,70 @@ const GameComponent = () => {
     }
   };
 
-  // Enhanced local game with authentic slither.io world
+  // AUTHENTIC SLITHER.IO GAME INITIALIZATION - EXACT COPY
   const startLocalGame = () => {
     const playerName = currentUser?.username || 'Player';
     const { food, floatingOrbs } = generateSlitherWorld();
     
-    // Spawn players in world coordinates (center of world)
+    // Spawn in random position within safe zone (like original)
+    const spawnAngle = Math.random() * 2 * Math.PI;
+    const spawnRadius = Math.random() * 1000; // Spawn within center area
+    const spawnX = Math.cos(spawnAngle) * spawnRadius;
+    const spawnY = Math.sin(spawnAngle) * spawnRadius;
+    
     setGameState({
       sessionId: 'local_game',
       playerId: playerName,
       players: {
         [playerName]: {
           player_id: playerName,
-          segments: initializeSnakeSegments({ x: 0, y: 0 }), // Center of world
+          segments: initializeSnakeSegments({ x: spawnX, y: spawnY }),
           color: ALL_SKINS[selectedSkin].color,
           alive: true,
           score: 15,
           mass: 15,
           targetAngle: 0,
           currentAngle: 0,
-          speed: calculateSpeed(15)
+          speed: BASE_SPEED,
+          boosting: false
         },
-        'DemoBot1': {
-          player_id: 'DemoBot1',
-          segments: initializeSnakeSegments({ x: -300, y: -200 }),
-          color: '#ff0080',
+        'Bot1': {
+          player_id: 'Bot1',
+          segments: initializeSnakeSegments({ x: -800, y: -600 }),
+          color: '#ff0040',
+          alive: true,
+          score: 22,
+          mass: 22,
+          targetAngle: Math.PI / 4,
+          currentAngle: Math.PI / 4,
+          speed: calculateSpeed(22),
+          boosting: false
+        },
+        'Bot2': {
+          player_id: 'Bot2',
+          segments: initializeSnakeSegments({ x: 900, y: 700 }),
+          color: '#00ff80',
           alive: true,
           score: 18,
           mass: 18,
-          targetAngle: Math.PI / 4,
-          currentAngle: Math.PI / 4,
-          speed: calculateSpeed(18)
-        },
-        'DemoBot2': {
-          player_id: 'DemoBot2',
-          segments: initializeSnakeSegments({ x: 400, y: 300 }),
-          color: '#00ff00',
-          alive: true,
-          score: 20,
-          mass: 20,
           targetAngle: -Math.PI / 3,
           currentAngle: -Math.PI / 3,
-          speed: calculateSpeed(20)
+          speed: calculateSpeed(18),
+          boosting: false
         }
       },
       food: food,
-      floatingOrbs: floatingOrbs,
+      floatingOrbs: [],
       deathOrbs: [],
       status: 'active',
       connected: true,
       worldBounds: { radius: WORLD_RADIUS, center: { x: 0, y: 0 } }
     });
     
-    // Set initial camera to follow player
+    // Set initial camera
     setCamera({
-      x: 0,
-      y: 0,
+      x: spawnX,
+      y: spawnY,
       zoom: 1,
       following: playerName
     });
