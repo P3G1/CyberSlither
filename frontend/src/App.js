@@ -1731,15 +1731,13 @@ const GameComponent = () => {
     }
   };
 
-  // AUTHENTIC SLITHER.IO KEY HANDLERS
+  // AUTHENTIC SLITHER.IO KEY HANDLERS - UPDATED
   const handleKeyDown = useCallback((event) => {
     if (gameStatus !== 'playing') return;
     
-    // BOOST SYSTEM - Spacebar
     if (event.code === 'Space') {
       event.preventDefault();
       
-      // If in spectator mode, exit to menu
       if (spectatorMode) {
         setSpectatorMode(false);
         setSpectatorTarget(null);
@@ -1749,35 +1747,15 @@ const GameComponent = () => {
         return;
       }
       
-      if (!isSpacePressed) {
-        setIsSpacePressed(true);
-        setBoostConsumeCounter(0);
-        
-        // Set boost state immediately
-        const playerId = currentUser?.username || 'Player';
-        setGameState(prevState => {
-          const player = prevState.players[playerId];
-          if (player && player.alive && player.segments.length > 5) {
-            return {
-              ...prevState,
-              players: {
-                ...prevState.players,
-                [playerId]: {
-                  ...player,
-                  boosting: true
-                }
-              }
-            };
-          }
-          return prevState;
-        });
-      }
+      setIsSpacePressed(true);
     }
     
-    // MASS EJECTION SYSTEM - W key (authentic slither.io)
+    // Mass ejection with W key (authentic slither.io)
     if (event.code === 'KeyW') {
       event.preventDefault();
       ejectMass();
+    }
+  }, [gameStatus, spectatorMode]);
     }
   }, [gameStatus, isSpacePressed, currentUser]);
 
