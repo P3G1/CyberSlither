@@ -2079,7 +2079,7 @@ const GameComponent = () => {
           const playerName = player.player_id.split('_')[0];
           const length = player.segments.length;
           const text = `${playerName} (${length})`;
-          const textY = player.segments[0].y - segmentSize - 10;
+          const textY = player.segments[0].y - SNAKE_HEAD_SIZE - 10;
           
           ctx.strokeText(text, player.segments[0].x, textY);
           ctx.fillText(text, player.segments[0].x, textY);
