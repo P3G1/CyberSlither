@@ -264,9 +264,61 @@ const GameComponent = () => {
   });
   const [particles, setParticles] = useState([]); // For eating effects
 
-  // AUTHENTIC SLITHER.IO BOOST SYSTEM  
-  const [isSpacePressed, setIsSpacePressed] = useState(false); // Track if spacebar is held
-  const [boostConsumeCounter, setBoostConsumeCounter] = useState(0); // For length consumption timing
+  // AUTHENTIC SLITHER.IO BOOST SYSTEM - EXACT COPY (Mouse + Space)
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [boostConsumeCounter, setBoostConsumeCounter] = useState(0);
+
+  // Mouse boost control (primary method in original slither.io)
+  const handleMouseDown = useCallback((event) => {
+    if (gameStatus === 'playing' && event.button === 0) { // Left mouse button
+      event.preventDefault();
+      setIsMouseDown(true);
+    }
+  }, [gameStatus]);
+
+  const handleMouseUp = useCallback((event) => {
+    if (event.button === 0) { // Left mouse button
+      event.preventDefault();
+      setIsMouseDown(false);
+    }
+  }, []);
+
+  // Space key boost control (secondary method)
+  const handleKeyDown = useCallback((event) => {
+    if (gameStatus !== 'playing') return;
+    
+    if (event.code === 'Space') {
+      event.preventDefault();
+      
+      if (spectatorMode) {
+        setSpectatorMode(false);
+        setSpectatorTarget(null);
+        setSpectatorTimeLeft(0);
+        setGameStatus('menu');
+        setShowVictoryModal(true);
+        return;
+      }
+      
+      setIsSpacePressed(true);
+    }
+    
+    // Mass ejection with W key (authentic slither.io)
+    if (event.code === 'KeyW') {
+      event.preventDefault();
+      ejectMass();
+    }
+  }, [gameStatus, spectatorMode]);
+
+  const handleKeyUp = useCallback((event) => {
+    if (event.code === 'Space') {
+      event.preventDefault();
+      setIsSpacePressed(false);
+    }
+  }, []);
+
+  // Combined boost state
+  const isBoosting = isMouseDown || isSpacePressed;
   
   // SPECTATOR MODE SYSTEM
   const [spectatorMode, setSpectatorMode] = useState(false);
