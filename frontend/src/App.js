@@ -30,15 +30,16 @@ const getCanvasSize = () => {
   return { width: Math.min(window.innerWidth, VIEWPORT_WIDTH), height: Math.min(window.innerHeight, VIEWPORT_HEIGHT) };
 };
 
-// EXACT SLITHER.IO PHYSICS CONSTANTS
-const FOOD_SIZE = 6; // Original small pellet size
-const SNAKE_SEGMENT_SIZE = 11; // Exact segment size
-const SNAKE_HEAD_SIZE = 15; // Exact head size
-const BASE_SPEED = 5.78; // Exact original base speed
-const MIN_SPEED = 4.61; // Exact minimum speed for large snakes
-const BOOST_SPEED_MULTIPLIER = 1.3; // Exact boost multiplier
-const MASS_SPEED_FACTOR = 0.0134; // Exact mass-speed relationship
+// EXACT ORIGINAL SLITHER.IO SPEED CONSTANTS
+const BASE_SPEED = 2.0; // Exact original: 2.0 game units per tick
+const BOOST_SPEED = 3.5; // Exact original: 3.5 game units per tick (1.75x multiplier)
+const LARGE_SNAKE_SPEED = 1.8; // Exact original: 1.8 for very large snakes
+const SPEED_REDUCTION_THRESHOLD = 22; // Start reducing speed after 22 segments
 const TURN_SPEED = 0.045; // Exact turning responsiveness
+
+// EXACT ORIGINAL CAMERA CONSTANTS
+const CAMERA_SMOOTHING = 0.1; // Exact original interpolation factor
+const CAMERA_OFFSET_SMOOTHING = 0.08; // For smooth offset transitions
 
 // Cyberpunk betting amounts
 const BET_AMOUNTS = [1, 5, 20, 50];
