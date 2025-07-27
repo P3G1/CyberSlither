@@ -1569,7 +1569,7 @@ const GameComponent = () => {
         newPlayers[playerId] = snake;
       });
       
-      // AUTHENTIC SLITHER.IO FIELD OF VIEW - EXACT COPY
+      // EXACT ORIGINAL SLITHER.IO CAMERA FOLLOWING - PERFECT COPY
       let targetSnake = null;
       
       if (spectatorMode && spectatorTarget) {
@@ -1579,21 +1579,38 @@ const GameComponent = () => {
       }
       
       if (targetSnake && targetSnake.alive && targetSnake.segments[0]) {
-        // EXACT field of view calculation from original slither.io
+        // EXACT original camera smoothing algorithm
+        const targetX = targetSnake.segments[0].x;
+        const targetY = targetSnake.segments[0].y;
+        
+        // EXACT field of view calculation (original formula)
         const length = targetSnake.segments.length;
         let zoom = 1.0;
         
         if (length > 10) {
+          // Original slither.io zoom formula
           zoom = Math.pow(0.9, Math.log(length / 10));
-          zoom = Math.max(zoom, 0.2); // Minimum zoom
+          zoom = Math.max(zoom, 0.2); // Minimum zoom limit
         }
         
-        setCamera(prevCamera => ({
-          x: targetSnake.segments[0].x,
-          y: targetSnake.segments[0].y,
-          zoom: zoom,
-          following: spectatorMode ? spectatorTarget : playerName
-        }));
+        // SMOOTH camera interpolation (exact original algorithm)
+        setCamera(prevCamera => {
+          const currentX = prevCamera.x || targetX;
+          const currentY = prevCamera.y || targetY;
+          const currentZoom = prevCamera.zoom || zoom;
+          
+          // Linear interpolation with exact original smoothing factor
+          const newX = currentX + (targetX - currentX) * CAMERA_SMOOTHING;
+          const newY = currentY + (targetY - currentY) * CAMERA_SMOOTHING;
+          const newZoom = currentZoom + (zoom - currentZoom) * CAMERA_OFFSET_SMOOTHING;
+          
+          return {
+            x: newX,
+            y: newY,
+            zoom: newZoom,
+            following: spectatorMode ? spectatorTarget : playerName
+          };
+        });
       }
       
       // FOOD GENERATION BUG FIX - Maintain proper food supply
