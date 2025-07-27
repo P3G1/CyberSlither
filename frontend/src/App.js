@@ -354,39 +354,53 @@ const GameComponent = () => {
     }
   };
 
-  // AUTHENTIC SLITHER.IO BOOST CONSUMPTION - BUG FIXED
+  // AUTHENTIC SLITHER.IO BOOST CONSUMPTION - EXACT COPY
   useEffect(() => {
-    if (isSpacePressed && gameStatus === 'playing' && !spectatorMode) {
+    if (isBoosting && gameStatus === 'playing' && !spectatorMode) {
       const consumeInterval = setInterval(() => {
-        setBoostConsumeCounter(prev => prev + 1);
-        
-        // Consume length every 20 frames (slower consumption - BUG FIX)
-        if (boostConsumeCounter % 20 === 0) {
-          const playerName = currentUser?.username || 'Player';
-          setGameState(prevState => {
-            const player = prevState.players[playerName];
-            if (player && player.alive && player.segments.length > 10) { // Higher minimum length
-              return {
-                ...prevState,
-                players: {
-                  ...prevState.players,
-                  [playerName]: {
-                    ...player,
-                    segments: player.segments.slice(0, -1), // Remove last segment
-                    mass: player.segments.length - 1,
-                    boosting: true
-                  }
+        const playerName = currentUser?.username || 'Player';
+        setGameState(prevState => {
+          const player = prevState.players[playerName];
+          if (player && player.alive && player.segments.length > 15) { // Original minimum
+            return {
+              ...prevState,
+              players: {
+                ...prevState.players,
+                [playerName]: {
+                  ...player,
+                  segments: player.segments.slice(0, -1), // Remove last segment
+                  mass: player.segments.length - 1,
+                  boosting: true
                 }
-              };
-            }
-            return prevState;
-          });
-        }
-      }, 100); // Slower consumption rate - 10fps instead of 20fps
+              }
+            };
+          }
+          return prevState;
+        });
+      }, 150); // Exact original consumption rate
 
       return () => clearInterval(consumeInterval);
+    } else {
+      // Turn off boost when not boosting
+      const playerName = currentUser?.username || 'Player';
+      setGameState(prevState => {
+        const player = prevState.players[playerName];
+        if (player && player.boosting) {
+          return {
+            ...prevState,
+            players: {
+              ...prevState.players,
+              [playerName]: {
+                ...player,
+                boosting: false
+              }
+            }
+          };
+        }
+        return prevState;
+      });
     }
-  }, [isSpacePressed, gameStatus, boostConsumeCounter, currentUser, spectatorMode]);
+  }, [isBoosting, gameStatus, spectatorMode, currentUser]);
 
   // SPECTATOR MODE TIMER - BUG FIXED
   useEffect(() => {
