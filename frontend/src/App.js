@@ -284,39 +284,6 @@ const GameComponent = () => {
     }
   }, []);
 
-  // Space key boost control (secondary method)
-  const handleKeyDown = useCallback((event) => {
-    if (gameStatus !== 'playing') return;
-    
-    if (event.code === 'Space') {
-      event.preventDefault();
-      
-      if (spectatorMode) {
-        setSpectatorMode(false);
-        setSpectatorTarget(null);
-        setSpectatorTimeLeft(0);
-        setGameStatus('menu');
-        setShowVictoryModal(true);
-        return;
-      }
-      
-      setIsSpacePressed(true);
-    }
-    
-    // Mass ejection with W key (authentic slither.io)
-    if (event.code === 'KeyW') {
-      event.preventDefault();
-      ejectMass();
-    }
-  }, [gameStatus, spectatorMode]);
-
-  const handleKeyUp = useCallback((event) => {
-    if (event.code === 'Space') {
-      event.preventDefault();
-      setIsSpacePressed(false);
-    }
-  }, []);
-
   // Combined boost state
   const isBoosting = isMouseDown || isSpacePressed;
   
