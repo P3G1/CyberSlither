@@ -1051,7 +1051,7 @@ const GameComponent = () => {
           mass: 15,
           targetAngle: 0,
           currentAngle: 0,
-          speed: BASE_SPEED,
+          speed: calculateSpeed(15),
           boosting: false
         },
         'Bot1': {
