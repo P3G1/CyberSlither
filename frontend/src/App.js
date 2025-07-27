@@ -1723,36 +1723,15 @@ const GameComponent = () => {
       ejectMass();
     }
   }, [gameStatus, spectatorMode]);
-    }
-  }, [gameStatus, isSpacePressed, currentUser]);
 
   const handleKeyUp = useCallback((event) => {
     if (event.code === 'Space') {
       event.preventDefault();
       setIsSpacePressed(false);
-      
-      // Stop boost immediately
-      const playerId = currentUser?.username || 'Player';
-      setGameState(prevState => {
-        const player = prevState.players[playerId];
-        if (player) {
-          return {
-            ...prevState,
-            players: {
-              ...prevState.players,
-              [playerId]: {
-                ...player,
-                boosting: false
-              }
-            }
-          };
-        }
-        return prevState;
-      });
     }
-  }, [currentUser]);
+  }, []);
 
-  // MASS EJECTION FUNCTION (authentic slither.io mechanic) - BUG FIXED
+  // MASS EJECTION FUNCTION - AUTHENTIC SLITHER.IO
   const ejectMass = useCallback(() => {
     const playerId = currentUser?.username || 'Player';
     
