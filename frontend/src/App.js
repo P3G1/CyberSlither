@@ -31,6 +31,9 @@ const getCanvasSize = () => {
 };
 
 // EXACT ORIGINAL SLITHER.IO SPEED CONSTANTS
+const FOOD_SIZE = 6; // Original small pellet size
+const SNAKE_SEGMENT_SIZE = 11; // Exact segment size
+const SNAKE_HEAD_SIZE = 15; // Exact head size
 const BASE_SPEED = 2.0; // Exact original: 2.0 game units per tick
 const BOOST_SPEED = 3.5; // Exact original: 3.5 game units per tick (1.75x multiplier)
 const LARGE_SNAKE_SPEED = 1.8; // Exact original: 1.8 for very large snakes
