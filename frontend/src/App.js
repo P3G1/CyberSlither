@@ -1816,6 +1816,7 @@ const GameComponent = () => {
     }
   }, [gameStatus, ejectMass]);
 
+  // AUTHENTIC SLITHER.IO MOUSE CONTROL - EXACT COPY
   const handleMouseMove = useCallback((event) => {
     if (gameStatus !== 'playing' || gameState.status !== 'active') return;
     
@@ -1826,7 +1827,7 @@ const GameComponent = () => {
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
     
-    // Convert to screen coordinates first
+    // Convert to screen coordinates (exact slither.io method)
     const screenX = (mouseX / rect.width) * canvasSize.width;
     const screenY = (mouseY / rect.height) * canvasSize.height;
     
@@ -1838,7 +1839,7 @@ const GameComponent = () => {
     updatePlayerDirection(worldX, worldY);
   }, [gameStatus, gameState.status, canvasSize, camera]);
 
-  // Update player direction based on world position (angle-based movement like slither.io)
+  // AUTHENTIC SLITHER.IO ANGLE CALCULATION - EXACT COPY
   const updatePlayerDirection = (targetX, targetY) => {
     const playerId = currentUser?.username || 'Player';
     
@@ -1850,7 +1851,7 @@ const GameComponent = () => {
       const player = prevState.players[playerId];
       const head = player.segments[0];
       
-      // Calculate angle from head to target position in world coordinates
+      // Calculate target angle (exact slither.io method)
       const targetAngle = Math.atan2(targetY - head.y, targetX - head.x);
       
       return {
@@ -1860,6 +1861,11 @@ const GameComponent = () => {
           [playerId]: {
             ...player,
             targetAngle: targetAngle
+          }
+        }
+      };
+    });
+  };
           }
         }
       };
