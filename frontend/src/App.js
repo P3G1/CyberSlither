@@ -1176,13 +1176,19 @@ const GameComponent = () => {
     return distance <= WORLD_RADIUS;
   };
 
-  // Mass-based speed calculation
-  const calculateSpeed = (mass, isBoosting = false) => {
-    let speed = BASE_SPEED - (mass * MASS_SPEED_FACTOR);
-    speed = Math.max(speed, MIN_SPEED);
+  // EXACT ORIGINAL SLITHER.IO SPEED CALCULATION
+  const calculateSpeed = (segmentCount, isBoosting = false) => {
+    let speed = BASE_SPEED; // Start with base speed (2.0)
     
+    // Apply size-based speed reduction (exact original formula)
+    if (segmentCount > SPEED_REDUCTION_THRESHOLD) {
+      const reductionFactor = (segmentCount - SPEED_REDUCTION_THRESHOLD) * 0.005;
+      speed = Math.max(LARGE_SNAKE_SPEED, BASE_SPEED - reductionFactor);
+    }
+    
+    // Apply boost (exact original multiplier)
     if (isBoosting) {
-      speed *= BOOST_SPEED_MULTIPLIER;
+      speed = BOOST_SPEED; // Fixed boost speed like original
     }
     
     return speed;
