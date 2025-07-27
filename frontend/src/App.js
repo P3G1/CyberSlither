@@ -1866,11 +1866,6 @@ const GameComponent = () => {
       };
     });
   };
-          }
-        }
-      };
-    });
-  };
 
   // Mobile touch handlers with better direction control
   const handleTouchStart = useCallback((event) => {
