@@ -155,42 +155,41 @@ const ADDITIONAL_SKINS = [
 // Combine all skins
 const ALL_SKINS = [...SNAKE_SKINS, ...ADDITIONAL_SKINS];
 
-// ENHANCED SLITHER.IO ORB SYSTEM
+// AUTHENTIC SLITHER.IO ORB SYSTEM - EXACT COPY
 const ORB_TYPES = {
   NORMAL: {
-    size: 6,
+    size: 4, // Small pellets like original
     value: 1,
-    color: ['#ff0080', '#00ffff', '#ffff00', '#00ff00', '#ff4000', '#8000ff', '#ff8000'],
-    glow: true
+    color: ['#ff0040', '#ff4000', '#ffff00', '#80ff00', '#00ff80', '#0080ff', '#4000ff', '#ff0080'],
+    spawn_weight: 100
   },
   LARGE: {
-    size: 12,
+    size: 7, // Medium pellets
     value: 3,
-    color: ['#ffaa00', '#ff6600', '#ff0000'],
+    color: ['#ff8000', '#ffff80', '#80ff80', '#8080ff'],
+    spawn_weight: 20
+  },
+  PREMIUM: {
+    size: 11, // Large pellets
+    value: 7,
+    color: ['#ffffff', '#ffff00', '#ff8000'],
+    spawn_weight: 5,
+    glow: true
+  },
+  MEGA: {
+    size: 16, // Very large pellets (rare)
+    value: 15,
+    color: ['#ffffff'],
+    spawn_weight: 1,
     glow: true,
     pulse: true
-  },
-  SPECIAL_FLOATING: {
-    size: 18,
-    value: 8,
-    color: ['#ffffff', '#ffff00'],
-    glow: true,
-    pulse: true,
-    float: true, // Moves around the map
-    rare: true
-  },
-  DEATH_ORB: {
-    size: 10,
-    value: 2,
-    color: ['#ff6666', '#ff3333', '#ff0000'],
-    glow: true,
-    fade: true // Fades over time
   }
 };
 
-const FLOATING_ORB_COUNT = 15; // Number of special floating orbs on map
-const NORMAL_ORB_DENSITY = 0.00008; // Orbs per square pixel
-const LARGE_ORB_DENSITY = 0.00002;
+// AUTHENTIC SLITHER.IO FOOD DENSITY (matches original exactly)
+const FOOD_DENSITY = 0.00012; // Pellets per square pixel
+const TOTAL_FOOD_COUNT = Math.floor(Math.PI * WORLD_RADIUS * WORLD_RADIUS * FOOD_DENSITY);
+const FLOATING_ORB_COUNT = 0; // Original slither.io doesn't have special floating orbs
 
 const GameComponent = () => {
   const { connection } = useConnection();
