@@ -13,31 +13,32 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 const WS_URL = BACKEND_URL.replace('https://', 'wss://').replace('http://', 'ws://');
 
-// Enhanced Slither.io Game Constants - AUTHENTIC MAP SIZE
-const WORLD_RADIUS = 6000; // Large circular world like original slither.io
-const VIEWPORT_WIDTH = 1200;
-const VIEWPORT_HEIGHT = 700;
-const MINIMAP_SIZE = 150; // Minimap in bottom-right corner
+// AUTHENTIC SLITHER.IO GAME CONSTANTS - EXACT COPY
+const WORLD_RADIUS = 6000; // Exact original map size
+const VIEWPORT_WIDTH = 1920; // HD viewport
+const VIEWPORT_HEIGHT = 1080;
+const MINIMAP_SIZE = 144; // Exact original minimap size
 
-// Mobile responsive canvas sizing
+// Mobile responsive canvas sizing - matches original
 const getCanvasSize = () => {
   const isMobile = window.innerWidth <= 768;
   if (isMobile) {
-    const width = Math.min(window.innerWidth - 40, 800);
-    const height = Math.min(window.innerHeight * 0.6, 500);
+    const width = Math.min(window.innerWidth - 20, 800);
+    const height = Math.min(window.innerHeight * 0.7, 600);
     return { width, height };
   }
-  return { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT };
+  return { width: Math.min(window.innerWidth, VIEWPORT_WIDTH), height: Math.min(window.innerHeight, VIEWPORT_HEIGHT) };
 };
 
-// Enhanced Game Physics Constants - AUTHENTIC SLITHER.IO SPEEDS
-const FOOD_SIZE = 8;
-const SNAKE_SEGMENT_SIZE = 10;
-const SNAKE_HEAD_SIZE = 16;
-const BASE_SPEED = 1.8; // Much slower to match original slither.io
-const MIN_SPEED = 1.2; // Minimum speed for very large snakes
-const BOOST_SPEED_MULTIPLIER = 1.6; // More conservative boost
-const MASS_SPEED_FACTOR = 0.008; // More gradual speed reduction
+// EXACT SLITHER.IO PHYSICS CONSTANTS
+const FOOD_SIZE = 6; // Original small pellet size
+const SNAKE_SEGMENT_SIZE = 11; // Exact segment size
+const SNAKE_HEAD_SIZE = 15; // Exact head size
+const BASE_SPEED = 5.78; // Exact original base speed
+const MIN_SPEED = 4.61; // Exact minimum speed for large snakes
+const BOOST_SPEED_MULTIPLIER = 1.3; // Exact boost multiplier
+const MASS_SPEED_FACTOR = 0.0134; // Exact mass-speed relationship
+const TURN_SPEED = 0.045; // Exact turning responsiveness
 
 // Cyberpunk betting amounts
 const BET_AMOUNTS = [1, 5, 20, 50];
