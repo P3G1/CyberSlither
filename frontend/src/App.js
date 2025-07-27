@@ -1124,26 +1124,37 @@ const GameComponent = () => {
     return { food, floatingOrbs: [] }; // No floating orbs in original
   };
 
-  // Generate death orbs when snake dies
+  // AUTHENTIC SLITHER.IO DEATH ORBS - EXACT COPY
   const generateDeathOrbs = (snakeSegments, snakeScore) => {
-    const orbCount = Math.min(snakeSegments.length, 100); // Limit for performance
     const orbs = [];
+    const segmentCount = snakeSegments.length;
     
-    for (let i = 0; i < orbCount; i++) {
+    // Generate proportional death orbs (authentic slither.io)
+    for (let i = 0; i < segmentCount; i++) {
       const segment = snakeSegments[i] || snakeSegments[0];
       const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * 50;
+      const distance = Math.random() * 80 + 20;
+      
+      // Size varies based on snake length (more realistic)
+      let orbType = 'NORMAL';
+      const rand = Math.random();
+      
+      if (segmentCount > 100 && rand < 0.1) orbType = 'PREMIUM';
+      else if (segmentCount > 50 && rand < 0.2) orbType = 'LARGE';
+      else orbType = 'NORMAL';
+      
+      const orbData = ORB_TYPES[orbType];
       
       orbs.push({
         x: segment.x + Math.cos(angle) * distance,
         y: segment.y + Math.sin(angle) * distance,
         id: `death_${Date.now()}_${i}`,
-        type: 'DEATH_ORB',
-        ...ORB_TYPES.DEATH_ORB,
-        color: ORB_TYPES.DEATH_ORB.color[Math.floor(Math.random() * ORB_TYPES.DEATH_ORB.color.length)],
-        birthTime: Date.now(),
-        lifespan: 30000, // 30 seconds
-        fadeStartTime: Date.now() + 25000
+        type: orbType,
+        size: orbData.size,
+        value: orbData.value,
+        color: orbData.color[Math.floor(Math.random() * orbData.color.length)],
+        glow: orbData.glow || false,
+        birthTime: Date.now()
       });
     }
     
