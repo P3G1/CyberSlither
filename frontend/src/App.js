@@ -1218,16 +1218,18 @@ const GameComponent = () => {
         if (!snake.mass) snake.mass = snake.segments?.length || 15;
         if (!snake.segments) snake.segments = initializeSnakeSegments(snake);
         
-        // Calculate speed based on mass (larger snakes are slower)
+        // AUTHENTIC SLITHER.IO MOVEMENT PHYSICS - EXACT COPY
         const isBoosting = snake.boosting || false;
         snake.speed = calculateSpeed(snake.mass, isBoosting);
         
-        // Smooth angle interpolation (authentic slither.io turning speed)
+        // EXACT turning mechanism from original slither.io
         const angleDiff = snake.targetAngle - snake.currentAngle;
         let smoothAngle = angleDiff;
         if (smoothAngle > Math.PI) smoothAngle -= 2 * Math.PI;
         if (smoothAngle < -Math.PI) smoothAngle += 2 * Math.PI;
-        snake.currentAngle += smoothAngle * 0.12; // Faster turning like original slither.io
+        
+        // Apply turning with exact responsiveness
+        snake.currentAngle += smoothAngle * TURN_SPEED;
         
         // Move snake head with mass-based speed - BOUNDARY COLLISION FIX
         const newHead = {
