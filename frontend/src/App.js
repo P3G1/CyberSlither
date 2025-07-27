@@ -1053,67 +1053,42 @@ const GameComponent = () => {
     startDemoGameLoop();
   };
 
-  // AUTHENTIC SLITHER.IO WORLD GENERATION
+  // AUTHENTIC SLITHER.IO WORLD GENERATION - EXACT COPY
   const generateSlitherWorld = () => {
     const worldArea = Math.PI * WORLD_RADIUS * WORLD_RADIUS;
-    const normalOrbCount = Math.floor(worldArea * NORMAL_ORB_DENSITY);
-    const largeOrbCount = Math.floor(worldArea * LARGE_ORB_DENSITY);
-    
     const food = [];
-    const floatingOrbs = [];
     
-    // Generate normal orbs scattered throughout the circular world
-    for (let i = 0; i < normalOrbCount; i++) {
+    // Generate exact food distribution like original slither.io
+    for (let i = 0; i < TOTAL_FOOD_COUNT; i++) {
       const angle = Math.random() * 2 * Math.PI;
-      const radius = Math.sqrt(Math.random()) * (WORLD_RADIUS - 100);
+      const radius = Math.sqrt(Math.random()) * (WORLD_RADIUS - 50);
+      
+      // Determine orb type based on authentic spawn weights
+      const rand = Math.random() * 126; // Total of all spawn weights
+      let orbType = 'NORMAL';
+      
+      if (rand < 1) orbType = 'MEGA';
+      else if (rand < 6) orbType = 'PREMIUM';
+      else if (rand < 26) orbType = 'LARGE';
+      else orbType = 'NORMAL';
+      
+      const orbData = ORB_TYPES[orbType];
       
       food.push({
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius,
-        id: `normal_${i}`,
-        type: 'NORMAL',
-        ...ORB_TYPES.NORMAL,
-        color: ORB_TYPES.NORMAL.color[Math.floor(Math.random() * ORB_TYPES.NORMAL.color.length)],
-        size: ORB_TYPES.NORMAL.size + Math.random() * 2
+        id: `pellet_${i}`,
+        type: orbType,
+        size: orbData.size,
+        value: orbData.value,
+        color: orbData.color[Math.floor(Math.random() * orbData.color.length)],
+        glow: orbData.glow || false,
+        pulse: orbData.pulse || false,
+        pulsePhase: orbData.pulse ? Math.random() * Math.PI * 2 : 0
       });
     }
     
-    // Generate large orbs
-    for (let i = 0; i < largeOrbCount; i++) {
-      const angle = Math.random() * 2 * Math.PI;
-      const radius = Math.sqrt(Math.random()) * (WORLD_RADIUS - 150);
-      
-      food.push({
-        x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius,
-        id: `large_${i}`,
-        type: 'LARGE',
-        ...ORB_TYPES.LARGE,
-        color: ORB_TYPES.LARGE.color[Math.floor(Math.random() * ORB_TYPES.LARGE.color.length)],
-        pulsePhase: Math.random() * Math.PI * 2
-      });
-    }
-    
-    // Generate special floating orbs
-    for (let i = 0; i < FLOATING_ORB_COUNT; i++) {
-      const angle = Math.random() * 2 * Math.PI;
-      const radius = Math.random() * (WORLD_RADIUS - 200);
-      
-      floatingOrbs.push({
-        x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius,
-        id: `floating_${i}`,
-        type: 'SPECIAL_FLOATING',
-        ...ORB_TYPES.SPECIAL_FLOATING,
-        color: ORB_TYPES.SPECIAL_FLOATING.color[Math.floor(Math.random() * ORB_TYPES.SPECIAL_FLOATING.color.length)],
-        vx: (Math.random() - 0.5) * 0.5, // Slow drift
-        vy: (Math.random() - 0.5) * 0.5,
-        pulsePhase: Math.random() * Math.PI * 2,
-        birthTime: Date.now()
-      });
-    }
-    
-    return { food, floatingOrbs };
+    return { food, floatingOrbs: [] }; // No floating orbs in original
   };
 
   // Generate death orbs when snake dies
