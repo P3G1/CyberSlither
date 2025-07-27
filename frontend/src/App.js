@@ -2099,147 +2099,151 @@ const GameComponent = () => {
     
   }, [gameState.players, gameState.food, gameState.deathOrbs, canvasSize, currentUser, camera]);
 
-  // Helper functions for drawing
-  const isOrbVisible = (orb, bounds) => {
-    return orb.x >= bounds.left && orb.x <= bounds.right && 
-           orb.y >= bounds.top && orb.y <= bounds.bottom;
-  };
-
-  const drawMinimap = (ctx, canvas) => {
-    if (!minimap.visible) return;
-    
+  // AUTHENTIC SLITHER.IO MINIMAP - EXACT COPY
+  const drawSlitherMinimap = (ctx, canvas) => {
     ctx.save();
     
     // Minimap position (bottom-right)
-    const mmX = canvas.width - MINIMAP_SIZE - 20;
-    const mmY = canvas.height - MINIMAP_SIZE - 20;
+    const mmX = canvas.width - MINIMAP_SIZE - 15;
+    const mmY = canvas.height - MINIMAP_SIZE - 15;
     
-    // Minimap background (circular like slither.io)
-    ctx.fillStyle = '#000000aa';
-    ctx.beginPath();
-    ctx.arc(mmX + MINIMAP_SIZE/2, mmY + MINIMAP_SIZE/2, MINIMAP_SIZE/2, 0, Math.PI * 2);
-    ctx.fill();
+    // Minimap background (exact slither.io style)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(mmX, mmY, MINIMAP_SIZE, MINIMAP_SIZE);
     
-    // World boundary on minimap
-    ctx.strokeStyle = '#ff0000';
+    // Border
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
+    ctx.strokeRect(mmX, mmY, MINIMAP_SIZE, MINIMAP_SIZE);
+    
+    // Draw world boundary on minimap
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 1;
+    const centerX = mmX + MINIMAP_SIZE / 2;
+    const centerY = mmY + MINIMAP_SIZE / 2;
+    const radius = MINIMAP_SIZE / 2 - 5;
     ctx.beginPath();
-    ctx.arc(mmX + MINIMAP_SIZE/2, mmY + MINIMAP_SIZE/2, MINIMAP_SIZE/2 - 2, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.stroke();
     
-    // Draw player dots
-    Object.entries(minimap.playerDots).forEach(([playerId, playerData]) => {
-      const scale = (MINIMAP_SIZE/2 - 10) / WORLD_RADIUS;
-      const dotX = mmX + MINIMAP_SIZE/2 + playerData.x * scale;
-      const dotY = mmY + MINIMAP_SIZE/2 + playerData.y * scale;
-      
-      // Check if within minimap bounds
-      const distFromCenter = Math.sqrt(
-        Math.pow(dotX - (mmX + MINIMAP_SIZE/2), 2) + 
-        Math.pow(dotY - (mmY + MINIMAP_SIZE/2), 2)
-      );
-      
-      if (distFromCenter <= MINIMAP_SIZE/2 - 5) {
-        ctx.fillStyle = playerId === (currentUser?.username || 'Player') ? '#ffff00' : '#00ffff';
-        const dotSize = Math.max(2, Math.min(6, (playerData.mass || 15) / 10));
+    // Draw players on minimap
+    const scale = radius / WORLD_RADIUS;
+    Object.values(gameState.players || {}).forEach(player => {
+      if (player.alive && player.segments && player.segments[0]) {
+        const mmPlayerX = centerX + player.segments[0].x * scale;
+        const mmPlayerY = centerY + player.segments[0].y * scale;
         
-        ctx.beginPath();
-        ctx.arc(dotX, dotY, dotSize, 0, Math.PI * 2);
-        ctx.fill();
+        // Check if within minimap bounds
+        const distFromCenter = Math.sqrt(
+          Math.pow(mmPlayerX - centerX, 2) + 
+          Math.pow(mmPlayerY - centerY, 2)
+        );
+        
+        if (distFromCenter <= radius) {
+          const isPlayer = player.player_id === (currentUser?.username || 'Player');
+          ctx.fillStyle = isPlayer ? '#ffff00' : player.color;
+          const dotSize = isPlayer ? 3 : 2;
+          
+          ctx.beginPath();
+          ctx.arc(mmPlayerX, mmPlayerY, dotSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
-    });
-    
-    // Draw hotspots (areas with death orbs)
-    minimap.hotspots.forEach(hotspot => {
-      const scale = (MINIMAP_SIZE/2 - 10) / WORLD_RADIUS;
-      const hotX = mmX + MINIMAP_SIZE/2 + hotspot.x * scale;
-      const hotY = mmY + MINIMAP_SIZE/2 + hotspot.y * scale;
-      
-      ctx.fillStyle = '#ff8000aa';
-      ctx.beginPath();
-      ctx.arc(hotX, hotY, 3, 0, Math.PI * 2);
-      ctx.fill();
     });
     
     ctx.restore();
   };
 
-  const drawGameUI = (ctx, canvas) => {
+  // AUTHENTIC SLITHER.IO UI - EXACT COPY
+  const drawSlitherUI = (ctx, canvas) => {
     ctx.save();
     
-    // AUTHENTIC SLITHER.IO UI ELEMENTS
     if (gameStatus === 'playing' || spectatorMode) {
-      // Top-left: Length display (prominent like original)
+      // Length display (exact slither.io style)
       const currentSnake = spectatorMode && spectatorTarget ? 
         gameState.players[spectatorTarget] : 
         gameState.players[currentUser?.username || 'Player'];
         
       if (currentSnake && currentSnake.segments) {
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 24px Arial';
+        ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'left';
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = '#000000';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
         
         const length = currentSnake.segments.length;
-        ctx.fillText(`Length: ${length}`, 20, 40);
+        const text = `Length: ${length}`;
         
-        // Show spectator mode indicator
+        ctx.strokeText(text, 20, 35);
+        ctx.fillText(text, 20, 35);
+        
+        // Spectator mode indicator
         if (spectatorMode) {
           ctx.fillStyle = '#ff0080';
           ctx.font = 'bold 16px Arial';
-          ctx.fillText(`Spectating: ${spectatorTarget} (${spectatorTimeLeft}s)`, 20, 70);
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 14px Arial';
-          ctx.fillText('Press SPACE to return to menu', 20, 95);
+          ctx.strokeText(`Spectating: ${spectatorTarget}`, 20, 60);
+          ctx.fillText(`Spectating: ${spectatorTarget}`, 20, 60);
         }
       }
       
-      // LIVE LEADERBOARD (top-right, authentic slither.io style)
+      // Live leaderboard (top-right, exact slither.io position)
       ctx.textAlign = 'right';
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 16px Arial';
-      ctx.fillText('Leaderboard', canvas.width - 20, 30);
+      ctx.font = 'bold 14px Arial';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
       
-      // Get top 10 players by length
+      const leaderText = 'Leaderboard';
+      ctx.strokeText(leaderText, canvas.width - 20, 25);
+      ctx.fillText(leaderText, canvas.width - 20, 25);
+      
+      // Top players
       const topPlayers = Object.values(gameState.players || {})
         .filter(p => p.alive && p.segments)
         .sort((a, b) => b.segments.length - a.segments.length)
-        .slice(0, 10);
+        .slice(0, 5);
       
       topPlayers.forEach((player, index) => {
         const rank = index + 1;
-        const playerName = player.player_id.split('_')[0]; // Remove any suffixes
+        const playerName = player.player_id.split('_')[0];
         const length = player.segments.length;
+        const isCurrentPlayer = player.player_id === (currentUser?.username || 'Player');
         
-        ctx.fillStyle = player.player_id === (currentUser?.username || 'Player') ? '#ffff00' : 
-                       player.player_id === spectatorTarget ? '#ff0080' : '#ffffff';
-        ctx.font = `${rank <= 3 ? 'bold' : 'normal'} 14px Arial`;
+        ctx.fillStyle = isCurrentPlayer ? '#ffff00' : '#ffffff';
+        ctx.font = `${rank === 1 ? 'bold' : 'normal'} 12px Arial`;
         
-        const yPos = 55 + (rank * 20);
-        ctx.fillText(`${rank}. ${playerName} (${length})`, canvas.width - 20, yPos);
+        const yPos = 45 + (rank * 16);
+        const rankText = `${rank}. ${playerName} (${length})`;
+        
+        ctx.strokeText(rankText, canvas.width - 20, yPos);
+        ctx.fillText(rankText, canvas.width - 20, yPos);
       });
       
-      // Bottom-left: Controls and boost status
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#00ffff';
-      ctx.font = 'bold 12px Arial';
-      
+      // Controls hint (bottom-left)
       if (!spectatorMode) {
-        // Boost status indicator
-        if (isSpacePressed) {
-          ctx.fillStyle = '#ffff00';
-          ctx.fillText('⚡ BOOST ACTIVE - Consuming length!', 20, canvas.height - 60);
-        } else {
-          ctx.fillStyle = '#00ff00';
-          ctx.fillText('Hold SPACE to boost', 20, canvas.height - 60);
-        }
-        
-        // Mass ejection hint
+        ctx.textAlign = 'left';
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'normal 11px Arial';
-        ctx.fillText('Press W or Right-click to eject mass', 20, canvas.height - 40);
-        ctx.fillText('Move mouse to steer', 20, canvas.height - 25);
+        ctx.font = '12px Arial';
+        
+        const controlsY = canvas.height - 45;
+        const controls = [
+          'Move mouse to steer',
+          'Hold mouse button or SPACE to boost',
+          'Press W to eject mass'
+        ];
+        
+        controls.forEach((text, index) => {
+          ctx.strokeText(text, 15, controlsY + (index * 15));
+          ctx.fillText(text, 15, controlsY + (index * 15));
+        });
+        
+        // Boost indicator
+        if (isBoosting) {
+          ctx.fillStyle = '#ff0080';
+          ctx.font = 'bold 14px Arial';
+          ctx.strokeText('⚡ BOOSTING', 15, controlsY - 20);
+          ctx.fillText('⚡ BOOSTING', 15, controlsY - 20);
+        }
       }
     }
     
