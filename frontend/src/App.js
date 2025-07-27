@@ -1905,14 +1905,16 @@ const GameComponent = () => {
     updatePlayerDirection(gameX, gameY);
   }, [gameStatus, gameState.status, canvasSize]);
 
-  // Event listeners for authentic slither.io controls
+  // AUTHENTIC SLITHER.IO EVENT LISTENERS - EXACT COPY
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.addEventListener('mousemove', handleMouseMove);
-      canvas.addEventListener('contextmenu', handleRightClick); // Right-click mass ejection
+      canvas.addEventListener('mousedown', handleMouseDown); // Primary boost control
+      canvas.addEventListener('mouseup', handleMouseUp);     // Primary boost control
+      canvas.addEventListener('contextmenu', handleRightClick);
       canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
       canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     }
@@ -1922,12 +1924,14 @@ const GameComponent = () => {
       window.removeEventListener('keyup', handleKeyUp);
       if (canvas) {
         canvas.removeEventListener('mousemove', handleMouseMove);
+        canvas.removeEventListener('mousedown', handleMouseDown);
+        canvas.removeEventListener('mouseup', handleMouseUp);
         canvas.removeEventListener('contextmenu', handleRightClick);
         canvas.removeEventListener('touchstart', handleTouchStart);
         canvas.removeEventListener('touchmove', handleTouchMove);
       }
     };
-  }, [handleKeyDown, handleKeyUp, handleMouseMove, handleRightClick, handleTouchStart, handleTouchMove]);
+  }, [handleKeyDown, handleKeyUp, handleMouseMove, handleMouseDown, handleMouseUp, handleRightClick, handleTouchStart, handleTouchMove]);
 
   // ENHANCED SLITHER.IO RENDERING SYSTEM - OPTIMIZED FOR LARGE SNAKES
   useEffect(() => {
